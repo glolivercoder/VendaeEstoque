@@ -1,0 +1,383 @@
+const DB_NAME = 'estoqueDB';
+const DB_VERSION = 2;
+
+let db;
+let dbInitPromise;
+
+const initDB = () => {
+  if (dbInitPromise) return dbInitPromise;
+
+  dbInitPromise = new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onerror = () => {
+      reject('Error opening database');
+    };
+
+    request.onsuccess = (event) => {
+      db = event.target.result;
+      resolve(db);
+    };
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+
+      // Delete existing object stores if they exist
+      if (db.objectStoreNames.contains('products')) {
+        db.deleteObjectStore('products');
+      }
+      if (db.objectStoreNames.contains('vendors')) {
+        db.deleteObjectStore('vendors');
+      }
+      if (db.objectStoreNames.contains('clients')) {
+        db.deleteObjectStore('clients');
+      }
+      if (db.objectStoreNames.contains('sales')) {
+        db.deleteObjectStore('sales');
+      }
+      if (db.objectStoreNames.contains('saleItems')) {
+        db.deleteObjectStore('saleItems');
+      }
+
+      // Create products store
+      const productsStore = db.createObjectStore('products', { keyPath: 'id', autoIncrement: true });
+      productsStore.createIndex('description', 'description', { unique: true });
+
+      // Create vendors store
+      const vendorsStore = db.createObjectStore('vendors', { keyPath: 'id', autoIncrement: true });
+      vendorsStore.createIndex('document', 'document', { unique: true });
+      vendorsStore.createIndex('name', 'name', { unique: false });
+
+      // Create clients store
+      const clientsStore = db.createObjectStore('clients', { keyPath: 'id', autoIncrement: true });
+      clientsStore.createIndex('document', 'document', { unique: true });
+      clientsStore.createIndex('name', 'name', { unique: false });
+
+      // Create sales store
+      const salesStore = db.createObjectStore('sales', { keyPath: 'id', autoIncrement: true });
+      salesStore.createIndex('vendorId', 'vendorId', { unique: false });
+      salesStore.createIndex('clientId', 'clientId', { unique: false });
+      salesStore.createIndex('saleDate', 'saleDate', { unique: false });
+
+      // Create sale items store
+      const saleItemsStore = db.createObjectStore('saleItems', { keyPath: 'id', autoIncrement: true });
+      saleItemsStore.createIndex('saleId', 'saleId', { unique: false });
+    };
+  });
+
+  return dbInitPromise;
+};
+
+// Initialize database and add default vendor
+const initializeDefaultVendor = async () => {
+  try {
+    await initDB();
+    const defaultVendor = {
+      name: 'Gleidison S. Oliveira',
+      document: '0727887807',
+      createdAt: new Date()
+    };
+
+    try {
+      await addVendor(defaultVendor);
+    } catch (error) {
+      if (!error.toString().includes('already exists')) {
+        console.error('Error adding default vendor:', error);
+      }
+    }
+  } catch (error) {
+    console.error('Error initializing database:', error);
+  }
+};
+
+initializeDefaultVendor();
+
+const ensureDB = async () => {
+  if (!db) {
+    await initDB();
+  }
+  return db;
+};
+
+export const getVendors = async () => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['vendors'], 'readonly');
+    const store = transaction.objectStore('vendors');
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
+};
+
+export const searchVendors = async (query) => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['vendors'], 'readonly');
+    const store = transaction.objectStore('vendors');
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+      const vendors = request.result;
+      const filteredVendors = vendors.filter(vendor =>
+        vendor.name.toLowerCase().includes(query.toLowerCase()) ||
+        vendor.document.toLowerCase().includes(query.toLowerCase())
+      );
+      resolve(filteredVendors.slice(0, 10));
+    };
+
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
+};
+
+export const addVendor = async (vendor) => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['vendors'], 'readwrite');
+    const store = transaction.objectStore('vendors');
+    
+    const index = store.index('document');
+    const checkRequest = index.get(vendor.document);
+
+    checkRequest.onsuccess = () => {
+      if (checkRequest.result) {
+        reject(new Error('Document already exists'));
+        return;
+      }
+
+      const addRequest = store.add({
+        ...vendor,
+        createdAt: new Date()
+      });
+
+      addRequest.onsuccess = () => {
+        resolve(addRequest.result);
+      };
+
+      addRequest.onerror = () => {
+        reject(addRequest.error);
+      };
+    };
+
+    checkRequest.onerror = () => {
+      reject(checkRequest.error);
+    };
+  });
+};
+
+export const getClients = async () => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['clients'], 'readonly');
+    const store = transaction.objectStore('clients');
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
+};
+
+export const searchClients = async (query) => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['clients'], 'readonly');
+    const store = transaction.objectStore('clients');
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+      const clients = request.result;
+      const filteredClients = clients.filter(client =>
+        client.name.toLowerCase().includes(query.toLowerCase()) ||
+        client.document.toLowerCase().includes(query.toLowerCase())
+      );
+      resolve(filteredClients.slice(0, 10));
+    };
+
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
+};
+
+export const addClient = async (client) => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['clients'], 'readwrite');
+    const store = transaction.objectStore('clients');
+    
+    const index = store.index('document');
+    const checkRequest = index.get(client.document);
+
+    checkRequest.onsuccess = () => {
+      if (checkRequest.result) {
+        reject(new Error('Document already exists'));
+        return;
+      }
+
+      const addRequest = store.add({
+        ...client,
+        createdAt: new Date()
+      });
+
+      addRequest.onsuccess = () => {
+        resolve(addRequest.result);
+      };
+
+      addRequest.onerror = () => {
+        reject(addRequest.error);
+      };
+    };
+
+    checkRequest.onerror = () => {
+      reject(checkRequest.error);
+    };
+  });
+};
+
+export const addSale = async (sale) => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['sales', 'saleItems'], 'readwrite');
+    const salesStore = transaction.objectStore('sales');
+    const saleItemsStore = transaction.objectStore('saleItems');
+
+    try {
+      const saleData = {
+        vendorId: sale.vendorId,
+        clientId: sale.clientId,
+        totalAmount: sale.totalAmount,
+        paymentMethod: sale.paymentMethod,
+        saleDate: new Date()
+      };
+
+      const saleRequest = salesStore.add(saleData);
+
+      saleRequest.onsuccess = () => {
+        const saleId = saleRequest.result;
+        
+        const itemPromises = sale.items.map(item => {
+          return new Promise((resolveItem, rejectItem) => {
+            const itemRequest = saleItemsStore.add({
+              saleId,
+              description: item.description,
+              quantity: item.quantity,
+              price: item.price
+            });
+
+            itemRequest.onsuccess = () => resolveItem();
+            itemRequest.onerror = () => rejectItem(itemRequest.error);
+          });
+        });
+
+        Promise.all(itemPromises)
+          .then(() => resolve(saleId))
+          .catch(error => reject(error));
+      };
+
+      saleRequest.onerror = () => {
+        reject(saleRequest.error);
+      };
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+export const getProducts = async () => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['products'], 'readonly');
+    const store = transaction.objectStore('products');
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
+};
+
+export const addProduct = async (product) => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['products'], 'readwrite');
+    const store = transaction.objectStore('products');
+    
+    const index = store.index('description');
+    const checkRequest = index.get(product.description);
+
+    checkRequest.onsuccess = () => {
+      if (checkRequest.result) {
+        reject(new Error('Product already exists'));
+        return;
+      }
+
+      const addRequest = store.add({
+        ...product,
+        createdAt: new Date()
+      });
+
+      addRequest.onsuccess = () => {
+        resolve(addRequest.result);
+      };
+
+      addRequest.onerror = () => {
+        reject(addRequest.error);
+      };
+    };
+
+    checkRequest.onerror = () => {
+      reject(checkRequest.error);
+    };
+  });
+};
+
+export const updateProduct = async (product) => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['products'], 'readwrite');
+    const store = transaction.objectStore('products');
+    const request = store.put(product);
+
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
+};
+
+export const deleteProduct = async (productId) => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['products'], 'readwrite');
+    const store = transaction.objectStore('products');
+    const request = store.delete(productId);
+
+    request.onsuccess = () => {
+      resolve();
+    };
+
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
+}; 
