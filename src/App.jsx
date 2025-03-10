@@ -46,7 +46,6 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load initial data
     const loadData = async () => {
       try {
         setIsLoading(true);
@@ -60,13 +59,20 @@ function App() {
         setClients(clientsList || []);
         setItems(productsList || []);
         
-        // Set default vendor
-        const defaultVendor = vendorsList?.find(v => v.document === '0727887807');
+        // Set default vendor with null safety
+        const defaultVendor = vendorsList?.find(v => v?.document === '0727887807') || {
+          name: 'Gleidison S. Oliveira',
+          document: '0727887807'
+        };
+
         if (defaultVendor) {
           setSelectedVendor(defaultVendor);
           setNewItem(prev => ({
             ...prev,
-            vendor: { name: defaultVendor.name, doc: defaultVendor.document }
+            vendor: { 
+              name: defaultVendor.name || '', 
+              doc: defaultVendor.document || '' 
+            }
           }));
         }
       } catch (error) {
@@ -302,29 +308,29 @@ function App() {
       return `${days[date.getDay()]}, ${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
     };
 
-    // Get total amount from current sale
-    const totalAmount = currentSale.total || (item.price * (item.saleQuantity || 1));
+    // Get total amount from current sale with null check
+    const totalAmount = currentSale?.total || (item?.price * (item?.saleQuantity || 1));
     
     const receiptContent = `RECIBO DE VENDA
 
 DADOS DO VENDEDOR
-Nome: ${item.vendor.name}
-Documento: ${item.vendor.doc}
+Nome: ${item?.vendor?.name || 'Não especificado'}
+Documento: ${item?.vendor?.doc || 'Não especificado'}
 
 DADOS DO CLIENTE
-Nome: ${item.client.name}
-Documento: ${item.client.doc}
+Nome: ${item?.client?.name || 'Não especificado'}
+Documento: ${item?.client?.doc || 'Não especificado'}
 
 DETALHES DA VENDA
-${currentSale.items ? 
+${currentSale?.items ? 
   currentSale.items.map(saleItem => 
-    `- ${saleItem.description}: ${saleItem.quantity}x R$ ${saleItem.price.toFixed(2)} = R$ ${saleItem.total.toFixed(2)}`
+    `- ${saleItem?.description || 'Item'}: ${saleItem?.quantity || 1}x R$ ${(saleItem?.price || 0).toFixed(2)} = R$ ${((saleItem?.price || 0) * (saleItem?.quantity || 1)).toFixed(2)}`
   ).join('\n') :
-  `- ${item.description}: 1x R$ ${item.price.toFixed(2)} = R$ ${item.price.toFixed(2)}`
+  `- ${item?.description || 'Item'}: 1x R$ ${(item?.price || 0).toFixed(2)} = R$ ${(item?.price || 0).toFixed(2)}`
 }
 
-Valor Total: R$ ${totalAmount.toFixed(2)}
-Forma de Pagamento: ${currentSale.paymentMethod || item.paymentMethod || 'Não especificado'}
+Valor Total: R$ ${(totalAmount || 0).toFixed(2)}
+Forma de Pagamento: ${currentSale?.paymentMethod || item?.paymentMethod || 'Não especificado'}
 
 Declaro para os devidos fins que recebi o valor acima descrito referente à venda dos itens listados.
 
@@ -332,13 +338,13 @@ ${navigator.geolocation ? 'Cidade Local' : 'Local'}, ${formatDateInPortuguese(cu
 
 
 _______________________________
-${item.vendor.name}
-${item.vendor.doc}
+${item?.vendor?.name || 'Vendedor'}
+${item?.vendor?.doc || ''}
 
 
 _______________________________
-${item.client.name}
-${item.client.doc}`;
+${item?.client?.name || 'Cliente'}
+${item?.client?.doc || ''}`;
     
     const blob = new Blob([receiptContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -698,61 +704,8 @@ ${item.client.doc}`;
                                 setItems(updatedItems);
                               }}
                             />
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleSale(item, index, 'dinheiro')}
-                                className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
-                              >
-                                Dinheiro
-                              </button>
-                              <button
-                                onClick={() => handleSale(item, index, 'cartao')}
-                                className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                              >
-                                Cartão
-                              </button>
-                              <button
-                                onClick={() => handleSale(item, index, 'pix')}
-                                className="px-3 py-1 text-sm bg-purple-500 text-white rounded hover:bg-purple-600"
-                              >
-                                Pix
-                              </button>
-                              <button
-                                onClick={() => {
-                                  const isSelected = selectedItems.includes(index);
-                                  if (isSelected) {
-                                    setSelectedItems(prev => prev.filter(i => i !== index));
-                                  } else {
-                                    setSelectedItems(prev => [...prev, index]);
-                                  }
-                                }}
-                                className={`px-3 py-1 text-sm ${
-                                  selectedItems.includes(index) 
-                                    ? 'bg-green-500' 
-                                    : 'bg-yellow-500'
-                                } text-white rounded hover:bg-opacity-90`}
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              </button>
-                            </div>
                           </div>
                         </div>
-                        {item.links.length > 0 && (
-                          <div className="mt-2">
-                            <p className="text-sm font-medium">Links:</p>
-                            <ul className="list-disc list-inside">
-                              {item.links.map((link, i) => (
-                                <li key={i} className="text-sm text-blue-500 hover:text-blue-600">
-                                  <a href={link} target="_blank" rel="noopener noreferrer">
-                                    {link}
-                                  </a>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
                       </div>
                     </div>
                     <div className="flex gap-2 mt-4 items-center">
@@ -770,24 +723,10 @@ ${item.client.doc}`;
                                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
                                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                   </svg>
-                                  <button
-                                    className="px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
-                                  >
+                                  <button className="px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600">
                                     Produto Vencido
                                   </button>
                                 </div>
-                              );
-                            } else if (diffDays === 0) {
-                              return (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                              );
-                            } else if (diffDays > 0 && diffDays <= 7) {
-                              return (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
-                                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
                               );
                             }
                             return null;
@@ -817,6 +756,45 @@ ${item.client.doc}`;
                       >
                         Excluir
                       </button>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSale(item, index, 'dinheiro')}
+                          className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                        >
+                          Dinheiro
+                        </button>
+                        <button
+                          onClick={() => handleSale(item, index, 'cartao')}
+                          className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                        >
+                          Cartão
+                        </button>
+                        <button
+                          onClick={() => handleSale(item, index, 'pix')}
+                          className="px-3 py-1 text-sm bg-purple-500 text-white rounded hover:bg-purple-600"
+                        >
+                          Pix
+                        </button>
+                        <button
+                          onClick={() => {
+                            const isSelected = selectedItems.includes(index);
+                            if (isSelected) {
+                              setSelectedItems(prev => prev.filter(i => i !== index));
+                            } else {
+                              setSelectedItems(prev => [...prev, index]);
+                            }
+                          }}
+                          className={`px-3 py-1 text-sm ${
+                            selectedItems.includes(index) 
+                              ? 'bg-green-500' 
+                              : 'bg-yellow-500'
+                          } text-white rounded hover:bg-opacity-90`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -941,7 +919,6 @@ ${item.client.doc}`;
                       paymentMethod: ''
                     });
 
-                    // Mostrar modal de seleção de pagamento
                     setShowPaymentPopup(true);
                   }}
                   className="w-full bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors mb-2"
