@@ -459,26 +459,37 @@ ${item?.client?.doc || ''}`;
       const imageData = canvas.toDataURL('image/png');
       
       if (exportMethod === 'whatsapp') {
-        // Enviar por WhatsApp
+        // Primeiro baixar a imagem
+        const link = document.createElement('a');
+        link.href = imageData;
+        link.download = `relatorio-vendas-${new Date().toISOString().slice(0, 10)}.png`;
+        link.click();
+        
+        // Depois abrir o WhatsApp
         if (contactInfo.whatsapp) {
-          const encodedMessage = encodeURIComponent('Relatório de Vendas');
-          window.open(`https://wa.me/${contactInfo.whatsapp}?text=${encodedMessage}`, '_blank');
-          
-          // Em um cenário real, você precisaria de um backend para enviar a imagem
-          // Aqui apenas abrimos o WhatsApp Web com o número
-          alert('Em um ambiente de produção, a imagem seria anexada à mensagem do WhatsApp.');
+          setTimeout(() => {
+            const encodedMessage = encodeURIComponent('Relatório de Vendas (enviando o arquivo que acabei de baixar)');
+            window.open(`https://wa.me/${contactInfo.whatsapp}?text=${encodedMessage}`, '_blank');
+            alert('O arquivo foi baixado. Agora você pode enviá-lo manualmente pelo WhatsApp que acabou de abrir.');
+          }, 1000);
         } else {
           setShowContactForm(true);
         }
       } else if (exportMethod === 'email') {
-        // Enviar por email
+        // Primeiro baixar a imagem
+        const link = document.createElement('a');
+        link.href = imageData;
+        link.download = `relatorio-vendas-${new Date().toISOString().slice(0, 10)}.png`;
+        link.click();
+        
+        // Depois abrir o cliente de email
         if (contactInfo.email) {
-          const subject = encodeURIComponent('Relatório de Vendas');
-          const body = encodeURIComponent('Segue em anexo o relatório de vendas.');
-          window.open(`mailto:${contactInfo.email}?subject=${subject}&body=${body}`, '_blank');
-          
-          // Em um cenário real, você precisaria de um backend para enviar a imagem
-          alert('Em um ambiente de produção, a imagem seria anexada ao email.');
+          setTimeout(() => {
+            const subject = encodeURIComponent('Relatório de Vendas');
+            const body = encodeURIComponent('Segue em anexo o relatório de vendas (enviando o arquivo que acabei de baixar).');
+            window.open(`mailto:${contactInfo.email}?subject=${subject}&body=${body}`, '_blank');
+            alert('O arquivo foi baixado. Agora você pode enviá-lo manualmente pelo email que acabou de abrir.');
+          }, 1000);
         } else {
           setShowContactForm(true);
         }
@@ -518,25 +529,31 @@ ${item?.client?.doc || ''}`;
       pdf.addImage(imageData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
       
       if (exportMethod === 'whatsapp') {
-        // Enviar por WhatsApp
+        // Primeiro salvar o PDF
+        pdf.save(`relatorio-vendas-${new Date().toISOString().slice(0, 10)}.pdf`);
+        
+        // Depois abrir o WhatsApp
         if (contactInfo.whatsapp) {
-          const encodedMessage = encodeURIComponent('Relatório de Vendas');
-          window.open(`https://wa.me/${contactInfo.whatsapp}?text=${encodedMessage}`, '_blank');
-          
-          // Em um cenário real, você precisaria de um backend para enviar o PDF
-          alert('Em um ambiente de produção, o PDF seria anexado à mensagem do WhatsApp.');
+          setTimeout(() => {
+            const encodedMessage = encodeURIComponent('Relatório de Vendas (enviando o arquivo PDF que acabei de baixar)');
+            window.open(`https://wa.me/${contactInfo.whatsapp}?text=${encodedMessage}`, '_blank');
+            alert('O arquivo PDF foi baixado. Agora você pode enviá-lo manualmente pelo WhatsApp que acabou de abrir.');
+          }, 1000);
         } else {
           setShowContactForm(true);
         }
       } else if (exportMethod === 'email') {
-        // Enviar por email
+        // Primeiro salvar o PDF
+        pdf.save(`relatorio-vendas-${new Date().toISOString().slice(0, 10)}.pdf`);
+        
+        // Depois abrir o cliente de email
         if (contactInfo.email) {
-          const subject = encodeURIComponent('Relatório de Vendas');
-          const body = encodeURIComponent('Segue em anexo o relatório de vendas.');
-          window.open(`mailto:${contactInfo.email}?subject=${subject}&body=${body}`, '_blank');
-          
-          // Em um cenário real, você precisaria de um backend para enviar o PDF
-          alert('Em um ambiente de produção, o PDF seria anexado ao email.');
+          setTimeout(() => {
+            const subject = encodeURIComponent('Relatório de Vendas');
+            const body = encodeURIComponent('Segue em anexo o relatório de vendas em PDF (enviando o arquivo que acabei de baixar).');
+            window.open(`mailto:${contactInfo.email}?subject=${subject}&body=${body}`, '_blank');
+            alert('O arquivo PDF foi baixado. Agora você pode enviá-lo manualmente pelo email que acabou de abrir.');
+          }, 1000);
         } else {
           setShowContactForm(true);
         }
