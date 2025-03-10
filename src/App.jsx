@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { getVendors, getClients, searchVendors, searchClients, addVendor, addClient, getProducts, addProduct, updateProduct, deleteProduct } from './services/database';
 import SearchableDropdown from './components/SearchableDropdown';
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
+import { Pie, Bar } from 'react-chartjs-2';
+
+// Registrar componentes do Chart.js
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
 function App() {
   const [items, setItems] = useState([]);
@@ -44,6 +49,16 @@ function App() {
   const [newVendor, setNewVendor] = useState({ name: '', document: '' });
   const [newClient, setNewClient] = useState({ name: '', document: '' });
   const [isLoading, setIsLoading] = useState(true);
+
+  // Novos estados para o relatório de vendas
+  const [showSalesReport, setShowSalesReport] = useState(false);
+  const [reportType, setReportType] = useState('day'); // 'day', 'month', 'period'
+  const [reportStartDate, setReportStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [reportEndDate, setReportEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [reportSearchQuery, setReportSearchQuery] = useState('');
+  const [showDashboard, setShowDashboard] = useState(false);
+  const [dashboardPeriod, setDashboardPeriod] = useState('day'); // 'day', 'week', 'month'
+  const [salesData, setSalesData] = useState([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -319,6 +334,136 @@ ${item?.client?.doc || ''}`;
     
     // Clean up
     URL.revokeObjectURL(url);
+  };
+
+  // Função para gerar dados de exemplo para os gráficos (em um app real, isso viria do banco de dados)
+  const generateSampleSalesData = () => {
+    // Dados de exemplo para demonstração
+    return [
+      { id: 1, date: '2023-06-01', client: 'João Silva', product: 'Camiseta', quantity: 2, price: 49.90, total: 99.80, paymentMethod: 'Cartão' },
+      { id: 2, date: '2023-06-01', client: 'Maria Souza', product: 'Calça Jeans', quantity: 1, price: 89.90, total: 89.90, paymentMethod: 'Dinheiro' },
+      { id: 3, date: '2023-06-02', client: 'Pedro Santos', product: 'Tênis', quantity: 1, price: 199.90, total: 199.90, paymentMethod: 'Pix' },
+      { id: 4, date: '2023-06-03', client: 'Ana Oliveira', product: 'Camiseta', quantity: 3, price: 49.90, total: 149.70, paymentMethod: 'Cartão' },
+      { id: 5, date: '2023-06-05', client: 'Carlos Ferreira', product: 'Boné', quantity: 2, price: 29.90, total: 59.80, paymentMethod: 'Dinheiro' },
+      { id: 6, date: '2023-06-10', client: 'Mariana Costa', product: 'Meia', quantity: 5, price: 12.90, total: 64.50, paymentMethod: 'Pix' },
+      { id: 7, date: '2023-06-15', client: 'Rafael Almeida', product: 'Bermuda', quantity: 2, price: 59.90, total: 119.80, paymentMethod: 'Cartão' },
+      { id: 8, date: '2023-06-20', client: 'Juliana Lima', product: 'Blusa', quantity: 1, price: 69.90, total: 69.90, paymentMethod: 'Dinheiro' },
+      { id: 9, date: '2023-06-25', client: 'Fernando Gomes', product: 'Tênis', quantity: 1, price: 199.90, total: 199.90, paymentMethod: 'Pix' },
+      { id: 10, date: '2023-06-30', client: 'Camila Rodrigues', product: 'Camiseta', quantity: 2, price: 49.90, total: 99.80, paymentMethod: 'Cartão' },
+    ];
+  };
+
+  // Carregar dados de vendas de exemplo ao iniciar
+  useEffect(() => {
+    setSalesData(generateSampleSalesData());
+  }, []);
+
+  // Filtrar dados de vendas com base nos critérios selecionados
+  const getFilteredSalesData = () => {
+    let filtered = [...salesData];
+    
+    // Filtrar por período
+    if (reportType === 'day') {
+      filtered = filtered.filter(sale => sale.date === reportStartDate);
+    } else if (reportType === 'month') {
+      const [year, month] = reportStartDate.split('-');
+      filtered = filtered.filter(sale => {
+        const [saleYear, saleMonth] = sale.date.split('-');
+        return saleYear === year && saleMonth === month;
+      });
+    } else if (reportType === 'period') {
+      filtered = filtered.filter(sale => sale.date >= reportStartDate && sale.date <= reportEndDate);
+    }
+    
+    // Filtrar por busca (cliente ou produto)
+    if (reportSearchQuery) {
+      const query = reportSearchQuery.toLowerCase();
+      filtered = filtered.filter(sale => 
+        sale.client.toLowerCase().includes(query) || 
+        sale.product.toLowerCase().includes(query)
+      );
+    }
+    
+    return filtered;
+  };
+
+  // Preparar dados para o gráfico de pizza (itens mais vendidos)
+  const getPieChartData = () => {
+    // Agrupar por produto e somar quantidades
+    const productSales = {};
+    salesData.forEach(sale => {
+      if (productSales[sale.product]) {
+        productSales[sale.product] += sale.quantity;
+      } else {
+        productSales[sale.product] = sale.quantity;
+      }
+    });
+    
+    // Converter para formato do Chart.js
+    const labels = Object.keys(productSales);
+    const data = Object.values(productSales);
+    
+    // Gerar cores aleatórias
+    const backgroundColors = labels.map(() => 
+      `rgba(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, 0.6)`
+    );
+    
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Quantidade Vendida',
+          data,
+          backgroundColor: backgroundColors,
+          borderWidth: 1,
+        },
+      ],
+    };
+  };
+
+  // Preparar dados para o gráfico de barras (vendas por período)
+  const getBarChartData = () => {
+    // Agrupar vendas por período
+    const salesByPeriod = {};
+    
+    salesData.forEach(sale => {
+      let period;
+      
+      if (dashboardPeriod === 'day') {
+        period = sale.date;
+      } else if (dashboardPeriod === 'week') {
+        // Simplificação: usar a primeira data da semana
+        const date = new Date(sale.date);
+        const dayOfWeek = date.getDay();
+        const diff = date.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // ajuste para começar na segunda
+        const firstDayOfWeek = new Date(date.setDate(diff));
+        period = firstDayOfWeek.toISOString().split('T')[0];
+      } else if (dashboardPeriod === 'month') {
+        period = sale.date.substring(0, 7); // YYYY-MM
+      }
+      
+      if (salesByPeriod[period]) {
+        salesByPeriod[period] += sale.quantity;
+      } else {
+        salesByPeriod[period] = sale.quantity;
+      }
+    });
+    
+    // Ordenar períodos
+    const sortedPeriods = Object.keys(salesByPeriod).sort();
+    
+    return {
+      labels: sortedPeriods,
+      datasets: [
+        {
+          label: 'Quantidade Vendida',
+          data: sortedPeriods.map(period => salesByPeriod[period]),
+          backgroundColor: 'rgba(54, 162, 235, 0.6)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1,
+        },
+      ],
+    };
   };
 
   return (
@@ -873,28 +1018,7 @@ ${item?.client?.doc || ''}`;
                 </button>
 
                 <button
-                  onClick={() => {
-                    const totalSales = salesSummary.totalCash + salesSummary.totalCard + salesSummary.totalPix;
-                    
-                    let report = `Relatório de Vendas:\n\n`;
-                    report += `Cliente: ${currentSale.client.name}\n`;
-                    report += `Documento: ${currentSale.client.doc}\n\n`;
-                    report += `Itens Vendidos:\n`;
-                    
-                    currentSale.items.forEach(item => {
-                      report += `- ${item.description}: ${item.quantity} x R$ ${item.price.toFixed(2)} = R$ ${item.total.toFixed(2)}\n`;
-                    });
-                    
-                    report += `\nTotal da Venda: R$ ${currentSale.total.toFixed(2)}\n`;
-                    report += `Forma de Pagamento: ${currentSale.paymentMethod}\n\n`;
-                    report += `Totais Gerais:\n`;
-                    report += `Dinheiro: R$ ${salesSummary.totalCash.toFixed(2)}\n`;
-                    report += `Cartão: R$ ${salesSummary.totalCard.toFixed(2)}\n`;
-                    report += `Pix: R$ ${salesSummary.totalPix.toFixed(2)}\n`;
-                    report += `Total Geral: R$ ${totalSales.toFixed(2)}`;
-
-                    alert(report);
-                  }}
+                  onClick={() => setShowSalesReport(true)}
                   className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
                 >
                   Ver Relatório de Vendas
@@ -1028,6 +1152,217 @@ ${item?.client?.doc || ''}`;
               >
                 Cancelar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Relatório de Vendas */}
+      {showSalesReport && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white p-8 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-semibold">Relatório de Vendas</h2>
+              <button
+                onClick={() => setShowSalesReport(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Barra de busca */}
+            <div className="mb-6">
+              <input
+                type="text"
+                placeholder="Buscar por cliente ou produto..."
+                value={reportSearchQuery}
+                onChange={(e) => setReportSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 border rounded-md"
+              />
+            </div>
+
+            {/* Filtros de período */}
+            <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Tipo de Relatório</label>
+                <select
+                  value={reportType}
+                  onChange={(e) => setReportType(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md"
+                >
+                  <option value="day">Diário</option>
+                  <option value="month">Mensal</option>
+                  <option value="period">Por Período</option>
+                </select>
+              </div>
+
+              {reportType === 'period' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Data Inicial</label>
+                    <input
+                      type="date"
+                      value={reportStartDate}
+                      onChange={(e) => setReportStartDate(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Data Final</label>
+                    <input
+                      type="date"
+                      value={reportEndDate}
+                      onChange={(e) => setReportEndDate(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md"
+                    />
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    {reportType === 'day' ? 'Data' : 'Mês'}
+                  </label>
+                  <input
+                    type={reportType === 'day' ? 'date' : 'month'}
+                    value={reportStartDate}
+                    onChange={(e) => setReportStartDate(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-md"
+                  />
+                </div>
+              )}
+
+              <div className="md:col-span-3">
+                <button
+                  onClick={() => setShowDashboard(true)}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                >
+                  Dashboard
+                </button>
+              </div>
+            </div>
+
+            {/* Tabela de vendas */}
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white border">
+                <thead>
+                  <tr>
+                    <th className="py-2 px-4 border-b">Data</th>
+                    <th className="py-2 px-4 border-b">Cliente</th>
+                    <th className="py-2 px-4 border-b">Produto</th>
+                    <th className="py-2 px-4 border-b">Quantidade</th>
+                    <th className="py-2 px-4 border-b">Preço Unit.</th>
+                    <th className="py-2 px-4 border-b">Total</th>
+                    <th className="py-2 px-4 border-b">Pagamento</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {getFilteredSalesData().map((sale) => (
+                    <tr key={sale.id}>
+                      <td className="py-2 px-4 border-b">{sale.date}</td>
+                      <td className="py-2 px-4 border-b">{sale.client}</td>
+                      <td className="py-2 px-4 border-b">{sale.product}</td>
+                      <td className="py-2 px-4 border-b text-center">{sale.quantity}</td>
+                      <td className="py-2 px-4 border-b text-right">R$ {sale.price.toFixed(2)}</td>
+                      <td className="py-2 px-4 border-b text-right">R$ {sale.total.toFixed(2)}</td>
+                      <td className="py-2 px-4 border-b">{sale.paymentMethod}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colSpan="5" className="py-2 px-4 border-b text-right font-bold">Total:</td>
+                    <td className="py-2 px-4 border-b text-right font-bold">
+                      R$ {getFilteredSalesData().reduce((sum, sale) => sum + sale.total, 0).toFixed(2)}
+                    </td>
+                    <td className="py-2 px-4 border-b"></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Dashboard */}
+      {showDashboard && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white p-8 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-semibold">Dashboard de Vendas</h2>
+              <button
+                onClick={() => setShowDashboard(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Filtro de período para o gráfico de barras */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-1">Agrupar por:</label>
+              <div className="flex gap-4">
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    value="day"
+                    checked={dashboardPeriod === 'day'}
+                    onChange={() => setDashboardPeriod('day')}
+                    className="mr-2"
+                  />
+                  Dia
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    value="week"
+                    checked={dashboardPeriod === 'week'}
+                    onChange={() => setDashboardPeriod('week')}
+                    className="mr-2"
+                  />
+                  Semana
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    value="month"
+                    checked={dashboardPeriod === 'month'}
+                    onChange={() => setDashboardPeriod('month')}
+                    className="mr-2"
+                  />
+                  Mês
+                </label>
+              </div>
+            </div>
+
+            {/* Gráficos */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-lg font-medium mb-4">Produtos Mais Vendidos</h3>
+                <div className="h-80">
+                  <Pie data={getPieChartData()} options={{ maintainAspectRatio: false }} />
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-medium mb-4">Vendas por Período</h3>
+                <div className="h-80">
+                  <Bar 
+                    data={getBarChartData()} 
+                    options={{ 
+                      maintainAspectRatio: false,
+                      scales: {
+                        y: {
+                          beginAtZero: true
+                        }
+                      }
+                    }} 
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
