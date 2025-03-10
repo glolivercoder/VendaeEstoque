@@ -140,42 +140,6 @@ function App() {
     }
   };
 
-  const handleSale = async (item, index, paymentMethod) => {
-    const updatedItems = [...items];
-    const quantity = updatedItems[index].soldQuantity || 1;
-    
-    if (updatedItems[index].quantity < quantity) {
-      alert('Quantidade insuficiente em estoque');
-      return;
-    }
-
-    if (!window.confirm(`Confirmar venda de ${quantity} unidade(s) de ${item.description} via ${paymentMethod}?`)) {
-      return;
-    }
-
-    try {
-      const updatedItem = {
-        ...updatedItems[index],
-        quantity: updatedItems[index].quantity - quantity,
-        sold: updatedItems[index].sold + quantity
-      };
-
-      await updateProduct(updatedItem);
-      updatedItems[index] = updatedItem;
-      setItems(updatedItems);
-
-      // Update sales summary
-      setSalesSummary(prev => ({
-        totalCash: paymentMethod === 'dinheiro' ? prev.totalCash + (item.price * quantity) : prev.totalCash,
-        totalCard: paymentMethod === 'cartao' ? prev.totalCard + (item.price * quantity) : prev.totalCard,
-        totalPix: paymentMethod === 'pix' ? prev.totalPix + (item.price * quantity) : prev.totalPix
-      }));
-    } catch (error) {
-      alert('Erro ao atualizar o produto');
-      console.error('Error updating product:', error);
-    }
-  };
-
   const handleMultipleSales = async (paymentMethod) => {
     if (selectedItems.length === 0) {
       alert('Selecione pelo menos um item para vender');
@@ -757,24 +721,6 @@ ${item?.client?.doc || ''}`;
                         Excluir
                       </button>
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => handleSale(item, index, 'dinheiro')}
-                          className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
-                        >
-                          Dinheiro
-                        </button>
-                        <button
-                          onClick={() => handleSale(item, index, 'cartao')}
-                          className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                        >
-                          Cartão
-                        </button>
-                        <button
-                          onClick={() => handleSale(item, index, 'pix')}
-                          className="px-3 py-1 text-sm bg-purple-500 text-white rounded hover:bg-purple-600"
-                        >
-                          Pix
-                        </button>
                         <button
                           onClick={() => {
                             const isSelected = selectedItems.includes(index);
