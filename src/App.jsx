@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getVendors, getClients, searchVendors, searchClients, addVendor, addClient, getProducts, addProduct, updateProduct, deleteProduct } from './services/database';
 import SearchableDropdown from './components/SearchableDropdown';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
+import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 // Registrar componentes do Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -59,6 +61,16 @@ function App() {
   const [showDashboard, setShowDashboard] = useState(false);
   const [dashboardPeriod, setDashboardPeriod] = useState('day'); // 'day', 'week', 'month'
   const [salesData, setSalesData] = useState([]);
+
+  // Novos estados para contatos e exportação
+  const [contactInfo, setContactInfo] = useState({ whatsapp: '', email: '' });
+  const [showContactForm, setShowContactForm] = useState(false);
+  const [exportType, setExportType] = useState(''); // 'photo' ou 'pdf'
+  const [exportMethod, setExportMethod] = useState(''); // 'whatsapp' ou 'email'
+  const [editingContact, setEditingContact] = useState(false);
+  
+  // Refs para capturar elementos para exportação
+  const reportRef = useRef(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -358,9 +370,58 @@ ${item?.client?.doc || ''}`;
     setSalesData(generateSampleSalesData());
   }, []);
 
-  // Filtrar dados de vendas com base nos critérios selecionados
+  // Modificar a função getFilteredSalesData para capturar corretamente os dados do cliente e das vendas
   const getFilteredSalesData = () => {
-    let filtered = [...salesData];
+    // Criar dados de vendas a partir dos itens do estoque e das vendas realizadas
+    const realSalesData = [];
+    
+    // Adicionar vendas dos itens do estoque
+    items.forEach(item => {
+      // Cada item vendido gera uma entrada no relatório
+      if (item.sold > 0) {
+        // Obter informações do cliente e do vendedor
+        const clientInfo = item.client || currentSale.client || { name: 'Cliente não especificado', doc: '' };
+        const vendorInfo = item.vendor || { name: 'Vendedor não especificado', doc: '' };
+        
+        realSalesData.push({
+          id: item.id,
+          date: item.saleDate || new Date().toISOString().split('T')[0],
+          client: clientInfo.name,
+          clientDoc: clientInfo.doc,
+          vendor: vendorInfo.name,
+          vendorDoc: vendorInfo.doc,
+          product: item.description,
+          quantity: item.sold,
+          price: item.price,
+          total: item.price * item.sold,
+          paymentMethod: item.paymentMethod || 'Não especificado'
+        });
+      }
+    });
+    
+    // Adicionar vendas do histórico de vendas (se existir)
+    if (currentSale && currentSale.items && currentSale.items.length > 0) {
+      currentSale.items.forEach((saleItem, index) => {
+        realSalesData.push({
+          id: `sale-${index}`,
+          date: new Date().toISOString().split('T')[0],
+          client: currentSale.client?.name || 'Cliente não especificado',
+          clientDoc: currentSale.client?.doc || '',
+          vendor: selectedVendor?.name || 'Vendedor não especificado',
+          vendorDoc: selectedVendor?.document || '',
+          product: saleItem.description,
+          quantity: saleItem.quantity,
+          price: saleItem.price,
+          total: saleItem.total,
+          paymentMethod: currentSale.paymentMethod || 'Não especificado'
+        });
+      });
+    }
+    
+    // Combinar com os dados de exemplo para demonstração
+    const combinedData = [...realSalesData, ...salesData];
+    
+    let filtered = [...combinedData];
     
     // Filtrar por período
     if (reportType === 'day') {
@@ -375,23 +436,174 @@ ${item?.client?.doc || ''}`;
       filtered = filtered.filter(sale => sale.date >= reportStartDate && sale.date <= reportEndDate);
     }
     
-    // Filtrar por busca (cliente ou produto)
+    // Filtrar por busca (cliente, produto ou documento)
     if (reportSearchQuery) {
       const query = reportSearchQuery.toLowerCase();
       filtered = filtered.filter(sale => 
-        sale.client.toLowerCase().includes(query) || 
-        sale.product.toLowerCase().includes(query)
+        (sale.client && sale.client.toLowerCase().includes(query)) || 
+        (sale.product && sale.product.toLowerCase().includes(query)) ||
+        (sale.clientDoc && sale.clientDoc.toLowerCase().includes(query)) ||
+        (sale.vendorDoc && sale.vendorDoc.toLowerCase().includes(query))
       );
     }
     
     return filtered;
   };
 
+  // Função para exportar o relatório como imagem
+  const exportAsImage = async () => {
+    if (!reportRef.current) return;
+    
+    try {
+      const canvas = await html2canvas(reportRef.current);
+      const imageData = canvas.toDataURL('image/png');
+      
+      if (exportMethod === 'whatsapp') {
+        // Enviar por WhatsApp
+        if (contactInfo.whatsapp) {
+          const encodedMessage = encodeURIComponent('Relatório de Vendas');
+          window.open(`https://wa.me/${contactInfo.whatsapp}?text=${encodedMessage}`, '_blank');
+          
+          // Em um cenário real, você precisaria de um backend para enviar a imagem
+          // Aqui apenas abrimos o WhatsApp Web com o número
+          alert('Em um ambiente de produção, a imagem seria anexada à mensagem do WhatsApp.');
+        } else {
+          setShowContactForm(true);
+        }
+      } else if (exportMethod === 'email') {
+        // Enviar por email
+        if (contactInfo.email) {
+          const subject = encodeURIComponent('Relatório de Vendas');
+          const body = encodeURIComponent('Segue em anexo o relatório de vendas.');
+          window.open(`mailto:${contactInfo.email}?subject=${subject}&body=${body}`, '_blank');
+          
+          // Em um cenário real, você precisaria de um backend para enviar a imagem
+          alert('Em um ambiente de produção, a imagem seria anexada ao email.');
+        } else {
+          setShowContactForm(true);
+        }
+      } else {
+        // Download direto
+        const link = document.createElement('a');
+        link.href = imageData;
+        link.download = `relatorio-vendas-${new Date().toISOString().slice(0, 10)}.png`;
+        link.click();
+      }
+    } catch (error) {
+      console.error('Erro ao exportar imagem:', error);
+      alert('Erro ao exportar como imagem. Por favor, tente novamente.');
+    }
+  };
+
+  // Função para exportar o relatório como PDF
+  const exportAsPDF = async () => {
+    if (!reportRef.current) return;
+    
+    try {
+      const canvas = await html2canvas(reportRef.current);
+      const imageData = canvas.toDataURL('image/png');
+      
+      const pdf = new jsPDF('landscape', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 30;
+      
+      pdf.setFontSize(18);
+      pdf.text('Relatório de Vendas', pdfWidth / 2, 20, { align: 'center' });
+      pdf.addImage(imageData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      
+      if (exportMethod === 'whatsapp') {
+        // Enviar por WhatsApp
+        if (contactInfo.whatsapp) {
+          const encodedMessage = encodeURIComponent('Relatório de Vendas');
+          window.open(`https://wa.me/${contactInfo.whatsapp}?text=${encodedMessage}`, '_blank');
+          
+          // Em um cenário real, você precisaria de um backend para enviar o PDF
+          alert('Em um ambiente de produção, o PDF seria anexado à mensagem do WhatsApp.');
+        } else {
+          setShowContactForm(true);
+        }
+      } else if (exportMethod === 'email') {
+        // Enviar por email
+        if (contactInfo.email) {
+          const subject = encodeURIComponent('Relatório de Vendas');
+          const body = encodeURIComponent('Segue em anexo o relatório de vendas.');
+          window.open(`mailto:${contactInfo.email}?subject=${subject}&body=${body}`, '_blank');
+          
+          // Em um cenário real, você precisaria de um backend para enviar o PDF
+          alert('Em um ambiente de produção, o PDF seria anexado ao email.');
+        } else {
+          setShowContactForm(true);
+        }
+      } else {
+        // Download direto
+        pdf.save(`relatorio-vendas-${new Date().toISOString().slice(0, 10)}.pdf`);
+      }
+    } catch (error) {
+      console.error('Erro ao exportar PDF:', error);
+      alert('Erro ao exportar como PDF. Por favor, tente novamente.');
+    }
+  };
+
+  // Função para lidar com a exportação
+  const handleExport = (type, method) => {
+    setExportType(type);
+    setExportMethod(method);
+    
+    if ((method === 'whatsapp' && !contactInfo.whatsapp) || 
+        (method === 'email' && !contactInfo.email)) {
+      setShowContactForm(true);
+    } else {
+      // Se já temos as informações de contato, mostrar opção para editar
+      if (method === 'whatsapp' || method === 'email') {
+        const shouldEdit = window.confirm(
+          `Enviar para ${method === 'whatsapp' ? 
+            `WhatsApp: ${contactInfo.whatsapp}` : 
+            `Email: ${contactInfo.email}`}?\n\nClique em "Cancelar" para editar o contato.`
+        );
+        
+        if (!shouldEdit) {
+          setEditingContact(true);
+          setShowContactForm(true);
+          return;
+        }
+      }
+      
+      if (type === 'photo') {
+        exportAsImage();
+      } else if (type === 'pdf') {
+        exportAsPDF();
+      }
+    }
+  };
+
+  // Função para salvar informações de contato
+  const saveContactInfo = () => {
+    setShowContactForm(false);
+    setEditingContact(false);
+    
+    // Após salvar, continuar com a exportação
+    if (exportType === 'photo') {
+      exportAsImage();
+    } else if (exportType === 'pdf') {
+      exportAsPDF();
+    }
+  };
+
   // Preparar dados para o gráfico de pizza (itens mais vendidos)
   const getPieChartData = () => {
     // Agrupar por produto e somar quantidades
     const productSales = {};
-    salesData.forEach(sale => {
+    
+    // Usar dados filtrados atualizados
+    const filteredData = getFilteredSalesData();
+    
+    filteredData.forEach(sale => {
       if (productSales[sale.product]) {
         productSales[sale.product] += sale.quantity;
       } else {
@@ -426,7 +638,10 @@ ${item?.client?.doc || ''}`;
     // Agrupar vendas por período
     const salesByPeriod = {};
     
-    salesData.forEach(sale => {
+    // Usar dados filtrados atualizados
+    const filteredData = getFilteredSalesData();
+    
+    filteredData.forEach(sale => {
       let period;
       
       if (dashboardPeriod === 'day') {
@@ -1245,12 +1460,21 @@ ${item?.client?.doc || ''}`;
             </div>
 
             {/* Tabela de vendas */}
-            <div className="overflow-x-auto">
+            <div ref={reportRef} className="overflow-x-auto bg-white p-4 rounded-lg">
+              <h3 className="text-xl font-semibold mb-4 text-center">Relatório de Vendas</h3>
+              <p className="text-sm text-gray-500 mb-4 text-center">
+                {reportType === 'day' ? `Data: ${reportStartDate}` : 
+                 reportType === 'month' ? `Mês: ${reportStartDate}` : 
+                 `Período: ${reportStartDate} a ${reportEndDate}`}
+              </p>
+              
               <table className="min-w-full bg-white border">
                 <thead>
                   <tr>
                     <th className="py-2 px-4 border-b">Data</th>
                     <th className="py-2 px-4 border-b">Cliente</th>
+                    <th className="py-2 px-4 border-b">Doc. Cliente</th>
+                    <th className="py-2 px-4 border-b">Vendedor</th>
                     <th className="py-2 px-4 border-b">Produto</th>
                     <th className="py-2 px-4 border-b">Quantidade</th>
                     <th className="py-2 px-4 border-b">Preço Unit.</th>
@@ -1259,10 +1483,12 @@ ${item?.client?.doc || ''}`;
                   </tr>
                 </thead>
                 <tbody>
-                  {getFilteredSalesData().map((sale) => (
-                    <tr key={sale.id}>
+                  {getFilteredSalesData().map((sale, index) => (
+                    <tr key={`${sale.id}-${index}`}>
                       <td className="py-2 px-4 border-b">{sale.date}</td>
                       <td className="py-2 px-4 border-b">{sale.client}</td>
+                      <td className="py-2 px-4 border-b">{sale.clientDoc}</td>
+                      <td className="py-2 px-4 border-b">{sale.vendor}</td>
                       <td className="py-2 px-4 border-b">{sale.product}</td>
                       <td className="py-2 px-4 border-b text-center">{sale.quantity}</td>
                       <td className="py-2 px-4 border-b text-right">R$ {sale.price.toFixed(2)}</td>
@@ -1273,7 +1499,7 @@ ${item?.client?.doc || ''}`;
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td colSpan="5" className="py-2 px-4 border-b text-right font-bold">Total:</td>
+                    <td colSpan="7" className="py-2 px-4 border-b text-right font-bold">Total:</td>
                     <td className="py-2 px-4 border-b text-right font-bold">
                       R$ {getFilteredSalesData().reduce((sum, sale) => sum + sale.total, 0).toFixed(2)}
                     </td>
@@ -1281,6 +1507,168 @@ ${item?.client?.doc || ''}`;
                   </tr>
                 </tfoot>
               </table>
+            </div>
+            
+            {/* Botões de exportação */}
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <button
+                  onClick={() => handleExport('photo', '')}
+                  className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                >
+                  Exportar como Foto
+                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleExport('photo', 'whatsapp')}
+                    className="flex items-center justify-center px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 mr-1">
+                      <path d="M12 2C6.48 2 2 6.48 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10c0-5.52-4.48-10-10-10zm.31 16.9c-1.33 0-2.58-.35-3.66-.95L5 19l1.06-3.69c-.68-1.15-1.06-2.48-1.06-3.9 0-4.28 3.47-7.75 7.75-7.75s7.75 3.47 7.75 7.75-3.47 7.75-7.75 7.75zm4.26-5.82c-.23-.12-1.37-.68-1.58-.76-.21-.08-.37-.12-.52.12-.15.23-.58.76-.71.91-.13.15-.27.17-.5.06-.23-.12-.98-.36-1.87-1.14-.69-.62-1.15-1.38-1.29-1.61-.13-.23-.01-.35.1-.47.1-.1.23-.27.35-.4.12-.13.16-.23.24-.38.08-.15.04-.29-.02-.4-.06-.12-.52-1.25-.71-1.71-.19-.46-.38-.39-.52-.4-.13 0-.29-.01-.44-.01-.15 0-.38.06-.58.29-.19.23-.74.72-.74 1.77s.76 2.06.87 2.21c.11.15 1.55 2.37 3.76 3.32.53.23.93.36 1.25.47.53.17 1 .14 1.38.09.42-.06 1.29-.53 1.48-1.04.19-.51.19-.94.13-1.04-.06-.09-.21-.15-.44-.27z"/>
+                    </svg>
+                    WhatsApp
+                  </button>
+                  <button
+                    onClick={() => handleExport('photo', 'email')}
+                    className="flex items-center justify-center px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 mr-1">
+                      <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                    Email
+                  </button>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <button
+                  onClick={() => handleExport('pdf', '')}
+                  className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                >
+                  Exportar como PDF
+                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleExport('pdf', 'whatsapp')}
+                    className="flex items-center justify-center px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 mr-1">
+                      <path d="M12 2C6.48 2 2 6.48 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10c0-5.52-4.48-10-10-10zm.31 16.9c-1.33 0-2.58-.35-3.66-.95L5 19l1.06-3.69c-.68-1.15-1.06-2.48-1.06-3.9 0-4.28 3.47-7.75 7.75-7.75s7.75 3.47 7.75 7.75-3.47 7.75-7.75 7.75zm4.26-5.82c-.23-.12-1.37-.68-1.58-.76-.21-.08-.37-.12-.52.12-.15.23-.58.76-.71.91-.13.15-.27.17-.5.06-.23-.12-.98-.36-1.87-1.14-.69-.62-1.15-1.38-1.29-1.61-.13-.23-.01-.35.1-.47.1-.1.23-.27.35-.4.12-.13.16-.23.24-.38.08-.15.04-.29-.02-.4-.06-.12-.52-1.25-.71-1.71-.19-.46-.38-.39-.52-.4-.13 0-.29-.01-.44-.01-.15 0-.38.06-.58.29-.19.23-.74.72-.74 1.77s.76 2.06.87 2.21c.11.15 1.55 2.37 3.76 3.32.53.23.93.36 1.25.47.53.17 1 .14 1.38.09.42-.06 1.29-.53 1.48-1.04.19-.51.19-.94.13-1.04-.06-.09-.21-.15-.44-.27z"/>
+                    </svg>
+                    WhatsApp
+                  </button>
+                  <button
+                    onClick={() => handleExport('pdf', 'email')}
+                    className="flex items-center justify-center px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 mr-1">
+                      <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                    Email
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de formulário de contato */}
+      {showContactForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium">
+                {editingContact ? 'Editar Contato' : 'Adicionar Contato'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowContactForm(false);
+                  setEditingContact(false);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {exportMethod === 'whatsapp' || exportMethod === '' ? (
+                <div>
+                  <label className="block text-sm font-medium mb-1">WhatsApp</label>
+                  <div className="flex">
+                    <input
+                      type="tel"
+                      placeholder="Ex: 5511999999999"
+                      value={contactInfo.whatsapp}
+                      onChange={(e) => setContactInfo({...contactInfo, whatsapp: e.target.value})}
+                      className="w-full px-3 py-2 border rounded-md"
+                    />
+                    {contactInfo.whatsapp && (
+                      <a 
+                        href={`https://wa.me/${contactInfo.whatsapp}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="ml-2 p-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center justify-center"
+                        title="Testar número"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                          <path d="M12 2C6.48 2 2 6.48 2 12c0 5.52 4.48 10 10 10s10-4.48 10-10c0-5.52-4.48-10-10-10zm.31 16.9c-1.33 0-2.58-.35-3.66-.95L5 19l1.06-3.69c-.68-1.15-1.06-2.48-1.06-3.9 0-4.28 3.47-7.75 7.75-7.75s7.75 3.47 7.75 7.75-3.47 7.75-7.75 7.75zm4.26-5.82c-.23-.12-1.37-.68-1.58-.76-.21-.08-.37-.12-.52.12-.15.23-.58.76-.71.91-.13.15-.27.17-.5.06-.23-.12-.98-.36-1.87-1.14-.69-.62-1.15-1.38-1.29-1.61-.13-.23-.01-.35.1-.47.1-.1.23-.27.35-.4.12-.13.16-.23.24-.38.08-.15.04-.29-.02-.4-.06-.12-.52-1.25-.71-1.71-.19-.46-.38-.39-.52-.4-.13 0-.29-.01-.44-.01-.15 0-.38.06-.58.29-.19.23-.74.72-.74 1.77s.76 2.06.87 2.21c.11.15 1.55 2.37 3.76 3.32.53.23.93.36 1.25.47.53.17 1 .14 1.38.09.42-.06 1.29-.53 1.48-1.04.19-.51.19-.94.13-1.04-.06-.09-.21-.15-.44-.27z"/>
+                        </svg>
+                      </a>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Inclua o código do país (Ex: 55 para Brasil)</p>
+                </div>
+              ) : null}
+              
+              {exportMethod === 'email' || exportMethod === '' ? (
+                <div>
+                  <label className="block text-sm font-medium mb-1">Email</label>
+                  <div className="flex">
+                    <input
+                      type="email"
+                      placeholder="exemplo@email.com"
+                      value={contactInfo.email}
+                      onChange={(e) => setContactInfo({...contactInfo, email: e.target.value})}
+                      className="w-full px-3 py-2 border rounded-md"
+                    />
+                    {contactInfo.email && (
+                      <a 
+                        href={`mailto:${contactInfo.email}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="ml-2 p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center justify-center"
+                        title="Testar email"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                        </svg>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ) : null}
+              
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  onClick={() => {
+                    setShowContactForm(false);
+                    setEditingContact(false);
+                  }}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={saveContactInfo}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                >
+                  Salvar
+                </button>
+              </div>
             </div>
           </div>
         </div>
