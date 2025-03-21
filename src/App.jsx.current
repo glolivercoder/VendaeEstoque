@@ -33,7 +33,7 @@ function App() {
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
-  };;
+  };
 
   // Função para converter data do formato ISO para o formato brasileiro (DD/MM/YYYY)
   const formatDateToBrazilian = (isoDate) => {

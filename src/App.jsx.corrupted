@@ -1,3 +1,4 @@
+```javascript
 import { useState, useEffect, useRef } from 'react';
 import {
   addProduct,
@@ -33,7 +34,7 @@ function App() {
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
-  };;
+  };
 
   // Função para converter data do formato ISO para o formato brasileiro (DD/MM/YYYY)
   const formatDateToBrazilian = (isoDate) => {
@@ -1098,7 +1099,7 @@ ${item?.client?.cpf || ''}
 
   const handleCPFMask = (value) => {
     return value
-      .replace(/\D/g, '') // Removes tudo que não é dígito
+      .replace(/\D/g, '') // Remove tudo que não é dígito
       .replace(/(\d{3})(\d)/, '$1.$2') // Coloca ponto após os primeiros 3 dígitos
       .replace(/(\d{3})(\d)/, '$1.$2') // Coloca ponto após os segundos 3 dígitos
       .replace(/(\d{3})(\d{1,2})/, '$1-$2') // Coloca hífen antes dos últimos 2 dígitos
@@ -3850,3 +3851,4 @@ ${item?.client?.cpf || ''}
 }
 
 export default App;
+```
