@@ -1,5 +1,5 @@
 const DB_NAME = 'estoqueDB';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 let db;
 let dbInitPromise;
