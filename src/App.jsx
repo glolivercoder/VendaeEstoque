@@ -33,7 +33,7 @@ function App() {
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
-  };;
+  };
 
   // Função para converter data do formato ISO para o formato brasileiro (DD/MM/YYYY)
   const formatDateToBrazilian = (isoDate) => {
@@ -2362,9 +2362,9 @@ ${item?.client?.cpf || ''}
                           </div>
                         )}
                         <div className={`${item.image ? 'col-span-2' : 'col-span-3'}`}>
-                          <p className="font-medium text-center">{item.description}</p>
-                          <p className="text-sm text-gray-600 text-center">Preço: R$ {item.price}</p>
-                          <div className="flex items-center justify-center gap-4 mt-2">
+                          <p className="font-medium text-left">{item.description}</p>
+                          <p className="text-sm text-gray-600 text-left">Preço: R$ {item.price}</p>
+                          <div className="flex items-center justify-start gap-4 mt-2">
                             <p className="text-sm text-gray-600">Vendidos: {item.sold}</p>
                             <div className="flex items-center gap-2">
                               <input
@@ -2386,7 +2386,7 @@ ${item?.client?.cpf || ''}
                           </div>
                           {item.links && item.links.length > 0 && (
                             <div className="mt-2">
-                              <p className="text-sm font-medium text-gray-600 text-center">Links:</p>
+                              <p className="text-sm font-medium text-gray-600 text-left">Links:</p>
                               <div className="space-y-1">
                                 {item.links.map((link, linkIndex) => (
                                   <a
@@ -2394,7 +2394,7 @@ ${item?.client?.cpf || ''}
                                     href={link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="block text-sm text-blue-500 hover:text-blue-600 text-center"
+                                    className="block text-sm text-blue-500 hover:text-blue-600 text-left"
                                   >
                                     {link}
                                   </a>
@@ -2406,7 +2406,7 @@ ${item?.client?.cpf || ''}
                         
                         {/* Área de descrição com margem de 10px à esquerda da categoria */}
                         <div className="flex flex-col h-full" style={{ marginRight: '10px' }}>
-                          <div className="text-right mb-2">
+                          <div className="text-left mb-2">
                             <span className="font-medium">Descrição</span>
                           </div>
                           {showDescription && (
@@ -2419,10 +2419,10 @@ ${item?.client?.cpf || ''}
                           
                           {/* Categoria do item */}
                           <div className="mt-auto">
-                            <div className="text-right mb-1">
+                            <div className="text-left mb-1">
                               <span className="font-medium">Categoria</span>
                             </div>
-                            <div className="text-right">
+                            <div className="text-left">
                               <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
                                 {item.category || "Todos"}
                               </span>
@@ -2500,7 +2500,7 @@ ${item?.client?.cpf || ''}
                             } text-white rounded hover:bg-opacity-90`}
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                             </svg>
                           </button>
                         </div>
@@ -2522,7 +2522,7 @@ ${item?.client?.cpf || ''}
                 disabled={selectedItems.length === 0}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4m6-2v8m0 4h4m-4 0h4m-6 0a9 9 0 019-9v1" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Finalizar Venda
               </button>
@@ -2533,7 +2533,7 @@ ${item?.client?.cpf || ''}
                 className="w-full bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 00-2 2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Relatório Completo
               </button>
