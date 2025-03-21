@@ -10,17 +10,20 @@ const initDB = () => {
   dbInitPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-    request.onerror = () => {
+    request.onerror = (event) => {
+      console.error('Erro ao abrir banco de dados:', event.target.error);
       reject('Error opening database');
     };
 
     request.onsuccess = (event) => {
       db = event.target.result;
+      console.log('Banco de dados aberto com sucesso');
       resolve(db);
     };
 
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
+      console.log('Atualizando estrutura do banco de dados...');
 
       // Delete existing object stores if they exist
       if (db.objectStoreNames.contains('products')) {
@@ -62,41 +65,77 @@ const initDB = () => {
       // Create sale items store
       const saleItemsStore = db.createObjectStore('saleItems', { keyPath: 'id', autoIncrement: true });
       saleItemsStore.createIndex('saleId', 'saleId', { unique: false });
+      
+      console.log('Estrutura do banco de dados atualizada');
     };
   });
 
   return dbInitPromise;
 };
 
+// Define ensureDB before it's used by other functions
+const ensureDB = async () => {
+  if (!db) {
+    try {
+      await initDB();
+    } catch (error) {
+      console.error('Erro em ensureDB:', error);
+      throw error;
+    }
+  }
+  return db;
+};
+
 // Initialize database and add default vendor
 const initializeDefaultVendor = async () => {
   try {
-    await initDB();
+    // Primeiro garantimos que o banco de dados está inicializado
+    const database = await ensureDB();
+    if (!database) {
+      console.error('Banco de dados não inicializado corretamente');
+      return;
+    }
+
+    // Verificar se o fornecedor padrão já existe
     const defaultVendor = {
       name: 'Gleidison S. Oliveira',
       document: '0727887807',
       createdAt: new Date()
     };
 
-    try {
-      await addVendor(defaultVendor);
-    } catch (error) {
-      if (!error.toString().includes('already exists')) {
-        console.error('Error adding default vendor:', error);
+    // Verificar se o fornecedor já existe antes de tentar adicioná-lo
+    const vendorExists = await checkVendorExists(defaultVendor.document);
+    if (!vendorExists) {
+      console.log('Adicionando fornecedor padrão...');
+      try {
+        await addVendor(defaultVendor);
+        console.log('Fornecedor padrão adicionado com sucesso');
+      } catch (error) {
+        // Se o erro for porque o fornecedor já existe, ignoramos
+        if (error.toString().includes('already exists')) {
+          console.log('Fornecedor padrão já existe');
+        } else {
+          console.error('Erro ao adicionar fornecedor padrão:', error);
+        }
       }
+    } else {
+      console.log('Fornecedor padrão já existe');
     }
   } catch (error) {
-    console.error('Error initializing database:', error);
+    console.error('Erro ao inicializar fornecedor padrão:', error);
+    // Não lançamos o erro para não bloquear a inicialização do app
   }
 };
 
-initializeDefaultVendor();
-
-const ensureDB = async () => {
-  if (!db) {
-    await initDB();
+// Função auxiliar para verificar se um fornecedor existe
+const checkVendorExists = async (document) => {
+  try {
+    const vendors = await getVendors();
+    return vendors.some(vendor => vendor.document === document);
+  } catch (error) {
+    console.error('Erro ao verificar fornecedor:', error);
+    return false;
   }
-  return db;
 };
 
 export const getVendors = async () => {
@@ -380,4 +419,43 @@ export const deleteProduct = async (productId) => {
       reject(request.error);
     };
   });
-}; 
+};
+
+export const deleteClient = async (clientId) => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['clients'], 'readwrite');
+    const store = transaction.objectStore('clients');
+    const request = store.delete(clientId);
+
+    request.onsuccess = () => {
+      resolve();
+    };
+
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
+};
+
+export const updateClient = async (client) => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['clients'], 'readwrite');
+    const store = transaction.objectStore('clients');
+    const request = store.put(client);
+
+    request.onsuccess = () => {
+      resolve();
+    };
+
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
+};
+
+export {
+  ensureDB,
+  initializeDefaultVendor
+};
