@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import './styles/ImageStyles.css';
 import {
   addProduct,
   getProducts,
@@ -2378,31 +2379,102 @@ ${item?.client?.cpf || ''}
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Imagem do Item</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (event) => {
-                              setNewItem({...newItem, image: event.target.result});
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                        className="w-full px-3 py-2 border rounded-md"
-                      />
-                      {newItem.image && (
-                        <div className="mt-2">
-                          <img
-                            src={newItem.image}
-                            alt="Preview"
-                            className="w-full max-h-40 object-contain rounded-md border"
-                          />
+                      <label className="block text-sm font-medium mb-1">Imagens do Item</label>
+                      <div className="image-upload-section">
+                        {newItem.image && (
+                          <div className="image-preview">
+                            <img
+                              src={newItem.image}
+                              alt="Preview"
+                              className="w-full max-h-40 object-contain rounded-md border"
+                            />
+                          </div>
+                        )}
+
+                        <div className="image-actions mt-2 flex space-x-2">
+                          <label className="image-upload-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                              <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
+                              <path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/>
+                            </svg>
+                            Imagem Principal
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onload = (event) => {
+                                    setNewItem({...newItem, image: event.target.result});
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                              className="hidden-file-input"
+                            />
+                          </label>
+
+                          <label className="image-upload-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                              <path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
+                            </svg>
+                            Adicionar Imagem
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onload = (event) => {
+                                    const newImage = event.target.result;
+                                    const additionalImages = newItem.additionalImages || [];
+                                    setNewItem({
+                                      ...newItem,
+                                      additionalImages: [...additionalImages, newImage]
+                                    });
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                              className="hidden-file-input"
+                            />
+                          </label>
                         </div>
-                      )}
+
+                        {/* Miniaturas das imagens adicionais */}
+                        {newItem.additionalImages && newItem.additionalImages.length > 0 && (
+                          <div className="product-images-grid mt-2">
+                            {newItem.image && (
+                              <img
+                                src={newItem.image}
+                                alt="Imagem Principal"
+                                className="product-image-thumbnail active"
+                              />
+                            )}
+                            {newItem.additionalImages.map((img, index) => (
+                              <div key={index} className="image-preview-item">
+                                <img
+                                  src={img}
+                                  alt={`Imagem ${index + 1}`}
+                                  className="product-image-thumbnail"
+                                />
+                                <div
+                                  className="remove-image"
+                                  onClick={() => {
+                                    const updatedImages = [...newItem.additionalImages];
+                                    updatedImages.splice(index, 1);
+                                    setNewItem({...newItem, additionalImages: updatedImages});
+                                  }}
+                                >
+                                  ×
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div>
@@ -2648,11 +2720,32 @@ ${item?.client?.cpf || ''}
                     <div key={index} className="border p-4 rounded-lg">
                       {/* Grid principal para imagem e informações */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
-                        {item.image && (
-                          <div>
-                            <img src={item.image} alt={item.description} className="w-full h-32 object-cover rounded-md" />
-                          </div>
-                        )}
+                        <div className="product-image-container">
+                          {item.image ? (
+                            <img src={item.image} alt={item.description} className="product-image" />
+                          ) : (
+                            <div className="no-image-placeholder">Sem imagem</div>
+                          )}
+
+                          {/* Miniaturas das imagens adicionais */}
+                          {item.additionalImages && item.additionalImages.length > 0 && (
+                            <div className="product-images-grid mt-2">
+                              {item.additionalImages.map((img, imgIndex) => (
+                                <img
+                                  key={imgIndex}
+                                  src={img}
+                                  alt={`${item.description} - Imagem ${imgIndex + 1}`}
+                                  className="product-image-thumbnail"
+                                  onClick={() => {
+                                    // Abrir popup de visualização de imagem
+                                    setEditingItem(item);
+                                    setShowEditPopup(true);
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
                         <div className={`${item.image ? 'col-span-2' : 'col-span-3'}`}>
                           <p className="font-medium text-left">{item.description}</p>
                           <p className="text-sm text-gray-600 text-left">Preço: R$ {item.price}</p>
