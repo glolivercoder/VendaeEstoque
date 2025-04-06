@@ -164,7 +164,7 @@ function App() {
   const [showConfigPopup, setShowConfigPopup] = useState(false);
   const [backupLocation, setBackupLocation] = useState(localStorage.getItem('backupLocation') || '');
   const [autoBackup, setAutoBackup] = useState(localStorage.getItem('autoBackup') === 'true');
-  const [showDescription, setShowDescription] = useState(null);
+  const [showDescription, setShowDescription] = useState(true);
 
   // Adicionar estado para categorias e nova categoria
   const [categories, setCategories] = useState(['Ferramentas', 'Instrumentos Musicais', 'Informática', 'Gadgets', 'Todos', 'Diversos']);
@@ -2567,8 +2567,8 @@ ${item?.client?.cpf || ''}
                   <label className="font-medium">Descrição:</label>
                   <input
                     type="checkbox"
-                    checked={showDescription !== null}
-                    onChange={() => setShowDescription(showDescription === null ? true : null)}
+                    checked={showDescription}
+                    onChange={() => setShowDescription(!showDescription)}
                     className="w-4 h-4 text-blue-600"
                   />
                 </div>
@@ -2599,7 +2599,8 @@ ${item?.client?.cpf || ''}
                     .filter(item => selectedCategory === 'Todos' || item.category === selectedCategory)
                     .map((item, index) => (
                     <div key={index} className="border p-4 rounded-lg">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      {/* Grid principal para imagem e informações */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
                         {item.image && (
                           <div>
                             <img src={item.image} alt={item.description} className="w-full h-32 object-cover rounded-md" />
@@ -2646,27 +2647,11 @@ ${item?.client?.cpf || ''}
                               </div>
                             </div>
                           )}
-                        </div>
 
-                        {/* Área de descrição com margem de 10px à esquerda da categoria */}
-                        <div className="flex flex-col h-full" style={{ marginRight: '10px' }}>
-                          <div className="text-left mb-2">
-                            <span className="font-medium">Descrição</span>
-                          </div>
-                          {showDescription && (
-                            <div className="h-[100px] flex items-center">
-                              <p className="text-sm w-full">
-                                {item.itemDescription || "Sem descrição"}
-                              </p>
-                            </div>
-                          )}
-
-                          {/* Categoria do item */}
-                          <div className="mt-auto">
+                          {/* Categoria do item (movida para a coluna de informações) */}
+                          <div className="mt-4">
                             <div className="text-left mb-1">
-                              <span className="font-medium">Categoria</span>
-                            </div>
-                            <div className="text-left">
+                              <span className="font-medium">Categoria:</span>{" "}
                               <span className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
                                 {item.category || "Todos"}
                               </span>
@@ -2674,6 +2659,22 @@ ${item?.client?.cpf || ''}
                           </div>
                         </div>
                       </div>
+
+                      {/* Área de descrição centralizada (fora do grid principal) */}
+                      {showDescription && (
+                        <div className="mt-4 flex justify-center items-center w-full">
+                          <div className="max-w-2xl mx-auto text-center w-full">
+                            <div className="text-center mb-2">
+                              <span className="font-medium">Descrição</span>
+                            </div>
+                            <div className="bg-gray-50 p-3 rounded-lg shadow-sm">
+                              <p className="text-sm text-center" style={{ overflowWrap: 'break-word' }}>
+                                {item.itemDescription || "Sem descrição"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       <div className="flex gap-2 mt-4 items-center">
                         {item.expirationDate && (
