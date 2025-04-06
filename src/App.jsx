@@ -1666,8 +1666,22 @@ ${item?.client?.cpf || ''}
   };
 
   const handleWhatsAppClick = (number) => {
-    const formattedNumber = number.replace(/\D/g, '');
-    window.open(`https://wa.me/${formattedNumber}`, '_blank');
+    try {
+      // Formata o número para o formato internacional
+      const formattedNumber = number.replace(/\D/g, '');
+
+      // Tenta abrir o aplicativo WhatsApp no dispositivo
+      window.location.href = `whatsapp://send?phone=${formattedNumber}`;
+
+      // Fallback para o WhatsApp Web caso o app não abra
+      setTimeout(() => {
+        window.open(`https://wa.me/${formattedNumber}`, '_blank');
+      }, 500);
+    } catch (error) {
+      console.error('Erro ao abrir WhatsApp:', error);
+      // Fallback para o WhatsApp Web
+      window.open(`https://wa.me/${number.replace(/\D/g, '')}`, '_blank');
+    }
   };
 
   const handleWhatsAppWebClick = (number) => {
@@ -1676,7 +1690,14 @@ ${item?.client?.cpf || ''}
   };
 
   const handleEmailClick = (email) => {
-    window.location.href = `mailto:${email}`;
+    try {
+      // Abre o cliente de email padrão do dispositivo
+      window.location.href = `mailto:${email}`;
+    } catch (error) {
+      console.error('Erro ao abrir cliente de email:', error);
+      // Fallback para abrir em nova aba
+      window.open(`mailto:${email}`, '_blank');
+    }
   };
 
   // Adicionar nova função para atualizar estoque
@@ -2897,16 +2918,39 @@ ${item?.client?.cpf || ''}
                         </button>
                         {client.whatsapp && (
                           <a
-                            href={`https://wa.me/${formatWhatsApp(client.whatsapp)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2 text-green-500 hover:text-green-600"
-                            onClick={(e) => e.stopPropagation()}
-                            title="Enviar WhatsApp"
+                            href={`tel:${client.whatsapp}`}
+                            className="p-2 text-green-500 hover:text-green-600 flex items-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleWhatsAppClick(client.whatsapp);
+                              return false; // Impede o comportamento padrão do link
+                            }}
+                            title="Abrir WhatsApp"
                           >
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
-                            </svg>
+                            <img
+                              src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/767px-WhatsApp.svg.png"
+                              alt="WhatsApp"
+                              className="w-5 h-5"
+                            />
+                          </a>
+                        )}
+
+                        {client.email && (
+                          <a
+                            href={`mailto:${client.email}`}
+                            className="p-2 text-blue-500 hover:text-blue-600 flex items-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEmailClick(client.email);
+                              return false; // Impede o comportamento padrão do link
+                            }}
+                            title="Enviar Email"
+                          >
+                            <img
+                              src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Gmail_icon_%282020%29.svg/2560px-Gmail_icon_%282020%29.svg.png"
+                              alt="Email"
+                              className="w-5 h-5"
+                            />
                           </a>
                         )}
                         <button
@@ -3071,10 +3115,14 @@ ${item?.client?.cpf || ''}
                         />
                         <button
                           onClick={() => handleWhatsAppClick(newClient.whatsapp)}
-                          className="p-2 text-blue-500 hover:text-blue-600"
+                          className="p-2 text-green-500 hover:text-green-600"
                           title="Enviar WhatsApp"
                         >
-                          <i className="fas fa-whatsapp"></i>
+                          <img
+                            src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/767px-WhatsApp.svg.png"
+                            alt="WhatsApp"
+                            className="w-5 h-5"
+                          />
                         </button>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -3090,7 +3138,11 @@ ${item?.client?.cpf || ''}
                           className="p-2 text-blue-500 hover:text-blue-600"
                           title="Enviar Email"
                         >
-                          <i className="fas fa-envelope"></i>
+                          <img
+                            src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Gmail_icon_%282020%29.svg/2560px-Gmail_icon_%282020%29.svg.png"
+                            alt="Email"
+                            className="w-5 h-5"
+                          />
                         </button>
                       </div>
                     </div>
