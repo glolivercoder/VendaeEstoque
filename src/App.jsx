@@ -1014,19 +1014,61 @@ ${item?.client?.cpf || ''}
       const canvas = await html2canvas(reportRef.current);
       const imageData = canvas.toDataURL('image/png');
 
-      const pdf = new jsPDF('landscape', 'mm', 'a4');
+      // Usar orientação retrato para melhor formatação em A4
+      const pdf = new jsPDF('portrait', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
 
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 30;
 
-      pdf.setFontSize(18);
-      pdf.text('Relatório de Vendas', pdfWidth / 2, 20, { align: 'center' });
-      pdf.addImage(imageData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      // Calcular quantas páginas serão necessárias
+      const pageHeight = pdfHeight - 40; // Altura disponível na página (margem de 20mm em cima e embaixo)
+      const ratio = pdfWidth / imgWidth * 0.9; // Usar 90% da largura disponível
+      const scaledImgHeight = imgHeight * ratio;
+      const totalPages = Math.ceil(scaledImgHeight / pageHeight);
+
+      // Adicionar páginas conforme necessário
+      let remainingHeight = scaledImgHeight;
+      let sourceY = 0;
+
+      for (let i = 0; i < totalPages; i++) {
+        if (i > 0) pdf.addPage();
+
+        // Adicionar cabeçalho em cada página
+        pdf.setFontSize(16);
+        pdf.text('Relatório de Vendas', pdfWidth / 2, 15, { align: 'center' });
+        pdf.setFontSize(10);
+        pdf.text(`Página ${i+1} de ${totalPages}`, pdfWidth / 2, 22, { align: 'center' });
+
+        // Calcular altura para esta página
+        const pageContentHeight = Math.min(remainingHeight, pageHeight);
+
+        // Adicionar parte da imagem correspondente a esta página
+        const destY = 30; // Posição Y inicial na página
+
+        // Calcular a parte da imagem original a ser usada nesta página
+        const sourceHeight = pageContentHeight / ratio;
+
+        pdf.addImage(
+          imageData,
+          'PNG',
+          (pdfWidth - imgWidth * ratio) / 2, // centralizar horizontalmente
+          destY,
+          imgWidth * ratio,
+          imgHeight * ratio,
+          null,
+          'FAST',
+          0,
+          sourceY / imgHeight,
+          1,
+          (sourceY + sourceHeight) / imgHeight
+        );
+
+        // Atualizar para a próxima página
+        remainingHeight -= pageContentHeight;
+        sourceY += sourceHeight;
+      }
 
       if (exportMethod === 'whatsapp') {
         // Primeiro salvar o PDF
@@ -1359,8 +1401,32 @@ ${item?.client?.cpf || ''}
     };
   };
 
-  // Atualizar os gráficos quando a data do relatório mudar
+  // Atualizar os gráficos e totais quando a data do relatório mudar
   useEffect(() => {
+    // Calcular totais por método de pagamento
+    const filteredData = getFilteredSalesData();
+
+    // Calcular totais por método de pagamento
+    const totals = {
+      totalCash: 0,
+      totalCard: 0,
+      totalPix: 0
+    };
+
+    filteredData.forEach(sale => {
+      const paymentMethod = sale.paymentMethod?.toLowerCase() || '';
+      if (paymentMethod.includes('dinheiro')) {
+        totals.totalCash += sale.total;
+      } else if (paymentMethod.includes('cartao') || paymentMethod.includes('cartão')) {
+        totals.totalCard += sale.total;
+      } else if (paymentMethod.includes('pix')) {
+        totals.totalPix += sale.total;
+      }
+    });
+
+    // Atualizar o resumo de vendas
+    setSalesSummary(totals);
+
     // Forçar atualização dos gráficos
     if (showDashboard) {
       // Temporariamente esconder e mostrar novamente para forçar a atualização
@@ -1392,6 +1458,30 @@ ${item?.client?.cpf || ''}
 
   // Atualizar os dashboards quando os dados de vendas mudarem
   useEffect(() => {
+    // Calcular totais por método de pagamento
+    const filteredData = getFilteredSalesData();
+
+    // Calcular totais por método de pagamento
+    const totals = {
+      totalCash: 0,
+      totalCard: 0,
+      totalPix: 0
+    };
+
+    filteredData.forEach(sale => {
+      const paymentMethod = sale.paymentMethod?.toLowerCase() || '';
+      if (paymentMethod.includes('dinheiro')) {
+        totals.totalCash += sale.total;
+      } else if (paymentMethod.includes('cartao') || paymentMethod.includes('cartão')) {
+        totals.totalCard += sale.total;
+      } else if (paymentMethod.includes('pix')) {
+        totals.totalPix += sale.total;
+      }
+    });
+
+    // Atualizar o resumo de vendas
+    setSalesSummary(totals);
+
     if (showDashboard) {
       // Forçar atualização dos gráficos
       setShowDashboard(false);
@@ -3309,6 +3399,22 @@ ${item?.client?.cpf || ''}
                         </tfoot>
                       </table>
                     </div>
+                  </div>
+
+                  {/* Botões de Exportação para o Relatório Simplificado */}
+                  <div className="flex justify-end gap-2 mt-4">
+                    <button
+                      onClick={() => handleExport('photo', 'download')}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    >
+                      Exportar como Imagem
+                    </button>
+                    <button
+                      onClick={() => handleExport('pdf', 'download')}
+                      className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                    >
+                      Exportar como PDF
+                    </button>
                   </div>
                 </div>
               ) : (
