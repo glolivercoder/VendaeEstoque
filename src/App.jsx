@@ -21,6 +21,7 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { syncProductsToHostinger, configureHostingerApp } from './services/hostinger';
 import MagicWandButton from './components/MagicWandButton';
+import MagicCaptureButton from './components/MagicCaptureButton';
 
 // Registrar componentes do Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -2341,7 +2342,23 @@ ${item?.client?.cpf || ''}
             {/* Add Item Section */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-semibold">Adicionar Novo Item</h2>
+                <div className="flex items-center gap-4">
+                  <h2 className="text-2xl font-semibold">Adicionar Novo Item</h2>
+                  {/* Magic Capture Button */}
+                  {showAddItem && (
+                    <MagicCaptureButton
+                      onProductDataExtracted={(productData) => {
+                        setNewItem(prev => ({
+                          ...prev,
+                          description: productData.description || prev.description,
+                          itemDescription: productData.itemDescription || prev.itemDescription,
+                          category: productData.category || prev.category,
+                          price: productData.price || prev.price
+                        }));
+                      }}
+                    />
+                  )}
+                </div>
                 <button
                   onClick={() => setShowAddItem(!showAddItem)}
                   className="text-gray-600 hover:text-gray-800"
@@ -2377,6 +2394,15 @@ ${item?.client?.cpf || ''}
                         }}
                         className="w-full px-3 py-2 border rounded-md"
                       />
+                      {newItem.image && (
+                        <div className="mt-2">
+                          <img
+                            src={newItem.image}
+                            alt="Preview"
+                            className="w-full max-h-40 object-contain rounded-md border"
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <div>
