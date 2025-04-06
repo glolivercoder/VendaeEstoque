@@ -720,6 +720,11 @@ ${item?.client?.cpf || ''}
 
     // Adicionar vendas dos itens do estoque
     items.forEach(item => {
+      // Verificar se o item tem uma categoria válida, se não tiver, definir como 'Diversos'
+      if (!item.category || !categories.includes(item.category)) {
+        item.category = 'Diversos';
+      }
+
       if (item.sold > 0) { // Removida a verificação de item.saleDate para incluir todas as vendas
         const clientInfo = item.client || currentSale?.client || { name: 'Cliente não especificado' };
         const vendorInfo = item.vendor || selectedVendor || { name: 'Vendedor não especificado' };
@@ -742,7 +747,8 @@ ${item?.client?.cpf || ''}
           price: Math.abs(item.price), // Garantir que o preço seja positivo
           total: Math.abs(item.price * item.sold), // Garantir que o total seja positivo
           paymentMethod: item.paymentMethod || 'Não especificado',
-          source: 'estoque' // Marcar a origem dos dados
+          source: 'estoque', // Marcar a origem dos dados
+          category: item.category // Adicionar a categoria do produto
         });
       }
     });
@@ -1372,11 +1378,8 @@ ${item?.client?.cpf || ''}
 
   // Atualizar os gráficos quando a data do relatório mudar
   useEffect(() => {
-    console.log("Data do relatório alterada:", reportStartDate, reportEndDate, reportType);
-
     // Forçar atualização dos gráficos
     if (showDashboard) {
-      console.log("Forçando atualização dos dashboards");
       // Temporariamente esconder e mostrar novamente para forçar a atualização
       setShowDashboard(false);
       setTimeout(() => setShowDashboard(true), 100);
@@ -1385,8 +1388,6 @@ ${item?.client?.cpf || ''}
 
   // Garantir que as datas estejam no formato correto quando o tipo de relatório mudar
   useEffect(() => {
-    console.log("Tipo de relatório alterado para:", reportType);
-
     // Obter a data atual no formato ISO
     const currentDateISO = getCurrentDateISO();
     const currentDateBR = formatDateToBrazilian(currentDateISO);
@@ -1404,14 +1405,11 @@ ${item?.client?.cpf || ''}
       setReportStartDate(formatDateToBrazilian(firstDayISO));
       setReportEndDate(currentDateBR);
     }
-
-    console.log("Datas ajustadas:", reportStartDate, reportEndDate);
   }, [reportType]);
 
   // Atualizar os dashboards quando os dados de vendas mudarem
   useEffect(() => {
     if (showDashboard) {
-      console.log("Dados de vendas alterados, atualizando dashboards");
       // Forçar atualização dos gráficos
       setShowDashboard(false);
       setTimeout(() => setShowDashboard(true), 100);
@@ -2131,6 +2129,13 @@ ${item?.client?.cpf || ''}
       if (item.saleDate && !(item.saleDate instanceof Date) && isNaN(new Date(item.saleDate).getTime())) {
         console.log("Data de venda inválida:", item.saleDate);
         fixedItem.saleDate = new Date();
+        needsFix = true;
+      }
+
+      // Verificar se o produto tem uma categoria válida
+      if (!item.category || !categories.includes(item.category)) {
+        console.log("Categoria inválida ou ausente para o produto:", item.description);
+        fixedItem.category = 'Diversos'; // Definir categoria padrão como 'Diversos'
         needsFix = true;
       }
 
@@ -3175,19 +3180,14 @@ ${item?.client?.cpf || ''}
           <div className="bg-white p-6 rounded-lg max-w-6xl w-full h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-semibold">
-                {showDashboard ? 'Dashboard' : 'Relatório de Vendas'}
+                Relatório de Vendas
               </h3>
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => {
                     const { salesDataFixed, itemsFixed } = checkDataIntegrity();
                     if (salesDataFixed || itemsFixed) {
-                      alert("Dados corrigidos com sucesso! Os dashboards serão atualizados.");
-                      // Forçar atualização dos gráficos
-                      if (showDashboard) {
-                        setShowDashboard(false);
-                        setTimeout(() => setShowDashboard(true), 100);
-                      }
+                      alert("Dados corrigidos com sucesso!");
                     } else {
                       alert("Verificação concluída. Nenhum problema encontrado nos dados.");
                     }
@@ -3201,39 +3201,6 @@ ${item?.client?.cpf || ''}
                   Verificar Dados
                 </button>
                 <button
-                  onClick={() => {
-                    // Forçar a atualização dos dados ao alternar para o dashboard
-                    if (!showDashboard) {
-                      console.log("Alternando para o dashboard e atualizando dados");
-
-                      // Verificar a integridade dos dados primeiro
-                      const { salesDataFixed, itemsFixed } = checkDataIntegrity();
-
-                      // Atualizar os dados filtrados antes de mostrar o dashboard
-                      const filteredData = getFilteredSalesData();
-                      console.log("Dados filtrados atualizados:", filteredData.length, "registros");
-
-                      // Ativar o dashboard
-                      setShowDashboard(true);
-
-                      // Notificar o usuário se os dados foram corrigidos
-                      if (salesDataFixed || itemsFixed) {
-                        setTimeout(() => {
-                          alert("Dados corrigidos com sucesso! Os dashboards foram atualizados.");
-                        }, 200);
-                      }
-                    } else {
-                      // Simplesmente voltar ao relatório
-                      setShowDashboard(false);
-                    }
-                  }}
-                  className={`px-4 py-2 rounded-lg ${
-                    showDashboard ? 'bg-blue-600' : 'bg-blue-500'
-                  } text-white hover:bg-blue-600 transition-colors`}
-                >
-                  {showDashboard ? 'Voltar ao Relatório' : 'Ver Dashboard'}
-                </button>
-                <button
                   onClick={() => setShowSalesReport(false)}
                   className="text-gray-500 hover:text-gray-700"
                 >
@@ -3245,70 +3212,51 @@ ${item?.client?.cpf || ''}
             </div>
 
             <div className="space-y-4" ref={reportRef}>
-              {showDashboard ? (
-                // Dashboard Content
-                <div className="space-y-6">
-                  {/* Dashboard Period Selector */}
+              {/* Conteúdo do Relatório de Vendas */}
+              <div className="space-y-6">
+                  {/* Seletor de Período */}
                   <div className="flex gap-4 items-center">
                     <select
                       value={reportType}
                       onChange={(e) => {
                         setReportType(e.target.value);
-                        // Forçar atualização dos dados quando o tipo de relatório muda
-                        console.log("Tipo de relatório alterado para:", e.target.value);
-                        setTimeout(() => {
-                          const filteredData = getFilteredSalesData();
-                          console.log("Dados filtrados atualizados após mudança de tipo:", filteredData.length, "registros");
-
-                          // Forçar atualização da UI
-                          setShowDashboard(false);
-                          setTimeout(() => setShowDashboard(true), 50);
-                        }, 100);
                       }}
                       className="px-4 py-2 border rounded-lg"
                     >
                       <option value="day">Hoje</option>
                       <option value="month">Este Mês</option>
-                      <option value="period">Período Personalizado</option>
+                      <option value="custom">Período Personalizado</option>
                     </select>
-                    {reportType === 'period' && (
+                    {reportType === 'custom' && (
                       <div className="flex gap-4">
-                        <input
-                          type="date"
-                          value={formatDateToISO(reportStartDate)}
-                          onChange={(e) => {
-                            const newDate = formatDateToBrazilian(e.target.value);
-                            setReportStartDate(newDate);
-                            // Forçar atualização dos dados quando a data inicial muda
-                            console.log("Data inicial alterada para:", newDate);
-                            setTimeout(() => {
-                              const filteredData = getFilteredSalesData();
-                              console.log("Dados filtrados atualizados após mudança de data inicial:", filteredData.length, "registros");
-                            }, 100);
-                          }}
-                          className="w-full px-3 py-2 border rounded-md"
-                        />
-                        <input
-                          type="date"
-                          value={formatDateToISO(reportEndDate)}
-                          onChange={(e) => {
-                            const newDate = formatDateToBrazilian(e.target.value);
-                            setReportEndDate(newDate);
-                            // Forçar atualização dos dados quando a data final muda
-                            console.log("Data final alterada para:", newDate);
-                            setTimeout(() => {
-                              const filteredData = getFilteredSalesData();
-                              console.log("Dados filtrados atualizados após mudança de data final:", filteredData.length, "registros");
-                            }, 100);
-                          }}
-                          className="w-full px-3 py-2 border rounded-md"
-                        />
+                        <div className="flex flex-col">
+                          <label className="text-sm text-gray-600 mb-1">De:</label>
+                          <input
+                            type="date"
+                            value={formatDateToISO(reportStartDate)}
+                            onChange={(e) => {
+                              const newDate = formatDateToBrazilian(e.target.value);
+                              setReportStartDate(newDate);
+                            }}
+                            className="w-full px-3 py-2 border rounded-md"
+                          />
+                        </div>
+                        <div className="flex flex-col">
+                          <label className="text-sm text-gray-600 mb-1">Até:</label>
+                          <input
+                            type="date"
+                            value={formatDateToISO(reportEndDate)}
+                            onChange={(e) => {
+                              const newDate = formatDateToBrazilian(e.target.value);
+                              setReportEndDate(newDate);
+                            }}
+                            className="w-full px-3 py-2 border rounded-md"
+                          />
+                        </div>
                       </div>
                     )}
                     <button
                       onClick={() => {
-                        console.log("Atualizando dashboards manualmente");
-
                         // Verificar a integridade dos dados
                         const { salesDataFixed, itemsFixed } = checkDataIntegrity();
 
@@ -3316,115 +3264,60 @@ ${item?.client?.cpf || ''}
                         const filteredData = getFilteredSalesData();
                         console.log("Dados filtrados atualizados:", filteredData.length, "registros");
 
-                        // Forçar atualização dos gráficos
-                        setShowDashboard(false);
-
-                        // Usar um timeout para garantir que a UI seja atualizada
-                        setTimeout(() => {
-                          setShowDashboard(true);
-
-                          // Mostrar mensagem de sucesso
-                          setTimeout(() => {
-                            if (salesDataFixed || itemsFixed) {
-                              alert("Dados corrigidos e dashboards atualizados com sucesso!");
-                            } else {
-                              alert("Dashboards atualizados com sucesso!");
-                            }
-                          }, 200);
-                        }, 100);
+                        // Mostrar mensagem de sucesso
+                        if (salesDataFixed || itemsFixed) {
+                          alert("Dados corrigidos com sucesso!");
+                        } else {
+                          alert("Dados verificados com sucesso!");
+                        }
                       }}
                       className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
-                      title="Atualizar Dashboards"
+                      title="Verificar Dados"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
-                      Atualizar
+                      Verificar
                     </button>
                   </div>
 
-                  {/* Dashboard Summary Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-lg text-white">
-                      <h4 className="text-lg font-medium mb-2">Total de Vendas</h4>
-                      <p className="text-3xl font-bold">
-                        R$ {getFilteredSalesData().reduce((total, sale) => total + sale.total, 0).toFixed(2)}
-                      </p>
-                    </div>
-                    <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-lg text-white">
-                      <h4 className="text-lg font-medium mb-2">Produtos Vendidos</h4>
-                      <p className="text-3xl font-bold">
-                        {getFilteredSalesData().reduce((total, sale) => total + sale.quantity, 0)}
-                      </p>
-                    </div>
-                    <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-6 rounded-lg text-white">
-                      <h4 className="text-lg font-medium mb-2">Média de Vendas</h4>
-                      <p className="text-3xl font-bold">
-                        R$ {(() => {
-                          const filteredSales = getFilteredSalesData();
-                          const totalValue = filteredSales.reduce((total, sale) => total + sale.total, 0);
-                          return (filteredSales.length > 0 ? totalValue / filteredSales.length : 0).toFixed(2);
-                        })()}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Dashboard Charts */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-white p-6 rounded-lg shadow-lg">
-                      <h4 className="text-lg font-medium mb-4">Produtos Mais Vendidos</h4>
-                      <div className="h-80">
-                        <Pie data={getPieChartData()} options={{ maintainAspectRatio: false }} />
-                      </div>
-                    </div>
-                    <div className="bg-white p-6 rounded-lg shadow-lg">
-                      <h4 className="text-lg font-medium mb-4">Vendas por Período</h4>
-                      <div className="h-80">
-                        <Bar data={getBarChartData()} options={{ maintainAspectRatio: false }} />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Payment Methods Distribution */}
+                  {/* Tabela de Vendas */}
                   <div className="bg-white p-6 rounded-lg shadow-lg">
-                    <h4 className="text-lg font-medium mb-4">Distribuição por Forma de Pagamento</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="p-4 bg-green-100 rounded-lg">
-                        <p className="text-sm text-green-600">Dinheiro</p>
-                        <p className="text-2xl font-bold text-green-700">
-                          R$ {(() => {
-                            const filteredSales = getFilteredSalesData();
-                            return filteredSales
-                              .filter(sale => sale.paymentMethod?.toLowerCase() === 'dinheiro')
-                              .reduce((total, sale) => total + sale.total, 0)
-                              .toFixed(2);
-                          })()}
-                        </p>
-                      </div>
-                      <div className="p-4 bg-blue-100 rounded-lg">
-                        <p className="text-sm text-blue-600">Cartão</p>
-                        <p className="text-2xl font-bold text-blue-700">
-                          R$ {(() => {
-                            const filteredSales = getFilteredSalesData();
-                            return filteredSales
-                              .filter(sale => sale.paymentMethod?.toLowerCase() === 'cartao' || sale.paymentMethod?.toLowerCase() === 'cartão')
-                              .reduce((total, sale) => total + sale.total, 0)
-                              .toFixed(2);
-                          })()}
-                        </p>
-                      </div>
-                      <div className="p-4 bg-purple-100 rounded-lg">
-                        <p className="text-sm text-purple-600">PIX</p>
-                        <p className="text-2xl font-bold text-purple-700">
-                          R$ {(() => {
-                            const filteredSales = getFilteredSalesData();
-                            return filteredSales
-                              .filter(sale => sale.paymentMethod?.toLowerCase() === 'pix')
-                              .reduce((total, sale) => total + sale.total, 0)
-                              .toFixed(2);
-                          })()}
-                        </p>
-                      </div>
+                    <h4 className="text-lg font-medium mb-4">Vendas no Período</h4>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full bg-white border border-gray-200">
+                        <thead>
+                          <tr className="bg-gray-100">
+                            <th className="py-2 px-4 border-b text-left">Data</th>
+                            <th className="py-2 px-4 border-b text-left">Cliente</th>
+                            <th className="py-2 px-4 border-b text-left">Produto</th>
+                            <th className="py-2 px-4 border-b text-right">Qtd</th>
+                            <th className="py-2 px-4 border-b text-right">Valor</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {getFilteredSalesData().map((sale, index) => (
+                            <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                              <td className="py-2 px-4 border-b">{sale.date}</td>
+                              <td className="py-2 px-4 border-b">{sale.client || 'Cliente não informado'}</td>
+                              <td className="py-2 px-4 border-b">{sale.product}</td>
+                              <td className="py-2 px-4 border-b text-right">{sale.quantity}</td>
+                              <td className="py-2 px-4 border-b text-right">R$ {sale.total.toFixed(2)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="bg-gray-100 font-bold">
+                            <td className="py-2 px-4 border-b" colSpan="3">Total</td>
+                            <td className="py-2 px-4 border-b text-right">
+                              {getFilteredSalesData().reduce((total, sale) => total + sale.quantity, 0)}
+                            </td>
+                            <td className="py-2 px-4 border-b text-right">
+                              R$ {getFilteredSalesData().reduce((total, sale) => total + sale.total, 0).toFixed(2)}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
                     </div>
                   </div>
                 </div>
@@ -3642,7 +3535,7 @@ ${item?.client?.cpf || ''}
                     </button>
                   </div>
                 </>
-              )}
+              )
             </div>
           </div>
         </div>
