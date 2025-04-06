@@ -41,11 +41,11 @@ function App() {
     try {
       const parts = isoDate.split('-');
       if (parts.length !== 3) return '';
-      
+
       const year = parts[0];
       const month = parts[1];
       const day = parts[2];
-      
+
       return `${day}/${month}/${year}`;
     } catch (e) {
       console.error("Erro ao formatar data:", e);
@@ -59,16 +59,16 @@ function App() {
     try {
       const parts = brDate.split('/');
       if (parts.length !== 3) return getCurrentDateISO();
-      
+
       const day = parts[0];
       const month = parts[1];
       const year = parts[2];
-      
+
       // Verificar se os valores são números válidos
       if (isNaN(parseInt(day)) || isNaN(parseInt(month)) || isNaN(parseInt(year))) {
         return getCurrentDateISO();
       }
-      
+
       return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     } catch (e) {
       console.error("Erro ao converter data:", e);
@@ -184,16 +184,16 @@ function App() {
       try {
         setIsLoading(true);
         console.log('Inicializando banco de dados...');
-        
+
         // Primeiro inicializa o banco de dados
         const database = await ensureDB();
         if (!database) {
           throw new Error('Falha ao inicializar o banco de dados');
         }
-        
+
         // Depois inicializa o fornecedor padrão
         await initializeDefaultVendor();
-        
+
         console.log('Banco de dados inicializado com sucesso!');
         loadData();
       } catch (error) {
@@ -215,12 +215,12 @@ function App() {
         getClients(),
         getProducts()
       ]);
-      
+
       setVendors(vendorsList || []);
       setFilteredClients((clientsList || []).map(client => ({ ...client, showDetails: false })));
       setClients((clientsList || []).map(client => ({ ...client, showDetails: false })));
       setItems(productsList || []);
-      
+
       // Carregar dados de vendas do localStorage
       const savedSalesData = localStorage.getItem('salesData');
       if (savedSalesData) {
@@ -232,7 +232,7 @@ function App() {
           console.error("Erro ao carregar dados de vendas do localStorage:", error);
         }
       }
-      
+
       // Carregar configurações de alerta de estoque mínimo
       const savedMinStockAlert = localStorage.getItem('minStockAlert');
       if (savedMinStockAlert) {
@@ -242,7 +242,7 @@ function App() {
           console.error("Erro ao carregar configurações de alerta de estoque mínimo:", error);
         }
       }
-      
+
       // Carregar configurações de ignorar estoque
       const savedIgnoreStock = localStorage.getItem('ignoreStock');
       if (savedIgnoreStock) {
@@ -252,13 +252,13 @@ function App() {
           console.error("Erro ao carregar configurações de ignorar estoque:", error);
         }
       }
-      
+
       // Load Hostinger configuration from localStorage
       const savedHostingerConfig = localStorage.getItem('hostingerConfig');
       if (savedHostingerConfig) {
         setHostingerConfig(JSON.parse(savedHostingerConfig));
       }
-      
+
       // Set default vendor with null safety
       const defaultVendor = vendorsList?.find(v => v?.document === '0727887807') || {
         name: 'Gleidison S. Oliveira',
@@ -269,9 +269,9 @@ function App() {
         setSelectedVendor(defaultVendor);
         setNewItem(prev => ({
           ...prev,
-          vendor: { 
-            name: defaultVendor.name || '', 
-            doc: defaultVendor.document || '' 
+          vendor: {
+            name: defaultVendor.name || '',
+            doc: defaultVendor.document || ''
           }
         }));
       }
@@ -310,11 +310,11 @@ function App() {
     // Definir a data atual no formato brasileiro
     const currentDateISO = getCurrentDateISO();
     const currentDateBR = formatDateToBrazilian(currentDateISO);
-    
+
     // Atualizar os estados com a data atual
     setReportStartDate(currentDateBR);
     setReportEndDate(currentDateBR);
-    
+
     console.log("Data atual ISO:", currentDateISO);
     console.log("Data atual BR:", currentDateBR);
   }, []);
@@ -325,7 +325,7 @@ function App() {
       setFilteredClients(allClients);
       return;
     }
-    
+
     const searchResults = await searchClients(query);
     setFilteredClients(searchResults);
   };
@@ -361,7 +361,7 @@ function App() {
           ...newClient
         };
         await updateClient(updatedClient);
-        const updatedClients = clients.map(c => 
+        const updatedClients = clients.map(c =>
           c.id === selectedClient.id ? updatedClient : c
         );
         setClients(updatedClients);
@@ -373,7 +373,7 @@ function App() {
         setClients(updatedClients);
         setFilteredClients(updatedClients);
       }
-      
+
       setShowAddClient(false);
       setSelectedClient(null);
       setNewClient({
@@ -403,7 +403,7 @@ function App() {
       setShowPixQRCode(true);
       return;
     }
-    
+
     if (selectedItems.length === 0) {
       alert('Selecione pelo menos um item para vender');
       return;
@@ -411,12 +411,12 @@ function App() {
 
     const updatedItems = [...items];
     let totalAmount = 0;
-    
+
     // Verificar estoque para todos os itens selecionados primeiro
     for (const index of selectedItems) {
       const item = updatedItems[index];
       const quantity = item.soldQuantity || 1;
-      
+
       if (!ignoreStock[item.id] && item.quantity < quantity) {
         alert(`Quantidade insuficiente em estoque para ${item.description}`);
         return;
@@ -436,7 +436,7 @@ function App() {
         const item = updatedItems[index];
         const quantity = Math.abs(item.soldQuantity || 1); // Garantir que a quantidade seja positiva
         const itemTotal = Math.abs(item.price * quantity); // Garantir que o total seja positivo
-        
+
         const updatedItem = {
           ...item,
           quantity: item.quantity - quantity,
@@ -444,7 +444,7 @@ function App() {
           saleDate,
           paymentMethod
         };
-        
+
         await updateProduct(updatedItem);
         updatedItems[index] = updatedItem;
         totalAmount += itemTotal;
@@ -477,7 +477,7 @@ function App() {
       }]);
 
       setShowPaymentPopup(false);
-      
+
       // Criar backup automático após a venda
       if (autoBackup) {
         try {
@@ -512,7 +512,7 @@ function App() {
       };
 
       const productId = await addProduct(productData);
-      
+
       // Atualizar a lista de itens
       setItems(prevItems => [
         ...prevItems,
@@ -535,7 +535,7 @@ function App() {
         itemDescription: '',
         category: 'Todos' // Resetar categoria para o padrão
       });
-      
+
       setShowAddItem(false);
       alert('Item adicionado com sucesso!');
     } catch (error) {
@@ -546,7 +546,7 @@ function App() {
 
   const generateReceipt = (item) => {
     const currentDate = new Date();
-    
+
     // Format date in Portuguese
     const formatDateInPortuguese = (date) => {
       const months = [
@@ -557,13 +557,13 @@ function App() {
         'domingo', 'segunda-feira', 'terça-feira', 'quarta-feira',
         'quinta-feira', 'sexta-feira', 'sábado'
       ];
-      
+
       return `${days[date.getDay()]}, ${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
     };
 
     // Get total amount from current sale with null check
     const totalAmount = currentSale?.total || (item?.price * (item?.saleQuantity || 1));
-    
+
     const receiptContent = `RECIBO DE VENDA
 
 DADOS DO VENDEDOR
@@ -576,8 +576,8 @@ RG: ${item?.client?.rg || 'Não especificado'}
 CPF: ${item?.client?.cpf || 'Não especificado'}
 
 DETALHES DA VENDA
-${currentSale?.items ? 
-  currentSale.items.map(saleItem => 
+${currentSale?.items ?
+  currentSale.items.map(saleItem =>
     `- ${saleItem?.description || 'Item'}: ${saleItem?.quantity || 1}x R$ ${(saleItem?.price || 0).toFixed(2)} = R$ ${((saleItem?.price || 0) * (saleItem?.quantity || 1)).toFixed(2)}`
   ).join('\n') :
   `- ${item?.description || 'Item'}: 1x R$ ${(item?.price || 0).toFixed(2)} = R$ ${(item?.price || 0).toFixed(2)}`
@@ -601,107 +601,132 @@ ${item?.client?.name || 'Cliente'}
 ${item?.client?.rg || ''}
 ${item?.client?.cpf || ''}
 `;
-    
+
     const blob = new Blob([receiptContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
     link.download = `recibo_venda_${currentDate.toISOString().slice(0,10)}.txt`;
     link.click();
-    
+
     // Clean up
     URL.revokeObjectURL(url);
   };
 
-  // Função para gerar dados de exemplo para os gráficos (em um app real, isso viria do banco de dados)
+  // Função para gerar dados de exemplo para os gráficos com datas variadas
   const generateSampleSalesData = () => {
     const today = new Date();
+
+    // Criar datas variadas para o histórico
+    const dates = [];
+    // Data atual
+    dates.push(new Date(today));
+    // Ontem
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    
-    // Formatar datas no padrão brasileiro
-    const todayFormatted = formatDateToBrazilian(today.toISOString().split('T')[0]);
-    const yesterdayFormatted = formatDateToBrazilian(yesterday.toISOString().split('T')[0]);
-    
-    return [
-      {
-        id: 1,
-        date: todayFormatted,
-        client: 'Cliente não especificado',
-        clientDoc: '',
-        clientCpf: '',
-        vendor: 'Vendedor não especificado',
-        vendorDoc: '',
-        product: 'dsdgd',
-        quantity: 19,
-        price: 90,
-        total: 1710,
-        paymentMethod: 'pix'
-      },
-      {
-        id: 2,
-        date: todayFormatted,
-        client: 'Cliente não especificado',
-        clientDoc: '',
-        clientCpf: '',
-        vendor: 'Vendedor não especificado',
-        vendorDoc: '',
-        product: 'gesgegg',
-        quantity: 16,
-        price: 12,
-        total: 192,
-        paymentMethod: 'dinheiro'
-      },
-      {
-        id: 3,
-        date: todayFormatted,
-        client: 'Cliente não especificado',
-        clientDoc: '',
-        clientCpf: '',
-        vendor: 'Vendedor não especificado',
-        vendorDoc: '',
-        product: 'escorredor de pratos',
-        quantity: 11,
-        price: 100,
-        total: 1100,
-        paymentMethod: 'dinheiro'
-      },
-      {
-        id: 4,
-        date: todayFormatted,
-        client: 'Cliente não especificado',
-        clientDoc: '',
-        clientCpf: '',
-        vendor: 'Vendedor não especificado',
-        vendorDoc: '',
-        product: 'fhdfhfh',
-        quantity: 12,
-        price: 99,
-        total: 1188,
-        paymentMethod: 'dinheiro'
-      }
+    dates.push(yesterday);
+    // Semana passada
+    const lastWeek = new Date(today);
+    lastWeek.setDate(lastWeek.getDate() - 7);
+    dates.push(lastWeek);
+    // Mês passado
+    const lastMonth = new Date(today);
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+    dates.push(lastMonth);
+    // Três meses atrás
+    const threeMonthsAgo = new Date(today);
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+    dates.push(threeMonthsAgo);
+
+    // Produtos variados
+    const products = [
+      { name: 'Smartphone XYZ', price: 1200, quantity: 2 },
+      { name: 'Notebook ABC', price: 3500, quantity: 1 },
+      { name: 'Fone de Ouvido', price: 150, quantity: 5 },
+      { name: 'Mouse sem fio', price: 80, quantity: 8 },
+      { name: 'Teclado mecânico', price: 250, quantity: 3 },
+      { name: 'Monitor 24"', price: 900, quantity: 2 },
+      { name: 'Cadeira gamer', price: 1500, quantity: 1 },
+      { name: 'Impressora', price: 450, quantity: 2 },
+      { name: 'Caixa de som', price: 120, quantity: 4 },
+      { name: 'Pendrive 64GB', price: 60, quantity: 10 }
     ];
+
+    // Métodos de pagamento
+    const paymentMethods = ['dinheiro', 'cartao', 'pix'];
+
+    // Gerar vendas com datas variadas
+    const sampleSales = [];
+    let id = 1;
+
+    dates.forEach(date => {
+      // Formatar data no padrão brasileiro
+      const formattedDate = formatDateToBrazilian(date.toISOString().split('T')[0]);
+
+      // Gerar 2-3 vendas para cada data
+      const numSales = 2 + Math.floor(Math.random() * 2); // 2 ou 3 vendas
+
+      for (let i = 0; i < numSales; i++) {
+        // Selecionar produto aleatório
+        const productIndex = Math.floor(Math.random() * products.length);
+        const product = products[productIndex];
+
+        // Selecionar método de pagamento aleatório
+        const paymentMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
+
+        // Quantidade aleatória (entre 1 e a quantidade máxima do produto)
+        const quantity = 1 + Math.floor(Math.random() * product.quantity);
+
+        // Calcular total
+        const total = product.price * quantity;
+
+        sampleSales.push({
+          id: id++,
+          date: formattedDate,
+          client: 'Cliente não especificado',
+          clientDoc: '',
+          clientCpf: '',
+          vendor: 'Vendedor não especificado',
+          vendorDoc: '',
+          product: product.name,
+          quantity: quantity,
+          price: product.price,
+          total: total,
+          paymentMethod: paymentMethod
+        });
+      }
+    });
+
+    return sampleSales;
   };
 
-  // Carregar dados de vendas de exemplo ao iniciar
+  // Carregar dados de vendas de exemplo ao iniciar apenas se não houver dados existentes
   useEffect(() => {
-    setSalesData(generateSampleSalesData());
+    // Verificar se já existem dados no localStorage
+    const savedSalesData = localStorage.getItem('salesData');
+    if (!savedSalesData || JSON.parse(savedSalesData).length === 0) {
+      console.log("Nenhum dado de vendas encontrado, gerando dados de exemplo...");
+      setSalesData(generateSampleSalesData());
+    } else {
+      console.log("Dados de vendas existentes encontrados, não gerando dados de exemplo.");
+    }
   }, []);
 
-  // Modificar a função getFilteredSalesData para trabalhar com o formato brasileiro
+  // Função getFilteredSalesData melhorada para trabalhar com o formato brasileiro e histórico de vendas
   const getFilteredSalesData = () => {
     console.log("Filtrando vendas para:", reportType, reportStartDate, reportEndDate);
-    
+
     const realSalesData = [];
-    
+
     // Adicionar vendas dos itens do estoque
     items.forEach(item => {
-      if (item.sold > 0 && item.saleDate) {
+      if (item.sold > 0) { // Removida a verificação de item.saleDate para incluir todas as vendas
         const clientInfo = item.client || currentSale?.client || { name: 'Cliente não especificado' };
         const vendorInfo = item.vendor || selectedVendor || { name: 'Vendedor não especificado' };
-        
+
         // Converter a data para o formato brasileiro
-        const localDate = new Date(item.saleDate);
+        // Se não houver data de venda, usar a data atual
+        const localDate = item.saleDate ? new Date(item.saleDate) : new Date();
         const formattedDate = formatDateToBrazilian(localDate.toISOString().split('T')[0]);
 
         realSalesData.push({
@@ -716,30 +741,41 @@ ${item?.client?.cpf || ''}
           quantity: Math.abs(item.sold), // Garantir que a quantidade seja positiva
           price: Math.abs(item.price), // Garantir que o preço seja positivo
           total: Math.abs(item.price * item.sold), // Garantir que o total seja positivo
-          paymentMethod: item.paymentMethod || 'Não especificado'
+          paymentMethod: item.paymentMethod || 'Não especificado',
+          source: 'estoque' // Marcar a origem dos dados
         });
       }
     });
-    
-    // Combinar com os dados existentes
-    const combinedData = [...realSalesData, ...salesData.map(sale => ({
-      ...sale,
-      quantity: Math.abs(sale.quantity || 0), // Garantir que a quantidade seja positiva
-      price: Math.abs(sale.price || 0), // Garantir que o preço seja positivo
-      total: Math.abs(sale.total || 0) // Garantir que o total seja positivo
-    }))];
-    
+
+    // Combinar com os dados existentes do localStorage/Vendas PDV
+    const combinedData = [
+      ...realSalesData,
+      ...salesData.map(sale => ({
+        ...sale,
+        quantity: Math.abs(sale.quantity || 0), // Garantir que a quantidade seja positiva
+        price: Math.abs(sale.price || 0), // Garantir que o preço seja positivo
+        total: Math.abs(sale.total || 0), // Garantir que o total seja positivo
+        source: sale.source || 'vendas_pdv' // Marcar a origem dos dados se não existir
+      }))
+    ];
+
     console.log("Total de vendas antes da filtragem:", combinedData.length);
-    
+
     let filtered = [...combinedData];
-    
+
     // Verificar se há dados para filtrar
     if (filtered.length === 0) {
       console.log("Nenhuma venda encontrada para filtrar");
       return [];
     }
-    
-    // Filtrar por período
+
+    // Filtrar por período apenas se estiver gerando relatório
+    // Se não estiver gerando relatório, retornar todos os dados
+    if (!showSalesReport && !showSimpleSalesReport) {
+      console.log("Exibindo todas as vendas na página principal");
+      return filtered;
+    }
+
     if (reportType === 'day') {
       console.log("Filtrando por dia:", reportStartDate);
       filtered = filtered.filter(sale => {
@@ -748,10 +784,21 @@ ${item?.client?.cpf || ''}
           console.log("Venda sem data:", sale);
           return false;
         }
-        
+
         try {
-          // Comparar diretamente as strings de data no formato brasileiro
-          const matches = sale.date === reportStartDate;
+          // Normalizar a data para o formato brasileiro se necessário
+          let saleDate = sale.date;
+
+          // Verificar se a data está no formato ISO (YYYY-MM-DD) e converter
+          if (saleDate.includes('-') && !saleDate.includes('/')) {
+            const dateParts = saleDate.split('-');
+            if (dateParts.length === 3) {
+              saleDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+            }
+          }
+
+          // Comparar as strings de data no formato brasileiro
+          const matches = saleDate === reportStartDate;
           if (matches) {
             console.log("Venda correspondente encontrada:", sale);
           }
@@ -764,13 +811,13 @@ ${item?.client?.cpf || ''}
     } else if (reportType === 'month') {
       console.log("Filtrando por mês:", reportStartDate);
       // Extrair mês e ano do formato brasileiro
-      const [day, month, year] = (reportStartDate || '').split('/');
-      
+      const [_day, month, year] = (reportStartDate || '').split('/');
+
       if (!month || !year) {
         console.error("Data de início inválida:", reportStartDate);
         return [];
       }
-      
+
       filtered = filtered.filter(sale => {
         try {
           // Verificar se a data é válida
@@ -778,15 +825,26 @@ ${item?.client?.cpf || ''}
             console.log("Venda sem data:", sale);
             return false;
           }
-          
+
+          // Normalizar a data para o formato brasileiro se necessário
+          let saleDate = sale.date;
+
+          // Verificar se a data está no formato ISO (YYYY-MM-DD) e converter
+          if (saleDate.includes('-') && !saleDate.includes('/')) {
+            const dateParts = saleDate.split('-');
+            if (dateParts.length === 3) {
+              saleDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+            }
+          }
+
           // Converter a data de venda do formato brasileiro para comparação
-          const [saleDay, saleMonth, saleYear] = (sale.date || '').split('/');
-          
+          const [_saleDay, saleMonth, saleYear] = saleDate.split('/');
+
           if (!saleMonth || !saleYear) {
-            console.log("Data de venda inválida:", sale.date);
+            console.log("Data de venda inválida:", saleDate);
             return false;
           }
-          
+
           const matches = parseInt(saleYear) === parseInt(year) && parseInt(saleMonth) === parseInt(month);
           if (matches) {
             console.log("Venda correspondente encontrada:", sale);
@@ -799,20 +857,20 @@ ${item?.client?.cpf || ''}
       });
     } else if (reportType === 'period') {
       console.log("Filtrando por período:", reportStartDate, "até", reportEndDate);
-      
+
       // Converter datas para comparação
       const startParts = reportStartDate.split('/');
       const endParts = reportEndDate.split('/');
-      
+
       if (startParts.length === 3 && endParts.length === 3) {
         const startDay = parseInt(startParts[0]);
         const startMonth = parseInt(startParts[1]);
         const startYear = parseInt(startParts[2]);
-        
+
         const endDay = parseInt(endParts[0]);
         const endMonth = parseInt(endParts[1]);
         const endYear = parseInt(endParts[2]);
-        
+
         filtered = filtered.filter(sale => {
           try {
             // Verificar se a data é válida
@@ -820,29 +878,40 @@ ${item?.client?.cpf || ''}
               console.log("Venda sem data:", sale);
               return false;
             }
-            
-            const [saleDay, saleMonth, saleYear] = (sale.date || '').split('/');
-            
+
+            // Normalizar a data para o formato brasileiro se necessário
+            let saleDate = sale.date;
+
+            // Verificar se a data está no formato ISO (YYYY-MM-DD) e converter
+            if (saleDate.includes('-') && !saleDate.includes('/')) {
+              const dateParts = saleDate.split('-');
+              if (dateParts.length === 3) {
+                saleDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+              }
+            }
+
+            const [saleDay, saleMonth, saleYear] = saleDate.split('/');
+
             if (!saleDay || !saleMonth || !saleYear) {
-              console.log("Data de venda inválida:", sale.date);
+              console.log("Data de venda inválida:", saleDate);
               return false;
             }
-            
+
             const saleDayNum = parseInt(saleDay);
             const saleMonthNum = parseInt(saleMonth);
             const saleYearNum = parseInt(saleYear);
-            
+
             // Comparar datas
-            const isAfterStart = 
-              (saleYearNum > startYear) || 
-              (saleYearNum === startYear && saleMonthNum > startMonth) || 
+            const isAfterStart =
+              (saleYearNum > startYear) ||
+              (saleYearNum === startYear && saleMonthNum > startMonth) ||
               (saleYearNum === startYear && saleMonthNum === startMonth && saleDayNum >= startDay);
-              
-            const isBeforeEnd = 
-              (saleYearNum < endYear) || 
-              (saleYearNum === endYear && saleMonthNum < endMonth) || 
+
+            const isBeforeEnd =
+              (saleYearNum < endYear) ||
+              (saleYearNum === endYear && saleMonthNum < endMonth) ||
               (saleYearNum === endYear && saleMonthNum === endMonth && saleDayNum <= endDay);
-              
+
             const matches = isAfterStart && isBeforeEnd;
             if (matches) {
               console.log("Venda correspondente encontrada:", sale);
@@ -857,12 +926,12 @@ ${item?.client?.cpf || ''}
         console.error("Formato de data inválido:", reportStartDate, reportEndDate);
       }
     }
-    
+
     // Filtrar por busca
     if (reportSearchQuery) {
       const query = reportSearchQuery.toLowerCase();
-      filtered = filtered.filter(sale => 
-        (sale.client && sale.client.toLowerCase().includes(query)) || 
+      filtered = filtered.filter(sale =>
+        (sale.client && sale.client.toLowerCase().includes(query)) ||
         (sale.product && sale.product.toLowerCase().includes(query)) ||
         (sale.clientDoc && sale.clientDoc.toLowerCase().includes(query)) ||
         (sale.clientCpf && sale.clientCpf.toLowerCase().includes(query)) ||
@@ -871,23 +940,23 @@ ${item?.client?.cpf || ''}
         (sale.paymentMethod && sale.paymentMethod.toLowerCase().includes(query))
       );
     }
-    
+
     // Filtrar por cliente
     if (clientSearchTerm) {
       const clientQuery = clientSearchTerm.toLowerCase();
-      filtered = filtered.filter(sale => 
-        (sale.client && sale.client.toLowerCase().includes(clientQuery)) || 
-        (sale.clientDoc && sale.clientDoc.toLowerCase().includes(clientQuery)) || 
+      filtered = filtered.filter(sale =>
+        (sale.client && sale.client.toLowerCase().includes(clientQuery)) ||
+        (sale.clientDoc && sale.clientDoc.toLowerCase().includes(clientQuery)) ||
         (sale.clientCpf && sale.clientCpf.toLowerCase().includes(clientQuery))
       );
     }
-    
+
     // Filtrar por produto
     if (productSearchTerm) {
       const productQuery = productSearchTerm.toLowerCase();
       filtered = filtered.filter(sale => sale.product && sale.product.toLowerCase().includes(productQuery));
     }
-    
+
     console.log("Total de vendas após filtragem:", filtered.length);
     return filtered;
   };
@@ -895,18 +964,18 @@ ${item?.client?.cpf || ''}
   // Função para exportar o relatório como imagem
   const exportAsImage = async () => {
     if (!reportRef.current) return;
-    
+
     try {
       const canvas = await html2canvas(reportRef.current);
       const imageData = canvas.toDataURL('image/png');
-      
+
       if (exportMethod === 'whatsapp') {
         // Primeiro baixar a imagem
         const link = document.createElement('a');
         link.href = imageData;
         link.download = `relatorio-vendas-${new Date().toISOString().slice(0, 10)}.png`;
         link.click();
-        
+
         // Depois abrir o WhatsApp
         if (contactInfo.whatsapp) {
           setTimeout(() => {
@@ -923,7 +992,7 @@ ${item?.client?.cpf || ''}
         link.href = imageData;
         link.download = `relatorio-vendas-${new Date().toISOString().slice(0, 10)}.png`;
         link.click();
-        
+
         // Depois abrir o cliente de email
         if (contactInfo.email) {
           setTimeout(() => {
@@ -951,29 +1020,29 @@ ${item?.client?.cpf || ''}
   // Função para exportar o relatório como PDF
   const exportAsPDF = async () => {
     if (!reportRef.current) return;
-    
+
     try {
       const canvas = await html2canvas(reportRef.current);
       const imageData = canvas.toDataURL('image/png');
-      
+
       const pdf = new jsPDF('landscape', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      
+
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
       const imgX = (pdfWidth - imgWidth * ratio) / 2;
       const imgY = 30;
-      
+
       pdf.setFontSize(18);
       pdf.text('Relatório de Vendas', pdfWidth / 2, 20, { align: 'center' });
       pdf.addImage(imageData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-      
+
       if (exportMethod === 'whatsapp') {
         // Primeiro salvar o PDF
         pdf.save(`relatorio-vendas-${new Date().toISOString().slice(0, 10)}.pdf`);
-        
+
         // Depois abrir o WhatsApp
         if (contactInfo.whatsapp) {
           setTimeout(() => {
@@ -987,7 +1056,7 @@ ${item?.client?.cpf || ''}
       } else if (exportMethod === 'email') {
         // Primeiro salvar o PDF
         pdf.save(`relatorio-vendas-${new Date().toISOString().slice(0, 10)}.pdf`);
-        
+
         // Depois abrir o cliente de email
         if (contactInfo.email) {
           setTimeout(() => {
@@ -1013,26 +1082,26 @@ ${item?.client?.cpf || ''}
   const handleExport = (type, method) => {
     setExportType(type);
     setExportMethod(method);
-    
-    if ((method === 'whatsapp' && !contactInfo.whatsapp) || 
+
+    if ((method === 'whatsapp' && !contactInfo.whatsapp) ||
         (method === 'email' && !contactInfo.email)) {
       setShowContactForm(true);
     } else {
       // Se já temos as informações de contato, mostrar opção para editar
       if (method === 'whatsapp' || method === 'email') {
         const shouldEdit = window.confirm(
-          `Enviar para ${method === 'whatsapp' ? 
-            `WhatsApp: ${contactInfo.whatsapp}` : 
+          `Enviar para ${method === 'whatsapp' ?
+            `WhatsApp: ${contactInfo.whatsapp}` :
             `Email: ${contactInfo.email}`}?\n\nClique em "Cancelar" para editar o contato.`
         );
-        
+
         if (!shouldEdit) {
           setEditingContact(true);
           setShowContactForm(true);
           return;
         }
       }
-      
+
       if (type === 'photo') {
         exportAsImage();
       } else if (type === 'pdf') {
@@ -1045,7 +1114,7 @@ ${item?.client?.cpf || ''}
   const handleSaveContact = () => {
     setShowContactForm(false);
     setEditingContact(false);
-    
+
     // Após salvar, continuar com a exportação
     if (exportType === 'photo') {
       exportAsImage();
@@ -1080,7 +1149,7 @@ ${item?.client?.cpf || ''}
 
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await response.json();
-      
+
       if (!data.erro) {
         return {
           address: data.logradouro || '',
@@ -1108,11 +1177,11 @@ ${item?.client?.cpf || ''}
   // Modificar a função getPieChartData para usar o mesmo sistema de datas do relatório
   const getPieChartData = () => {
     console.log("Gerando dados do gráfico de pizza para data:", reportStartDate);
-    
+
     // Obter os dados filtrados do relatório - exatamente os mesmos dados mostrados na tabela
     const filteredSales = getFilteredSalesData();
     console.log("Vendas filtradas para o gráfico:", filteredSales.length, "registros");
-    
+
     if (filteredSales.length === 0) {
       console.log("Nenhuma venda encontrada para o período selecionado");
       // Retornar dados vazios para evitar erro no gráfico
@@ -1127,7 +1196,7 @@ ${item?.client?.cpf || ''}
         ],
       };
     }
-    
+
     // Agrupar por produto - usar exatamente o mesmo formato que aparece na tabela
     const productSales = {};
     filteredSales.forEach(sale => {
@@ -1136,24 +1205,24 @@ ${item?.client?.cpf || ''}
         console.log("Venda sem produto:", sale);
         return;
       }
-      
+
       // Usar o produto como está, sem dividir por vírgulas
       const product = sale.product;
-      
+
       if (!productSales[product]) {
         productSales[product] = 0;
       }
-      
+
       // Adicionar a quantidade total da venda
       productSales[product] += sale.quantity;
     });
-    
+
     console.log("Produtos agrupados:", productSales);
-    
+
     // Converter para o formato do gráfico
     const labels = Object.keys(productSales);
     const data = Object.values(productSales);
-    
+
     if (labels.length === 0) {
       console.log("Nenhum produto encontrado após agrupamento");
       return {
@@ -1167,7 +1236,7 @@ ${item?.client?.cpf || ''}
         ],
       };
     }
-    
+
     // Gerar cores aleatórias para cada produto, mas usar seed fixo para manter consistência
     const backgroundColors = labels.map((label, index) => {
       // Usar o índice como seed para gerar cores consistentes
@@ -1176,7 +1245,7 @@ ${item?.client?.cpf || ''}
       const b = (200 + index * 30) % 255;
       return `rgba(${r}, ${g}, ${b}, 0.6)`;
     });
-    
+
     return {
       labels,
       datasets: [
@@ -1192,11 +1261,11 @@ ${item?.client?.cpf || ''}
   // Modificar a função getBarChartData para usar o mesmo sistema de datas do relatório
   const getBarChartData = () => {
     console.log("Gerando dados do gráfico de barras para data:", reportStartDate);
-    
+
     // Obter os dados filtrados do relatório - exatamente os mesmos dados mostrados na tabela
     const filteredSales = getFilteredSalesData();
     console.log("Vendas filtradas para o gráfico de barras:", filteredSales.length, "registros");
-    
+
     if (filteredSales.length === 0) {
       console.log("Nenhuma venda encontrada para o período selecionado");
       // Retornar dados vazios para evitar erro no gráfico
@@ -1212,56 +1281,56 @@ ${item?.client?.cpf || ''}
         ],
       };
     }
-    
+
     // Agrupar por data e produto
     const salesByDateAndProduct = {};
-    
+
     filteredSales.forEach(sale => {
       // Verificar se a data e o produto existem
       if (!sale.date || !sale.product) {
         console.log("Venda com data ou produto ausente:", sale);
         return;
       }
-      
+
       // Usar a data da venda como chave
       const dateKey = sale.date;
-      
+
       if (!salesByDateAndProduct[dateKey]) {
         salesByDateAndProduct[dateKey] = {};
       }
-      
+
       // Usar o produto como está, sem dividir por vírgulas
       const product = sale.product;
-      
+
       if (!salesByDateAndProduct[dateKey][product]) {
         salesByDateAndProduct[dateKey][product] = 0;
       }
-      
+
       // Adicionar a quantidade total da venda
       salesByDateAndProduct[dateKey][product] += sale.quantity;
     });
-    
+
     console.log("Vendas agrupadas por data e produto:", salesByDateAndProduct);
-    
+
     // Obter todas as datas e produtos únicos
     const dates = Object.keys(salesByDateAndProduct).sort((a, b) => {
       // Ordenar datas no formato DD/MM/YYYY
       const [dayA, monthA, yearA] = a.split('/').map(Number);
       const [dayB, monthB, yearB] = b.split('/').map(Number);
-      
+
       if (yearA !== yearB) return yearA - yearB;
       if (monthA !== monthB) return monthA - monthB;
       return dayA - dayB;
     });
-    
+
     const allProducts = new Set();
-    
+
     Object.values(salesByDateAndProduct).forEach(productMap => {
       Object.keys(productMap).forEach(product => allProducts.add(product));
     });
-    
+
     const uniqueProducts = Array.from(allProducts);
-    
+
     if (dates.length === 0 || uniqueProducts.length === 0) {
       console.log("Nenhuma data ou produto encontrado após agrupamento");
       return {
@@ -1276,7 +1345,7 @@ ${item?.client?.cpf || ''}
         ],
       };
     }
-    
+
     // Gerar cores consistentes para cada produto
     const productColors = {};
     uniqueProducts.forEach((product, index) => {
@@ -1286,7 +1355,7 @@ ${item?.client?.cpf || ''}
       const b = (200 + index * 30) % 255;
       productColors[product] = `rgba(${r}, ${g}, ${b}, 0.6)`;
     });
-    
+
     // Criar datasets para o gráfico
     const datasets = uniqueProducts.map(product => ({
       label: product,
@@ -1294,7 +1363,7 @@ ${item?.client?.cpf || ''}
       backgroundColor: productColors[product],
       borderWidth: 1,
     }));
-    
+
     return {
       labels: dates,
       datasets,
@@ -1304,7 +1373,7 @@ ${item?.client?.cpf || ''}
   // Atualizar os gráficos quando a data do relatório mudar
   useEffect(() => {
     console.log("Data do relatório alterada:", reportStartDate, reportEndDate, reportType);
-    
+
     // Forçar atualização dos gráficos
     if (showDashboard) {
       console.log("Forçando atualização dos dashboards");
@@ -1317,11 +1386,11 @@ ${item?.client?.cpf || ''}
   // Garantir que as datas estejam no formato correto quando o tipo de relatório mudar
   useEffect(() => {
     console.log("Tipo de relatório alterado para:", reportType);
-    
+
     // Obter a data atual no formato ISO
     const currentDateISO = getCurrentDateISO();
     const currentDateBR = formatDateToBrazilian(currentDateISO);
-    
+
     // Ajustar as datas com base no tipo de relatório
     if (reportType === 'day') {
       // Para relatório diário, usar a data atual
@@ -1335,7 +1404,7 @@ ${item?.client?.cpf || ''}
       setReportStartDate(formatDateToBrazilian(firstDayISO));
       setReportEndDate(currentDateBR);
     }
-    
+
     console.log("Datas ajustadas:", reportStartDate, reportEndDate);
   }, [reportType]);
 
@@ -1437,13 +1506,13 @@ ${item?.client?.cpf || ''}
       for (const index of selectedItems) {
         const item = updatedItems[index];
         const quantity = item.soldQuantity || 1;
-        
+
         // Verificar estoque
         if (!ignoreStock[item.id] && item.quantity < quantity) {
           alert(`Quantidade insuficiente em estoque para ${item.description}`);
           return;
         }
-        
+
         const updatedItem = {
           ...item,
           quantity: item.quantity - quantity,
@@ -1452,10 +1521,10 @@ ${item?.client?.cpf || ''}
           paymentMethod: 'pix',
           qrCodeImage: qrCodeImage
         };
-        
+
         await updateProduct(updatedItem);
         updatedItems[index] = updatedItem;
-        
+
         saleItems.push({
           id: item.id,
           description: item.description,
@@ -1503,7 +1572,7 @@ ${item?.client?.cpf || ''}
       }]);
 
       alert('Venda finalizada com sucesso!');
-      
+
       // Criar backup automático após a venda
       if (autoBackup) {
         try {
@@ -1552,7 +1621,7 @@ ${item?.client?.cpf || ''}
 
       await updateProduct(updatedItem);
       setItems(prevItems => prevItems.map(i => i.id === itemId ? updatedItem : i));
-      
+
       // Verificar estoque mínimo
       if (minStockAlert[itemId] && newQuantity <= minStockAlert[itemId]) {
         alert(`Alerta: Estoque do produto "${item.description}" está baixo (${newQuantity} unidades)`);
@@ -1583,12 +1652,12 @@ ${item?.client?.cpf || ''}
   const createBackup = async () => {
     try {
       console.log('Iniciando criação de backup...');
-      
+
       // Verificar se há dados para backup
       if (!items || items.length === 0) {
         console.warn('Nenhum produto encontrado para backup');
       }
-      
+
       const backupData = {
         products: items || [],
         clients: clients || [],
@@ -1631,10 +1700,10 @@ ${item?.client?.cpf || ''}
     try {
       console.log('Iniciando exportação de backup...');
       // Obter dados do backup temporário ou criar um novo
-      const backupData = localStorage.getItem('pdvBackupTemp') 
+      const backupData = localStorage.getItem('pdvBackupTemp')
         ? JSON.parse(localStorage.getItem('pdvBackupTemp'))
         : await createBackup();
-      
+
       if (!backupData) {
         console.error('Não foi possível obter dados para exportação');
         return;
@@ -1643,13 +1712,13 @@ ${item?.client?.cpf || ''}
       // Criar um blob com os dados
       const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
       console.log('Blob criado para exportação');
-      
+
       // Usar o seletor de arquivos nativo para escolher onde salvar
       try {
         // Verificar se a API File System Access está disponível
         if ('showSaveFilePicker' in window) {
           console.log('Usando File System Access API para salvar o arquivo...');
-          
+
           const options = {
             suggestedName: `pdv_backup_${new Date().toISOString().replace(/:/g, '-')}.json`,
             types: [{
@@ -1657,13 +1726,13 @@ ${item?.client?.cpf || ''}
               accept: { 'application/json': ['.json'] }
             }]
           };
-          
+
           try {
             const fileHandle = await window.showSaveFilePicker(options);
             const writable = await fileHandle.createWritable();
             await writable.write(blob);
             await writable.close();
-            
+
             console.log('Arquivo salvo com sucesso usando File System Access API');
             alert('Backup exportado com sucesso!');
             return;
@@ -1684,7 +1753,7 @@ ${item?.client?.cpf || ''}
         console.warn('Erro ao tentar usar File System Access API:', apiError);
         console.log('Usando método de fallback para download...');
       }
-      
+
       // Método de fallback: download direto
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -1693,7 +1762,7 @@ ${item?.client?.cpf || ''}
       document.body.appendChild(a);
       console.log('Iniciando download do arquivo...');
       a.click();
-      
+
       // Limpar
       setTimeout(() => {
         document.body.removeChild(a);
@@ -1708,21 +1777,28 @@ ${item?.client?.cpf || ''}
     }
   };
 
-  const importBackup = async (file) => {
+  const importBackup = async (event) => {
     try {
       console.log('Iniciando importação de backup...');
-      
-      // Se não foi fornecido um arquivo, abrir o seletor de arquivos
-      if (!file) {
+
+      // Verificar se o evento veio de um input de arquivo
+      let file = null;
+      if (event && event.target && event.target.files && event.target.files[0]) {
+        file = event.target.files[0];
+        console.log('Arquivo selecionado do input:', file.name);
+      } else if (event instanceof File) {
+        file = event;
+        console.log('Arquivo fornecido diretamente:', file.name);
+      } else {
         console.log('Nenhum arquivo fornecido, abrindo seletor de arquivos...');
-        
+
         // Criar um input de arquivo temporário
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
         fileInput.accept = '.json';
         fileInput.style.display = 'none';
         document.body.appendChild(fileInput);
-        
+
         // Promessa para lidar com a seleção de arquivo
         const filePromise = new Promise((resolve, reject) => {
           fileInput.onchange = (e) => {
@@ -1732,7 +1808,7 @@ ${item?.client?.cpf || ''}
               reject(new Error('Nenhum arquivo selecionado'));
             }
           };
-          
+
           // Se o usuário fechar o diálogo sem selecionar um arquivo
           setTimeout(() => {
             if (fileInput.files.length === 0) {
@@ -1740,8 +1816,9 @@ ${item?.client?.cpf || ''}
             }
           }, 1000);
         });
-        
+
         try {
+          fileInput.click(); // Abrir o seletor de arquivos
           file = await filePromise;
           console.log('Arquivo selecionado:', file.name);
         } catch (error) {
@@ -1749,54 +1826,119 @@ ${item?.client?.cpf || ''}
           document.body.removeChild(fileInput);
           return false;
         }
-        
+
         // Limpar o input temporário
         document.body.removeChild(fileInput);
       }
-      
+
+      if (!file) {
+        console.error('Nenhum arquivo para importar');
+        alert('Nenhum arquivo selecionado para importar.');
+        return false;
+      }
+
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        
+
         reader.onload = async (e) => {
           try {
             console.log('Arquivo lido, processando conteúdo...');
             const backupData = JSON.parse(e.target.result);
-            
-            // Validar o backup
-            if (!backupData.products || !backupData.timestamp) {
-              console.error('Arquivo de backup inválido');
-              alert('Arquivo de backup inválido. Verifique se o arquivo é um backup válido do sistema.');
-              reject(new Error('Arquivo de backup inválido'));
+
+            // Validar o backup - verificar se tem produtos ou vendas
+            if ((!backupData.products || backupData.products.length === 0) &&
+                (!backupData.sales || backupData.sales.length === 0)) {
+              console.error('Arquivo de backup inválido ou vazio');
+              alert('Arquivo de backup inválido ou vazio. Verifique se o arquivo contém dados de produtos ou vendas.');
+              reject(new Error('Arquivo de backup inválido ou vazio'));
               return;
             }
-            
-            console.log('Backup válido, criado em:', new Date(backupData.timestamp).toLocaleString());
-            
+
+            const timestamp = backupData.timestamp ? new Date(backupData.timestamp).toLocaleString() : 'data desconhecida';
+            console.log('Backup válido, criado em:', timestamp);
+
             // Confirmar a importação
-            if (!confirm(`Deseja importar o backup criado em ${new Date(backupData.timestamp).toLocaleString()}?\n\nDetalhes do backup:\n- Produtos: ${backupData.products.length}\n- Clientes: ${(backupData.clients || []).length}\n- Vendas: ${(backupData.sales || []).length}\n\nISSO SUBSTITUIRÁ TODOS OS DADOS ATUAIS!`)) {
+            if (!confirm(`Deseja importar o backup criado em ${timestamp}?\n\nDetalhes do backup:\n- Produtos: ${(backupData.products || []).length}\n- Clientes: ${(backupData.clients || []).length}\n- Vendas: ${(backupData.sales || []).length}\n\nISSO SUBSTITUIRÁ TODOS OS DADOS ATUAIS!`)) {
               console.log('Importação cancelada pelo usuário');
               reject(new Error('Importação cancelada pelo usuário'));
               return;
             }
-            
+
             console.log('Importando dados do backup...');
-            
-            // Importar dados
-            setItems(backupData.products || []);
-            setClients(backupData.clients || []);
-            setFilteredClients(backupData.clients || []);
-            setVendors(backupData.vendors || []);
-            setSalesData(backupData.sales || []);
-            setMinStockAlert(backupData.minStockAlert || {});
-            setIgnoreStock(backupData.ignoreStock || {});
-            setHostingerConfig(backupData.hostingerConfig || { site_url: '', api_key: '', site_id: '' });
-            
-            // Salvar no localStorage
-            localStorage.setItem('hostingerConfig', JSON.stringify(backupData.hostingerConfig || {}));
+
+            // Importar dados - manter dados existentes se não houver no backup
+            if (backupData.products && backupData.products.length > 0) {
+              setItems(backupData.products);
+              console.log(`Importados ${backupData.products.length} produtos`);
+            }
+
+            if (backupData.clients && backupData.clients.length > 0) {
+              setClients(backupData.clients);
+              setFilteredClients(backupData.clients);
+              console.log(`Importados ${backupData.clients.length} clientes`);
+            }
+
+            if (backupData.vendors && backupData.vendors.length > 0) {
+              setVendors(backupData.vendors);
+              console.log(`Importados ${backupData.vendors.length} fornecedores`);
+            }
+
+            if (backupData.sales && backupData.sales.length > 0) {
+              // Garantir que todas as vendas tenham o formato de data correto
+              const processedSales = backupData.sales.map(sale => {
+                // Se a venda não tiver data, usar a data atual
+                if (!sale.date) {
+                  return {
+                    ...sale,
+                    date: formatDateToBrazilian(new Date().toISOString().split('T')[0])
+                  };
+                }
+
+                // Se a data estiver no formato ISO, converter para brasileiro
+                if (sale.date.includes('-') && !sale.date.includes('/')) {
+                  const dateParts = sale.date.split('-');
+                  if (dateParts.length === 3) {
+                    return {
+                      ...sale,
+                      date: `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`
+                    };
+                  }
+                }
+
+                return sale;
+              });
+
+              setSalesData(processedSales);
+              console.log(`Importadas ${processedSales.length} vendas`);
+
+              // Atualizar o localStorage com as vendas importadas
+              localStorage.setItem('salesData', JSON.stringify(processedSales));
+            }
+
+            if (backupData.minStockAlert) {
+              setMinStockAlert(backupData.minStockAlert);
+              localStorage.setItem('minStockAlert', JSON.stringify(backupData.minStockAlert));
+            }
+
+            if (backupData.ignoreStock) {
+              setIgnoreStock(backupData.ignoreStock);
+              localStorage.setItem('ignoreStock', JSON.stringify(backupData.ignoreStock));
+            }
+
+            if (backupData.hostingerConfig) {
+              setHostingerConfig(backupData.hostingerConfig);
+              localStorage.setItem('hostingerConfig', JSON.stringify(backupData.hostingerConfig));
+            }
+
+            // Salvar no localStorage como backup temporário
             localStorage.setItem('pdvBackupTemp', JSON.stringify(backupData));
-            
+
             console.log('Backup importado com sucesso!');
             alert('Backup importado com sucesso!');
+
+            // Forçar a atualização da interface
+            checkDataIntegrity();
+
             resolve(true);
           } catch (error) {
             console.error('Erro ao processar arquivo de backup:', error);
@@ -1804,13 +1946,13 @@ ${item?.client?.cpf || ''}
             reject(error);
           }
         };
-        
+
         reader.onerror = () => {
           console.error('Erro ao ler o arquivo');
           alert('Erro ao ler o arquivo. Verifique se o arquivo não está corrompido.');
           reject(new Error('Erro ao ler o arquivo'));
         };
-        
+
         console.log('Iniciando leitura do arquivo...');
         reader.readAsText(file);
       });
@@ -1827,10 +1969,10 @@ ${item?.client?.cpf || ''}
       console.log('Salvando configurações de backup...');
       console.log('Local de backup:', backupLocation);
       console.log('Backup automático:', autoBackup);
-      
+
       localStorage.setItem('backupLocation', backupLocation);
       localStorage.setItem('autoBackup', autoBackup.toString());
-      
+
       console.log('Configurações salvas no localStorage');
       alert('Configurações de backup salvas com sucesso!');
       setShowConfigPopup(false);
@@ -1844,7 +1986,7 @@ ${item?.client?.cpf || ''}
   useEffect(() => {
     const lastSalesCount = localStorage.getItem('lastSalesCount');
     const currentSalesCount = salesData.length;
-    
+
     // Só fazer backup se o número de vendas aumentou
     if (autoBackup && currentSalesCount > 0 && (!lastSalesCount || currentSalesCount > parseInt(lastSalesCount))) {
       console.log('Realizando backup automático após venda...');
@@ -1862,120 +2004,144 @@ ${item?.client?.cpf || ''}
   // Função para verificar e corrigir a integridade dos dados
   const checkDataIntegrity = () => {
     console.log("Verificando integridade dos dados...");
-    
+
     // Verificar dados de vendas
     let salesDataFixed = false;
     const fixedSalesData = salesData.map(sale => {
       let needsFix = false;
       const fixedSale = { ...sale };
-      
+
+      // Verificar se a data existe
+      if (!sale.date) {
+        console.log("Venda sem data:", sale);
+        // Usar a data atual como fallback
+        fixedSale.date = formatDateToBrazilian(new Date().toISOString().split('T')[0]);
+        console.log("Data adicionada:", fixedSale.date);
+        needsFix = true;
+      }
       // Verificar se a data está no formato correto (DD/MM/YYYY)
-      if (sale.date && !/^\d{2}\/\d{2}\/\d{4}$/.test(sale.date)) {
+      else if (!/^\d{2}\/\d{2}\/\d{4}$/.test(sale.date)) {
         console.log("Data em formato incorreto:", sale.date);
         try {
-          // Tentar converter para o formato brasileiro
-          const dateObj = new Date(sale.date);
-          if (!isNaN(dateObj.getTime())) {
-            fixedSale.date = formatDateToBrazilian(dateObj.toISOString().split('T')[0]);
-            console.log("Data corrigida:", fixedSale.date);
-            needsFix = true;
+          // Verificar se a data está no formato ISO (YYYY-MM-DD)
+          if (sale.date.includes('-') && !sale.date.includes('/')) {
+            const dateParts = sale.date.split('-');
+            if (dateParts.length === 3) {
+              fixedSale.date = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+              console.log("Data corrigida de ISO para brasileiro:", fixedSale.date);
+              needsFix = true;
+            }
+          } else {
+            // Tentar converter para o formato brasileiro
+            const dateObj = new Date(sale.date);
+            if (!isNaN(dateObj.getTime())) {
+              fixedSale.date = formatDateToBrazilian(dateObj.toISOString().split('T')[0]);
+              console.log("Data corrigida:", fixedSale.date);
+              needsFix = true;
+            }
           }
         } catch (e) {
           console.error("Erro ao corrigir data:", e);
         }
       }
-      
+
+      // Adicionar campo source se não existir
+      if (!sale.source) {
+        fixedSale.source = 'vendas_pdv';
+        needsFix = true;
+      }
+
       // Verificar se os valores numéricos são realmente números
       if (sale.quantity === undefined || sale.quantity === null || isNaN(sale.quantity) || sale.quantity <= 0) {
         console.log("Quantidade inválida:", sale.quantity);
         fixedSale.quantity = Math.abs(Number(sale.quantity)) || 1;
         needsFix = true;
       }
-      
+
       if (sale.price === undefined || sale.price === null || isNaN(sale.price) || sale.price < 0) {
         console.log("Preço inválido:", sale.price);
         fixedSale.price = Math.abs(Number(sale.price)) || 0;
         needsFix = true;
       }
-      
+
       // Verificar se o total está correto (preço * quantidade)
       const calculatedTotal = fixedSale.price * fixedSale.quantity;
-      if (sale.total === undefined || sale.total === null || isNaN(sale.total) || 
+      if (sale.total === undefined || sale.total === null || isNaN(sale.total) ||
           sale.total < 0 || Math.abs(sale.total - calculatedTotal) > 0.01) {
         console.log("Total inválido ou inconsistente:", sale.total, "calculado:", calculatedTotal);
         fixedSale.total = calculatedTotal;
         needsFix = true;
       }
-      
+
       // Verificar se o produto existe
       if (!sale.product) {
         console.log("Venda sem produto:", sale);
         fixedSale.product = "Produto não especificado";
         needsFix = true;
       }
-      
+
       // Verificar se o método de pagamento existe
       if (!sale.paymentMethod) {
         console.log("Venda sem método de pagamento:", sale);
         fixedSale.paymentMethod = "Não especificado";
         needsFix = true;
       }
-      
+
       if (needsFix) {
         salesDataFixed = true;
         return fixedSale;
       }
-      
+
       return sale;
     });
-    
+
     // Atualizar os dados de vendas se foram corrigidos
     if (salesDataFixed) {
       console.log("Dados de vendas corrigidos:", fixedSalesData.length, "registros");
       setSalesData(fixedSalesData);
       localStorage.setItem('salesData', JSON.stringify(fixedSalesData));
     }
-    
+
     // Verificar dados de produtos
     let itemsFixed = false;
     const fixedItems = items.map(item => {
       let needsFix = false;
       const fixedItem = { ...item };
-      
+
       // Verificar se os valores numéricos são realmente números
       if (item.quantity === undefined || item.quantity === null || isNaN(item.quantity)) {
         console.log("Quantidade de estoque inválida:", item.quantity);
         fixedItem.quantity = Number(item.quantity) || 0;
         needsFix = true;
       }
-      
+
       if (item.price === undefined || item.price === null || isNaN(item.price) || item.price < 0) {
         console.log("Preço de produto inválido:", item.price);
         fixedItem.price = Math.abs(Number(item.price)) || 0;
         needsFix = true;
       }
-      
+
       if (item.sold === undefined || item.sold === null || isNaN(item.sold)) {
         console.log("Quantidade vendida inválida:", item.sold);
         fixedItem.sold = Number(item.sold) || 0;
         needsFix = true;
       }
-      
+
       // Verificar se a data de venda está no formato correto
       if (item.saleDate && !(item.saleDate instanceof Date) && isNaN(new Date(item.saleDate).getTime())) {
         console.log("Data de venda inválida:", item.saleDate);
         fixedItem.saleDate = new Date();
         needsFix = true;
       }
-      
+
       if (needsFix) {
         itemsFixed = true;
         return fixedItem;
       }
-      
+
       return item;
     });
-    
+
     // Atualizar os dados de produtos se foram corrigidos
     if (itemsFixed) {
       console.log("Dados de produtos corrigidos:", fixedItems.length, "registros");
@@ -1989,7 +2155,7 @@ ${item?.client?.cpf || ''}
         }
       });
     }
-    
+
     return { salesDataFixed, itemsFixed };
   };
 
@@ -2006,34 +2172,34 @@ ${item?.client?.cpf || ''}
   // Função para mostrar o relatório de vendas
   const handleShowSalesReport = () => {
     console.log("Abrindo relatório de vendas");
-    
+
     // Verificar a integridade dos dados antes de mostrar o relatório
     const { salesDataFixed, itemsFixed } = checkDataIntegrity();
-    
+
     // Definir a data de hoje como padrão para o relatório
     const today = new Date();
     const todayFormatted = formatDateToBrazilian(today.toISOString().split('T')[0]);
-    
+
     // Definir o primeiro e último dia do mês atual
     const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    
+
     // Formatar as datas no padrão brasileiro
     const firstDayFormatted = formatDateToBrazilian(firstDayOfMonth.toISOString().split('T')[0]);
     const lastDayFormatted = formatDateToBrazilian(lastDayOfMonth.toISOString().split('T')[0]);
-    
+
     // Definir as datas do relatório
     setReportType('day');
     setReportStartDate(todayFormatted);
     setReportEndDate(lastDayFormatted);
-    
+
     // Limpar a busca
     setReportSearchQuery('');
-    
+
     // Mostrar o relatório
     setShowSalesReport(true);
     setShowDashboard(false);
-    
+
     // Notificar o usuário se os dados foram corrigidos
     if (salesDataFixed || itemsFixed) {
       setTimeout(() => {
@@ -2329,7 +2495,7 @@ ${item?.client?.cpf || ''}
                   />
                 </div>
               </div>
-              
+
               {/* Filtro de categorias */}
               <div className="flex justify-center mb-6">
                 <div className="flex flex-wrap gap-2 justify-center">
@@ -2339,7 +2505,7 @@ ${item?.client?.cpf || ''}
                       onClick={() => setSelectedCategory(category)}
                       className={`px-3 py-1 rounded-full text-sm ${
                         selectedCategory === category
-                          ? 'bg-blue-500' 
+                          ? 'bg-blue-500'
                           : 'bg-gray-200'
                       } text-white rounded hover:bg-gray-300`}
                     >
@@ -2403,7 +2569,7 @@ ${item?.client?.cpf || ''}
                             </div>
                           )}
                         </div>
-                        
+
                         {/* Área de descrição com margem de 10px à esquerda da categoria */}
                         <div className="flex flex-col h-full" style={{ marginRight: '10px' }}>
                           <div className="text-left mb-2">
@@ -2416,7 +2582,7 @@ ${item?.client?.cpf || ''}
                               </p>
                             </div>
                           )}
-                          
+
                           {/* Categoria do item */}
                           <div className="mt-auto">
                             <div className="text-left mb-1">
@@ -2430,7 +2596,7 @@ ${item?.client?.cpf || ''}
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="flex gap-2 mt-4 items-center">
                         {item.expirationDate && (
                           <>
@@ -2439,7 +2605,7 @@ ${item?.client?.cpf || ''}
                               const today = new Date();
                               const diffTime = expiration - today;
                               const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                              
+
                               if (diffDays < 0) {
                                 return (
                                   <div className="flex items-center gap-2">
@@ -2494,8 +2660,8 @@ ${item?.client?.cpf || ''}
                               }
                             }}
                             className={`px-3 py-1 text-sm ${
-                              selectedItems.includes(index) 
-                                ? 'bg-green-500' 
+                              selectedItems.includes(index)
+                                ? 'bg-green-500'
                                 : 'bg-yellow-500'
                             } text-white rounded hover:bg-opacity-90`}
                           >
@@ -2619,7 +2785,7 @@ ${item?.client?.cpf || ''}
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {filteredClients.map((client) => (
                     <div key={client.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div 
+                      <div
                         className="flex-1 cursor-pointer hover:text-purple-600"
                         onClick={() => {
                           setSelectedClient(client);
@@ -2685,11 +2851,11 @@ ${item?.client?.cpf || ''}
                 <div className="p-4">
                   <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-bold">{selectedClient ? 'Editar Cliente' : 'Novo Cliente'}</h2>
-                    <MagicWandButton 
+                    <MagicWandButton
                       onDataExtracted={(data) => {
                         // Garantir que as datas estejam no formato correto
                         const formattedData = { ...data };
-                        
+
                         // Verificar e formatar a data de nascimento
                         if (formattedData.birthDate) {
                           // Verificar se já está no formato YYYY-MM-DD
@@ -2705,7 +2871,7 @@ ${item?.client?.cpf || ''}
                             }
                           }
                         }
-                        
+
                         // Verificar e formatar a data de expedição
                         if (formattedData.issueDate) {
                           // Verificar se já está no formato YYYY-MM-DD
@@ -2721,9 +2887,9 @@ ${item?.client?.cpf || ''}
                             }
                           }
                         }
-                        
+
                         console.log('Dados formatados para o formulário:', formattedData);
-                        
+
                         setNewClient(prev => ({
                           ...prev,
                           ...formattedData
@@ -2731,7 +2897,7 @@ ${item?.client?.cpf || ''}
                       }}
                     />
                   </div>
-                  
+
                   {/* Informações Básicas - Expansível */}
                   <details open className="mb-4">
                     <summary className="font-semibold cursor-pointer p-2 bg-gray-100 rounded">Informações Básicas</summary>
@@ -2856,7 +3022,7 @@ ${item?.client?.cpf || ''}
                         onChange={async (e) => {
                           const formattedCep = formatCep(e.target.value);
                           setNewClient(prev => ({ ...prev, cep: formattedCep }));
-                          
+
                           if (formattedCep.replace(/\D/g, '').length === 8) {
                             const addressData = await handleCepSearch(formattedCep);
                             if (addressData) {
@@ -3039,17 +3205,17 @@ ${item?.client?.cpf || ''}
                     // Forçar a atualização dos dados ao alternar para o dashboard
                     if (!showDashboard) {
                       console.log("Alternando para o dashboard e atualizando dados");
-                      
+
                       // Verificar a integridade dos dados primeiro
                       const { salesDataFixed, itemsFixed } = checkDataIntegrity();
-                      
+
                       // Atualizar os dados filtrados antes de mostrar o dashboard
                       const filteredData = getFilteredSalesData();
                       console.log("Dados filtrados atualizados:", filteredData.length, "registros");
-                      
+
                       // Ativar o dashboard
                       setShowDashboard(true);
-                      
+
                       // Notificar o usuário se os dados foram corrigidos
                       if (salesDataFixed || itemsFixed) {
                         setTimeout(() => {
@@ -3093,7 +3259,7 @@ ${item?.client?.cpf || ''}
                         setTimeout(() => {
                           const filteredData = getFilteredSalesData();
                           console.log("Dados filtrados atualizados após mudança de tipo:", filteredData.length, "registros");
-                          
+
                           // Forçar atualização da UI
                           setShowDashboard(false);
                           setTimeout(() => setShowDashboard(true), 50);
@@ -3142,21 +3308,21 @@ ${item?.client?.cpf || ''}
                     <button
                       onClick={() => {
                         console.log("Atualizando dashboards manualmente");
-                        
+
                         // Verificar a integridade dos dados
                         const { salesDataFixed, itemsFixed } = checkDataIntegrity();
-                        
+
                         // Atualizar os dados filtrados
                         const filteredData = getFilteredSalesData();
                         console.log("Dados filtrados atualizados:", filteredData.length, "registros");
-                        
+
                         // Forçar atualização dos gráficos
                         setShowDashboard(false);
-                        
+
                         // Usar um timeout para garantir que a UI seja atualizada
                         setTimeout(() => {
                           setShowDashboard(true);
-                          
+
                           // Mostrar mensagem de sucesso
                           setTimeout(() => {
                             if (salesDataFixed || itemsFixed) {
@@ -3303,7 +3469,7 @@ ${item?.client?.cpf || ''}
                             const yearMonth = e.target.value;
                             const firstDayOfMonth = `${yearMonth}-01`;
                             setReportStartDate(formatDateToBrazilian(firstDayOfMonth));
-                            
+
                             // Definir o último dia do mês como data final
                             const [year, month] = yearMonth.split('-');
                             const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
@@ -3748,7 +3914,7 @@ ${item?.client?.cpf || ''}
                             if (url) {
                               const fullUrl = url.startsWith('http') ? url : `https://${url}`;
                               setEditingItem({
-                                ...editingItem, 
+                                ...editingItem,
                                 links: [...(editingItem.links || []), fullUrl]
                               });
                               urlInput.value = '';
@@ -3779,7 +3945,7 @@ ${item?.client?.cpf || ''}
                     price: parseFloat(editingItem.price)
                   };
                   await updateProduct(updatedItem);
-                  setItems(prevItems => prevItems.map(item => 
+                  setItems(prevItems => prevItems.map(item =>
                     item.id === editingItem.id ? updatedItem : item
                   ));
                   setShowEditPopup(false);
@@ -3792,56 +3958,94 @@ ${item?.client?.cpf || ''}
           </div>
         </div>
       )}
-      
+
       {/* Configuration Popup */}
       {showConfigPopup && (
-        <div className="popup">
-          <div className="popup-content">
-            <h2>Configurações</h2>
-            <div className="form-group">
-              <label>Local de Backup:</label>
-                    <input
-                      type="text"
-                      value={backupLocation}
-                      onChange={(e) => setBackupLocation(e.target.value)}
-                placeholder="Caminho para salvar backups automáticos"
-              />
-              <small className="help-text">
-                Este caminho é usado apenas para backups automáticos. Para backups manuais, você poderá escolher onde salvar.
-              </small>
-                  </div>
-            <div className="form-group">
-              <label>
-                    <input
-                      type="checkbox"
-                      checked={autoBackup}
-                      onChange={(e) => setAutoBackup(e.target.checked)}
-                    />
-                Backup automático após cada venda
-                    </label>
-                  </div>
-            <div className="backup-buttons">
-              <button onClick={createBackup} className="btn btn-primary">
-                <i className="fas fa-save"></i> Criar Backup
-                    </button>
-              <button onClick={exportBackup} className="btn btn-success">
-                <i className="fas fa-file-export"></i> Exportar Backup
-                <small className="btn-description">Escolha onde salvar</small>
-                    </button>
-              <button onClick={() => importBackup()} className="btn btn-info">
-                <i className="fas fa-file-import"></i> Importar Backup
-                <small className="btn-description">Selecione um arquivo</small>
-                  </button>
-                </div>
-            <button 
-              onClick={() => {
-              saveBackupConfig();
-              setShowConfigPopup(false);
-              }} 
-              className="btn btn-secondary"
-            >
-              Fechar
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Configurações</h2>
+              <button
+                onClick={() => setShowConfigPopup(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="form-group">
+                <label className="block text-sm font-medium mb-1">Local de Backup:</label>
+                <input
+                  type="text"
+                  value={backupLocation}
+                  onChange={(e) => setBackupLocation(e.target.value)}
+                  placeholder="Caminho para salvar backups automáticos"
+                  className="w-full px-3 py-2 border rounded-md"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Este caminho é usado apenas para backups automáticos. Para backups manuais, você poderá escolher onde salvar.
+                </p>
+              </div>
+
+              <div className="form-group">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={autoBackup}
+                    onChange={(e) => setAutoBackup(e.target.checked)}
+                    className="h-4 w-4 mr-2"
+                  />
+                  <span>Backup automático após cada venda</span>
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+                <button
+                  onClick={createBackup}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center justify-center"
+                >
+                  <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                  Criar Backup
                 </button>
+
+                <button
+                  onClick={exportBackup}
+                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center justify-center"
+                >
+                  <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  Exportar
+                </button>
+
+                <button
+                  onClick={() => importBackup()}
+                  className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 flex items-center justify-center"
+                >
+                  <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Importar
+                </button>
+              </div>
+
+              <div className="flex justify-end mt-6 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    saveBackupConfig();
+                    setShowConfigPopup(false);
+                  }}
+                  className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700"
+                >
+                  Salvar e Fechar
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

@@ -38,3 +38,4 @@ const VendasPDVReport = ({
 };
 
 export default VendasPDVReport;
+
