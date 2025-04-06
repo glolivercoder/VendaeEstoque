@@ -26,7 +26,7 @@ const SimpleSalesReport = ({
               </svg>
             </button>
           </div>
-          
+
           {/* Filtros */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div>
@@ -58,7 +58,7 @@ const SimpleSalesReport = ({
               />
             </div>
           </div>
-          
+
           {/* Tabela de vendas */}
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white border border-gray-200">
@@ -80,7 +80,7 @@ const SimpleSalesReport = ({
                     if (clientSearchTerm && !sale.client.toLowerCase().includes(clientSearchTerm.toLowerCase())) {
                       return false;
                     }
-                    
+
                     // Filtrar por produto
                     if (productSearchTerm) {
                       const hasMatchingProduct = sale.items.some(item =>
@@ -88,7 +88,7 @@ const SimpleSalesReport = ({
                       );
                       if (!hasMatchingProduct) return false;
                     }
-                    
+
                     return true;
                   })
                   .sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -99,7 +99,7 @@ const SimpleSalesReport = ({
                         if (productSearchTerm && !item.description.toLowerCase().includes(productSearchTerm.toLowerCase())) {
                           return null;
                         }
-                        
+
                         return (
                           <tr key={`${index}-${itemIndex}`} className="hover:bg-gray-50">
                             <td className="py-2 px-4 border-b">{formatDateToBrazilian(sale.date)}</td>
@@ -117,34 +117,25 @@ const SimpleSalesReport = ({
               </tbody>
             </table>
           </div>
-          
-          {/* Resumo */}
+
+          {/* Totais */}
           <div className="mt-6 bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-bold mb-2">Resumo</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm text-gray-600">Total de Vendas</p>
-                <p className="font-bold">{salesData.length}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Total de Itens Vendidos</p>
-                <p className="font-bold">
+            <div className="flex justify-end">
+              <div className="text-right">
+                <p className="text-sm text-gray-600 font-semibold">Total de Itens: <span className="font-bold">
                   {salesData.reduce((total, sale) => {
                     return total + sale.items.reduce((itemTotal, item) => itemTotal + item.quantity, 0);
                   }, 0)}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Valor Total</p>
-                <p className="font-bold">
+                </span></p>
+                <p className="text-sm text-gray-600 font-semibold">Valor Total: <span className="font-bold">
                   R$ {salesData.reduce((total, sale) => {
                     return total + sale.items.reduce((itemTotal, item) => itemTotal + (item.quantity * item.price), 0);
                   }, 0).toFixed(2)}
-                </p>
+                </span></p>
               </div>
             </div>
           </div>
-          
+
           {/* Botões de ação */}
           <div className="flex justify-end mt-6 gap-4">
             <button
