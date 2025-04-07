@@ -158,12 +158,12 @@ export const formatDecimal = (value) => {
  */
 export const parseDecimal = (formattedValue) => {
   if (!formattedValue) return 0;
-
+  
   // Remove separadores de milhar e substitui vírgula por ponto
   const normalizedValue = String(formattedValue)
     .replace(/\./g, '')
     .replace(',', '.');
-
+  
   return parseFloat(normalizedValue) || 0;
 };
 
@@ -183,15 +183,15 @@ export const formatPhoneNumber = (value) => {
  */
 export const formatCNPJ = (value) => {
   if (!value) return '';
-
+  
   // Remove caracteres não numéricos
   const numbers = value.replace(/\D/g, '');
-
+  
   // CNPJ: 00.000.000/0000-00
   return numbers
     .replace(/^(\d{2})(\d)/, '$1.$2')
     .replace(/^(\d{2})\.?(\d{3})(\d)/, '$1.$2.$3')
     .replace(/\.(\d{3})(\d)/, '.$1/$2')
-    .replace(/(\/\d{4})(\d)/, '$1-$2')
+    .replace(/(\d{4})(\d)/, '$1-$2')
     .replace(/(-\d{2})\d+?$/, '$1');
 };

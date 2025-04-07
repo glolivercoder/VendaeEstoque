@@ -1,18 +1,20 @@
 import React, { createContext, useState, useEffect, useCallback, useContext } from 'react';
-import { 
-  getProducts, 
-  addProduct, 
-  updateProduct, 
+import {
+  getProducts,
+  addProduct,
+  updateProduct,
   deleteProduct,
   getVendors,
-  addVendor, 
-  getClients, 
+  addVendor,
+  updateVendor,
+  deleteVendor,
+  getClients,
   addClient,
   updateClient,
   deleteClient,
   ensureDB,
   initializeDefaultVendor,
-} from '../services/database/database';
+} from '../services/database';
 import useLocalStorage from '../hooks/useLocalStorage';
 
 // Criar o contexto
@@ -24,7 +26,7 @@ export const AppContextProvider = ({ children }) => {
   const [filteredItems, setFilteredItems] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [categories, setCategories] = useState(['Ferramentas', 'Instrumentos Musicais', 'Informática', 'Gadgets', 'Todos', 'Diversos']);
-  
+
   // Estados para vendas
   const [salesData, setSalesData] = useLocalStorage('salesData', []);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -33,13 +35,13 @@ export const AppContextProvider = ({ children }) => {
     totalCard: 0,
     totalPix: 0
   });
-  
+
   // Estados para clientes e fornecedores
   const [clients, setClients] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
   const [selectedVendor, setSelectedVendor] = useState(null);
-  
+
   // Estados para configurações
   const [minStockAlert, setMinStockAlert] = useLocalStorage('minStockAlert', {});
   const [ignoreStock, setIgnoreStock] = useLocalStorage('ignoreStock', {});
@@ -48,26 +50,26 @@ export const AppContextProvider = ({ children }) => {
     api_key: '',
     site_id: ''
   });
-  
+
   // Estado de carregamento
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Inicializar o banco de dados
   useEffect(() => {
     const initializeDB = async () => {
       try {
         setIsLoading(true);
         console.log('Inicializando banco de dados...');
-        
+
         // Primeiro inicializa o banco de dados
         const database = await ensureDB();
         if (!database) {
           throw new Error('Falha ao inicializar o banco de dados');
         }
-        
+
         // Depois inicializa o fornecedor padrão
         await initializeDefaultVendor();
-        
+
         console.log('Banco de dados inicializado com sucesso!');
         await loadData();
       } catch (error) {
@@ -79,7 +81,7 @@ export const AppContextProvider = ({ children }) => {
 
     initializeDB();
   }, []);
-  
+
   // Carregar dados iniciais
   const loadData = async () => {
     try {
@@ -89,12 +91,12 @@ export const AppContextProvider = ({ children }) => {
         getClients(),
         getProducts()
       ]);
-      
+
       setVendors(vendorsList || []);
       setClients((clientsList || []).map(client => ({ ...client, showDetails: false })));
       setItems(productsList || []);
       setFilteredItems(productsList || []);
-      
+
       // Set default vendor with null safety
       const defaultVendor = vendorsList?.find(v => v?.document === '0727887807') || {
         name: 'Gleidison S. Oliveira',
@@ -111,7 +113,7 @@ export const AppContextProvider = ({ children }) => {
       setIsLoading(false);
     }
   };
-  
+
   // Função para filtrar produtos por categoria
   const filterItemsByCategory = useCallback((category) => {
     setSelectedCategory(category);
@@ -121,7 +123,7 @@ export const AppContextProvider = ({ children }) => {
       setFilteredItems(items.filter(item => item.category === category));
     }
   }, [items]);
-  
+
   // Função para adicionar um novo produto
   const handleAddItem = async (newItem) => {
     try {
@@ -138,66 +140,66 @@ export const AppContextProvider = ({ children }) => {
       };
 
       const productId = await addProduct(productData);
-      
+
       const newProductWithId = {
         ...productData,
         id: productId,
         soldQuantity: 1
       };
-      
+
       setItems(prevItems => [...prevItems, newProductWithId]);
-      
+
       // Atualizar itens filtrados se necessário
       if (selectedCategory === 'Todos' || selectedCategory === newProductWithId.category) {
         setFilteredItems(prevItems => [...prevItems, newProductWithId]);
       }
-      
+
       return newProductWithId;
     } catch (error) {
       console.error('Error adding product:', error);
       throw error;
     }
   };
-  
+
   // Função para atualizar um produto
   const handleUpdateItem = async (updatedItem) => {
     try {
       await updateProduct(updatedItem);
-      
-      setItems(prevItems => 
-        prevItems.map(item => 
+
+      setItems(prevItems =>
+        prevItems.map(item =>
           item.id === updatedItem.id ? updatedItem : item
         )
       );
-      
-      setFilteredItems(prevItems => 
-        prevItems.map(item => 
+
+      setFilteredItems(prevItems =>
+        prevItems.map(item =>
           item.id === updatedItem.id ? updatedItem : item
         )
       );
-      
+
       return updatedItem;
     } catch (error) {
       console.error('Error updating product:', error);
       throw error;
     }
   };
-  
+
   // Função para excluir um produto
   const handleDeleteItem = async (itemId) => {
     try {
       await deleteProduct(itemId);
-      
+
       setItems(prevItems => prevItems.filter(item => item.id !== itemId));
       setFilteredItems(prevItems => prevItems.filter(item => item.id !== itemId));
-      
+
       return true;
     } catch (error) {
       console.error('Error deleting product:', error);
       throw error;
     }
   };
-  
+
   // Função para processar vendas multiplas
   const handleMultipleSales = async (paymentMethod) => {
     if (selectedItems.length === 0) {
@@ -206,12 +208,12 @@ export const AppContextProvider = ({ children }) => {
 
     const updatedItems = [...items];
     let totalAmount = 0;
-    
+
     // Verificar estoque para todos os itens selecionados primeiro
     for (const index of selectedItems) {
       const item = updatedItems[index];
       const quantity = item.soldQuantity || 1;
-      
+
       if (!ignoreStock[item.id] && item.quantity < quantity) {
         throw new Error(`Quantidade insuficiente em estoque para ${item.description}`);
       }
@@ -226,7 +228,7 @@ export const AppContextProvider = ({ children }) => {
         const item = updatedItems[index];
         const quantity = Math.abs(item.soldQuantity || 1); // Garantir que a quantidade seja positiva
         const itemTotal = Math.abs(item.price * quantity); // Garantir que o total seja positivo
-        
+
         const updatedItem = {
           ...item,
           quantity: item.quantity - quantity,
@@ -234,7 +236,7 @@ export const AppContextProvider = ({ children }) => {
           saleDate,
           paymentMethod
         };
-        
+
         await updateProduct(updatedItem);
         updatedItems[index] = updatedItem;
         totalAmount += itemTotal;
@@ -245,7 +247,7 @@ export const AppContextProvider = ({ children }) => {
         const itemMap = new Map(updatedItems.map(item => [item.id, item]));
         return prevItems.map(item => itemMap.get(item.id) || item);
       });
-      
+
       setSelectedItems([]);
 
       // Update sales summary
@@ -270,39 +272,39 @@ export const AppContextProvider = ({ children }) => {
         total: Math.abs(totalAmount),
         paymentMethod
       };
-      
+
       setSalesData(prev => [...prev, newSale]);
-      
+
       return newSale;
     } catch (error) {
       console.error('Error processing sales:', error);
       throw error;
     }
   };
-  
+
   // Função para formatar data no formato brasileiro
   const formatDateToBrazilian = (isoDate) => {
     if (!isoDate) return '';
     try {
       const parts = isoDate.split('-');
       if (parts.length !== 3) return '';
-      
+
       const year = parts[0];
       const month = parts[1];
       const day = parts[2];
-      
+
       return `${day}/${month}/${year}`;
     } catch (e) {
       console.error("Erro ao formatar data:", e);
       return '';
     }
   };
-  
+
   // Função de backup
   const createBackup = async () => {
     try {
       console.log("Iniciando backup...");
-      
+
       // Preparar dados para backup
       const backupData = {
         items: items,
@@ -315,28 +317,28 @@ export const AppContextProvider = ({ children }) => {
         backupDate: new Date().toISOString(),
         version: '2.0'
       };
-      
+
       // Serializar dados
       const backupJSON = JSON.stringify(backupData, null, 2);
-      
+
       // Nome do arquivo com timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const fileName = `backup_estoque_${timestamp}.json`;
-      
+
       // No ambiente web, fazer download do arquivo
       const blob = new Blob([backupJSON], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
-      
+
       const link = document.createElement('a');
       link.href = url;
       link.download = fileName;
-      
+
       // Salvar no local especificado
       // Em ambiente web, isso irá baixar para o local padrão
       link.click();
-      
+
       URL.revokeObjectURL(url);
-      
+
       console.log("Backup concluído com sucesso!");
       return true;
     } catch (error) {
@@ -344,7 +346,7 @@ export const AppContextProvider = ({ children }) => {
       throw error;
     }
   };
-  
+
   // Função para importar backup
   const importBackup = async (backupData) => {
     try {
@@ -352,7 +354,7 @@ export const AppContextProvider = ({ children }) => {
       if (!backupData.items || !backupData.vendors || !backupData.clients) {
         throw new Error("Arquivo de backup inválido ou corrompido");
       }
-      
+
       // Restaurar dados
       setItems(backupData.items);
       setFilteredItems(backupData.items);
@@ -362,14 +364,14 @@ export const AppContextProvider = ({ children }) => {
       setMinStockAlert(backupData.minStockAlert || {});
       setIgnoreStock(backupData.ignoreStock || {});
       setHostingerConfig(backupData.hostingerConfig || {});
-      
+
       return true;
     } catch (error) {
       console.error("Erro ao processar arquivo de backup:", error);
       throw error;
     }
   };
-  
+
   // Função para adicionar cliente
   const handleAddClient = async (newClient) => {
     try {
@@ -382,13 +384,13 @@ export const AppContextProvider = ({ children }) => {
       throw error;
     }
   };
-  
+
   // Função para atualizar cliente
   const handleUpdateClient = async (updatedClient) => {
     try {
       await updateClient(updatedClient);
-      setClients(prevClients => 
-        prevClients.map(client => 
+      setClients(prevClients =>
+        prevClients.map(client =>
           client.id === updatedClient.id ? updatedClient : client
         )
       );
@@ -398,7 +400,7 @@ export const AppContextProvider = ({ children }) => {
       throw error;
     }
   };
-  
+
   // Função para excluir cliente
   const handleDeleteClient = async (clientId) => {
     try {
@@ -410,7 +412,7 @@ export const AppContextProvider = ({ children }) => {
       throw error;
     }
   };
-  
+
   // Função para adicionar fornecedor
   const handleAddVendor = async (newVendor) => {
     try {
@@ -420,6 +422,31 @@ export const AppContextProvider = ({ children }) => {
       return true;
     } catch (error) {
       console.error('Error adding vendor:', error);
+      throw error;
+    }
+  };
+
+  // Função para atualizar fornecedor
+  const handleUpdateVendor = async (vendorId, updatedVendor) => {
+    try {
+      await updateVendor(vendorId, updatedVendor);
+      const updatedVendors = await getVendors();
+      setVendors(updatedVendors);
+      return true;
+    } catch (error) {
+      console.error('Error updating vendor:', error);
+      throw error;
+    }
+  };
+
+  // Função para excluir fornecedor
+  const handleDeleteVendor = async (vendorId) => {
+    try {
+      await deleteVendor(vendorId);
+      setVendors(prevVendors => prevVendors.filter(vendor => vendor.id !== vendorId));
+      return true;
+    } catch (error) {
+      console.error('Error deleting vendor:', error);
       throw error;
     }
   };
@@ -436,14 +463,14 @@ export const AppContextProvider = ({ children }) => {
       handleAddItem,
       handleUpdateItem,
       handleDeleteItem,
-      
+
       // Vendas
       salesData,
       selectedItems,
       setSelectedItems,
       salesSummary,
       handleMultipleSales,
-      
+
       // Clientes
       clients,
       selectedClient,
@@ -451,13 +478,15 @@ export const AppContextProvider = ({ children }) => {
       handleAddClient,
       handleUpdateClient,
       handleDeleteClient,
-      
+
       // Fornecedores
       vendors,
       selectedVendor,
       setSelectedVendor,
       handleAddVendor,
-      
+      handleUpdateVendor,
+      handleDeleteVendor,
+
       // Configurações
       minStockAlert,
       setMinStockAlert,
@@ -465,11 +494,11 @@ export const AppContextProvider = ({ children }) => {
       setIgnoreStock,
       hostingerConfig,
       setHostingerConfig,
-      
+
       // Backup
       createBackup,
       importBackup,
-      
+
       // Estado de carregamento
       isLoading
     }}>

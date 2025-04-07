@@ -8,6 +8,8 @@ import {
   addVendor,
   getVendors,
   searchVendors,
+  updateVendor,
+  deleteVendor,
   addClient,
   getClients,
   searchClients,
@@ -16,6 +18,7 @@ import {
   ensureDB,
   initializeDefaultVendor
 } from './services/database';
+import Vendors from './pages/Vendors';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 import html2canvas from 'html2canvas';
@@ -144,6 +147,7 @@ function App() {
   const [salesData, setSalesData] = useState([]);
   const [showAddItem, setShowAddItem] = useState(false);
   const [showSiteExporter, setShowSiteExporter] = useState(false);
+  const [showVendorsTab, setShowVendorsTab] = useState(false);
   const [hostingerConfig, setHostingerConfig] = useState({
     site_url: '',
     api_key: '',
@@ -343,6 +347,44 @@ function App() {
       setNewVendor({ name: '', document: '' });
     } catch {
       alert('Erro ao adicionar vendedor. Verifique se o documento já existe.');
+    }
+  };
+
+  // Funções para manipular fornecedores na aba de Fornecedores
+  const handleAddVendor = async (vendorData) => {
+    try {
+      const newVendorId = await addVendor(vendorData);
+      const updatedVendors = await getVendors();
+      setVendors(updatedVendors);
+      alert('Fornecedor adicionado com sucesso!');
+      return newVendorId;
+    } catch (error) {
+      console.error('Erro ao adicionar fornecedor:', error);
+      alert('Erro ao adicionar fornecedor. Por favor, tente novamente.');
+    }
+  };
+
+  const handleUpdateVendor = async (vendorData) => {
+    try {
+      await updateVendor(vendorData);
+      const updatedVendors = await getVendors();
+      setVendors(updatedVendors);
+      alert('Fornecedor atualizado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao atualizar fornecedor:', error);
+      alert('Erro ao atualizar fornecedor. Por favor, tente novamente.');
+    }
+  };
+
+  const handleDeleteVendor = async (vendorId) => {
+    try {
+      await deleteVendor(vendorId);
+      const updatedVendors = await getVendors();
+      setVendors(updatedVendors);
+      alert('Fornecedor excluído com sucesso!');
+    } catch (error) {
+      console.error('Erro ao excluir fornecedor:', error);
+      alert('Erro ao excluir fornecedor. Por favor, tente novamente.');
     }
   };
 
@@ -2961,6 +3003,17 @@ ${item?.client?.cpf || ''}
                 </svg>
               </button>
 
+              {/* Fornecedores button */}
+              <button
+                onClick={() => setShowVendorsTab(true)}
+                className="w-full bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 flex items-center justify-center gap-2 mt-4"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                Fornecedores
+              </button>
+
               {/* Site Exporter Sync button */}
               <button
                 onClick={() => setShowSiteExporter(!showSiteExporter)}
@@ -4211,6 +4264,57 @@ ${item?.client?.cpf || ''}
         </div>
       )}
 
+      {/* Vendors Popup */}
+      {showVendorsTab && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-6xl w-full h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Fornecedores</h3>
+              <button
+                onClick={() => setShowVendorsTab(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <Vendors
+              vendors={vendors}
+              handleAddVendor={handleAddVendor}
+              handleUpdateVendor={handleUpdateVendor}
+              handleDeleteVendor={handleDeleteVendor}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Vendors Popup */}
+      {showVendorsTab && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-6xl w-full h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Fornecedores</h3>
+              <button
+                onClick={() => setShowVendorsTab(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <Vendors
+              vendors={vendors}
+              handleAddVendor={handleAddVendor}
+              handleUpdateVendor={handleUpdateVendor}
+              handleDeleteVendor={handleDeleteVendor}
+            />
+          </div>
+        </div>
+      )}
 
     </div>
   );

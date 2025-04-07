@@ -1,5 +1,5 @@
 const DB_NAME = 'estoqueDB';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 let db;
 let dbInitPromise;
@@ -50,6 +50,12 @@ const initDB = () => {
       const vendorsStore = db.createObjectStore('vendors', { keyPath: 'id', autoIncrement: true });
       vendorsStore.createIndex('document', 'document', { unique: true });
       vendorsStore.createIndex('name', 'name', { unique: false });
+      vendorsStore.createIndex('cnpj', 'cnpj', { unique: false });
+      vendorsStore.createIndex('email', 'email', { unique: false });
+      vendorsStore.createIndex('whatsapp', 'whatsapp', { unique: false });
+      vendorsStore.createIndex('telegram', 'telegram', { unique: false });
+      vendorsStore.createIndex('instagram', 'instagram', { unique: false });
+      vendorsStore.createIndex('url', 'url', { unique: false });
 
       // Create clients store
       const clientsStore = db.createObjectStore('clients', { keyPath: 'id', autoIncrement: true });
@@ -65,7 +71,7 @@ const initDB = () => {
       // Create sale items store
       const saleItemsStore = db.createObjectStore('saleItems', { keyPath: 'id', autoIncrement: true });
       saleItemsStore.createIndex('saleId', 'saleId', { unique: false });
-      
+
       console.log('Estrutura do banco de dados atualizada');
     };
   });
@@ -100,6 +106,13 @@ const initializeDefaultVendor = async () => {
     const defaultVendor = {
       name: 'Gleidison S. Oliveira',
       document: '0727887807',
+      description: 'Fornecedor padrão do sistema',
+      cnpj: '',
+      email: '',
+      whatsapp: '',
+      telegram: '',
+      instagram: '',
+      url: '',
       createdAt: new Date()
     };
 
@@ -182,7 +195,7 @@ export const addVendor = async (vendor) => {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(['vendors'], 'readwrite');
     const store = transaction.objectStore('vendors');
-    
+
     const index = store.index('document');
     const checkRequest = index.get(vendor.document);
 
@@ -192,10 +205,22 @@ export const addVendor = async (vendor) => {
         return;
       }
 
-      const addRequest = store.add({
-        ...vendor,
+      // Ensure all required fields exist
+      const vendorData = {
+        name: vendor.name || '',
+        document: vendor.document || '',
+        description: vendor.description || '',
+        cnpj: vendor.cnpj || '',
+        email: vendor.email || '',
+        whatsapp: vendor.whatsapp || '',
+        telegram: vendor.telegram || '',
+        instagram: vendor.instagram || '',
+        url: vendor.url || '',
+        products: vendor.products || [],
         createdAt: new Date()
-      });
+      };
+
+      const addRequest = store.add(vendorData);
 
       addRequest.onsuccess = () => {
         resolve(addRequest.result);
@@ -208,6 +233,99 @@ export const addVendor = async (vendor) => {
 
     checkRequest.onerror = () => {
       reject(checkRequest.error);
+    };
+  });
+};
+
+export const updateVendor = async (vendor) => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['vendors'], 'readwrite');
+    const store = transaction.objectStore('vendors');
+
+    // First get the existing vendor
+    const getRequest = store.get(vendor.id);
+
+    getRequest.onsuccess = () => {
+      const existingVendor = getRequest.result;
+      if (!existingVendor) {
+        reject(new Error('Vendor not found'));
+        return;
+      }
+
+      // Check if document is being changed and if it already exists
+      if (vendor.document && vendor.document !== existingVendor.document) {
+        const index = store.index('document');
+        const checkRequest = index.get(vendor.document);
+
+        checkRequest.onsuccess = () => {
+          if (checkRequest.result && checkRequest.result.id !== vendor.id) {
+            reject(new Error('Document already exists for another vendor'));
+            return;
+          }
+
+          // Continue with update after document check
+          continueUpdate();
+        };
+
+        checkRequest.onerror = () => {
+          reject(checkRequest.error);
+        };
+      } else {
+        // No document change, proceed with update
+        continueUpdate();
+      }
+
+      function continueUpdate() {
+        // Merge existing data with updates
+        const updatedData = {
+          ...existingVendor,
+          name: vendor.name !== undefined ? vendor.name : existingVendor.name,
+          document: vendor.document !== undefined ? vendor.document : existingVendor.document,
+          description: vendor.description !== undefined ? vendor.description : existingVendor.description,
+          cnpj: vendor.cnpj !== undefined ? vendor.cnpj : existingVendor.cnpj,
+          email: vendor.email !== undefined ? vendor.email : existingVendor.email,
+          whatsapp: vendor.whatsapp !== undefined ? vendor.whatsapp : existingVendor.whatsapp,
+          telegram: vendor.telegram !== undefined ? vendor.telegram : existingVendor.telegram,
+          instagram: vendor.instagram !== undefined ? vendor.instagram : existingVendor.instagram,
+          url: vendor.url !== undefined ? vendor.url : existingVendor.url,
+          products: vendor.products !== undefined ? vendor.products : existingVendor.products,
+          updatedAt: new Date()
+        };
+
+        // Update the vendor
+        const updateRequest = store.put(updatedData);
+
+        updateRequest.onsuccess = () => {
+          resolve(updateRequest.result);
+        };
+
+        updateRequest.onerror = () => {
+          reject(updateRequest.error);
+        };
+      }
+    };
+
+    getRequest.onerror = () => {
+      reject(getRequest.error);
+    };
+  });
+};
+
+export const deleteVendor = async (id) => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['vendors'], 'readwrite');
+    const store = transaction.objectStore('vendors');
+
+    const request = store.delete(id);
+
+    request.onsuccess = () => {
+      resolve();
+    };
+
+    request.onerror = () => {
+      reject(request.error);
     };
   });
 };
@@ -256,7 +374,7 @@ export const addClient = async (client) => {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(['clients'], 'readwrite');
     const store = transaction.objectStore('clients');
-    
+
     const index = store.index('document');
     const checkRequest = index.get(client.document);
 
@@ -306,7 +424,7 @@ export const addSale = async (sale) => {
 
       saleRequest.onsuccess = () => {
         const saleId = saleRequest.result;
-        
+
         const itemPromises = sale.items.map(item => {
           return new Promise((resolveItem, rejectItem) => {
             const itemRequest = saleItemsStore.add({
@@ -357,7 +475,7 @@ export const addProduct = async (product) => {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(['products'], 'readwrite');
     const store = transaction.objectStore('products');
-    
+
     const index = store.index('description');
     const checkRequest = index.get(product.description);
 
