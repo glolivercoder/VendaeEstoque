@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { formatPhoneNumber, formatCNPJ } from '../utils/format';
+import VendorProductModal from '../components/modals/VendorProductModal';
 
 const Vendors = ({
   vendors,
@@ -7,12 +8,22 @@ const Vendors = ({
   handleUpdateVendor,
   handleDeleteVendor
 }) => {
+  // Definir função handleAddItem localmente
+  const handleAddItem = (product) => {
+    console.log('Adicionando produto:', product);
+    alert(`Produto "${product.description}" adicionado com sucesso!`);
+    return product;
+  };
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredVendors, setFilteredVendors] = useState([]);
   const [selectedVendor, setSelectedVendor] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [vendorToDelete, setVendorToDelete] = useState(null);
+
+  // Estado para controlar o modal de produtos do fornecedor
+  const [showVendorProducts, setShowVendorProducts] = useState(false);
+  const [selectedVendorForProducts, setSelectedVendorForProducts] = useState(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -124,6 +135,34 @@ const Vendors = ({
       handleDeleteVendor(vendorToDelete.id);
       setShowDeleteConfirm(false);
       setVendorToDelete(null);
+    }
+  };
+
+  // Abrir modal de produtos do fornecedor
+  const handleOpenVendorProducts = (vendor) => {
+    setSelectedVendorForProducts(vendor);
+    setShowVendorProducts(true);
+  };
+
+  // Adicionar produto para o fornecedor
+  const handleAddVendorProduct = (product) => {
+    // Aqui você pode implementar a lógica para adicionar o produto ao fornecedor
+    console.log('Adicionando produto para o fornecedor:', product);
+
+    try {
+      if (handleAddItem) {
+        console.log('Função handleAddItem encontrada');
+        const newProduct = handleAddItem(product);
+        console.log('Produto adicionado:', newProduct);
+        alert(`Produto "${product.description}" adicionado com sucesso!`);
+        return newProduct;
+      } else {
+        console.error('Função handleAddItem não disponível');
+        alert('Função de adicionar item não disponível.');
+      }
+    } catch (error) {
+      console.error('Erro ao adicionar produto:', error);
+      alert('Erro ao adicionar produto. Por favor, tente novamente.');
     }
   };
 
@@ -441,6 +480,15 @@ const Vendors = ({
                     <h3 className="font-medium text-gray-900">{vendor.name}</h3>
                     <div className="flex space-x-2">
                       <button
+                        onClick={() => handleOpenVendorProducts(vendor)}
+                        className="p-1 rounded-full hover:bg-green-100 text-green-600 transition-colors"
+                        title="Produtos do Fornecedor"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                      </button>
+                      <button
                         onClick={() => handleEdit(vendor)}
                         className="p-1 rounded-full hover:bg-primary/10 text-primary transition-colors"
                         title="Editar fornecedor"
@@ -594,6 +642,19 @@ const Vendors = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Vendor Products Modal */}
+      {showVendorProducts && selectedVendorForProducts && (
+        <VendorProductModal
+          isOpen={showVendorProducts}
+          onClose={() => {
+            setShowVendorProducts(false);
+            setSelectedVendorForProducts(null);
+          }}
+          vendor={selectedVendorForProducts}
+          onSave={handleAddVendorProduct}
+        />
       )}
     </div>
   );

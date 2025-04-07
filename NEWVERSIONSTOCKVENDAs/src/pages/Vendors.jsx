@@ -17,6 +17,10 @@ const Vendors = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [vendorToDelete, setVendorToDelete] = useState(null);
 
+  // Estado para controlar o modal de produtos do fornecedor
+  const [showVendorProducts, setShowVendorProducts] = useState(false);
+  const [selectedVendorForProducts, setSelectedVendorForProducts] = useState(null);
+
   // Form state
   const [formData, setFormData] = useState({
     name: '',
@@ -127,6 +131,12 @@ const Vendors = () => {
       setShowDeleteConfirm(false);
       setVendorToDelete(null);
     }
+  };
+
+  // Abrir modal de produtos do fornecedor
+  const handleOpenVendorProducts = (vendor) => {
+    setSelectedVendorForProducts(vendor);
+    setShowVendorProducts(true);
   };
 
   // Open external links
@@ -449,6 +459,15 @@ const Vendors = () => {
                     <h3 className="font-medium text-gray-900">{vendor.name}</h3>
                     <div className="flex space-x-2">
                       <button
+                        onClick={() => handleOpenVendorProducts(vendor)}
+                        className="p-1 rounded-full hover:bg-green-100 text-green-600 transition-colors"
+                        title="Produtos do Fornecedor"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                        </svg>
+                      </button>
+                      <button
                         onClick={() => handleEdit(vendor)}
                         className="p-1 rounded-full hover:bg-primary/10 text-primary transition-colors"
                         title="Editar fornecedor"
@@ -594,6 +613,108 @@ const Vendors = () => {
               >
                 Excluir
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Vendor Products Modal */}
+      {showVendorProducts && selectedVendorForProducts && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-6xl w-full h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Produtos do Fornecedor: {selectedVendorForProducts.name}</h3>
+              <button
+                onClick={() => {
+                  setShowVendorProducts(false);
+                  setSelectedVendorForProducts(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="bg-gray-50 p-4 rounded-lg mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="text-lg font-medium mb-2">Informações do Fornecedor</h4>
+                  <p><span className="font-medium">Nome:</span> {selectedVendorForProducts.name}</p>
+                  {selectedVendorForProducts.description && (
+                    <p><span className="font-medium">Descrição:</span> {selectedVendorForProducts.description}</p>
+                  )}
+                  {selectedVendorForProducts.cnpj && (
+                    <p><span className="font-medium">CNPJ:</span> {selectedVendorForProducts.cnpj}</p>
+                  )}
+                </div>
+
+                <div>
+                  <h4 className="text-lg font-medium mb-2">Contato</h4>
+                  <div className="flex flex-wrap gap-3">
+                    {selectedVendorForProducts.whatsapp && (
+                      <button
+                        onClick={() => openExternalLink('whatsapp', selectedVendorForProducts.whatsapp)}
+                        className="flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        WhatsApp
+                      </button>
+                    )}
+
+                    {selectedVendorForProducts.email && (
+                      <button
+                        onClick={() => openExternalLink('email', selectedVendorForProducts.email)}
+                        className="flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Email
+                      </button>
+                    )}
+
+                    {selectedVendorForProducts.url && (
+                      <button
+                        onClick={() => openExternalLink('url', selectedVendorForProducts.url)}
+                        className="flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                        Website
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-medium">Produtos</h4>
+                <button
+                  className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors flex items-center"
+                  onClick={() => {
+                    // Aqui você pode implementar a lógica para adicionar um novo produto
+                    alert('Adicionar novo produto para o fornecedor ' + selectedVendorForProducts.name);
+                  }}
+                >
+                  <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Adicionar Produto
+                </button>
+              </div>
+
+              <div className="bg-white p-4 rounded-lg border">
+                <p className="text-center text-gray-500 py-8">
+                  Nenhum produto cadastrado para este fornecedor.
+                </p>
+              </div>
             </div>
           </div>
         </div>
