@@ -11,8 +11,31 @@ const Vendors = ({
   // Definir função handleAddItem localmente
   const handleAddItem = (product) => {
     console.log('Adicionando produto:', product);
-    alert(`Produto "${product.description}" adicionado com sucesso!`);
-    return product;
+
+    // Aqui você pode implementar a lógica para adicionar o produto ao estoque
+    // Por exemplo, você pode usar localStorage para armazenar temporariamente o produto
+    try {
+      // Obter produtos existentes do localStorage
+      const existingProducts = JSON.parse(localStorage.getItem('products') || '[]');
+
+      // Gerar um ID único para o produto
+      const newProduct = {
+        ...product,
+        id: Date.now().toString(),
+        createdAt: new Date().toISOString()
+      };
+
+      // Adicionar o novo produto à lista
+      existingProducts.push(newProduct);
+
+      // Salvar a lista atualizada no localStorage
+      localStorage.setItem('products', JSON.stringify(existingProducts));
+
+      return newProduct;
+    } catch (error) {
+      console.error('Erro ao salvar produto:', error);
+      throw error;
+    }
   };
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredVendors, setFilteredVendors] = useState([]);
@@ -150,16 +173,11 @@ const Vendors = ({
     console.log('Adicionando produto para o fornecedor:', product);
 
     try {
-      if (handleAddItem) {
-        console.log('Função handleAddItem encontrada');
-        const newProduct = handleAddItem(product);
-        console.log('Produto adicionado:', newProduct);
-        alert(`Produto "${product.description}" adicionado com sucesso!`);
-        return newProduct;
-      } else {
-        console.error('Função handleAddItem não disponível');
-        alert('Função de adicionar item não disponível.');
-      }
+      // Usar a função handleAddItem definida localmente
+      const newProduct = handleAddItem(product);
+      console.log('Produto adicionado:', newProduct);
+      alert(`Produto "${product.description}" adicionado com sucesso!`);
+      return newProduct;
     } catch (error) {
       console.error('Erro ao adicionar produto:', error);
       alert('Erro ao adicionar produto. Por favor, tente novamente.');

@@ -37,7 +37,7 @@ const VendorProductModal = ({
     if (vendor) {
       setFormData(prev => ({
         ...prev,
-        vendorId: vendor.id
+        vendorId: vendor.id || vendor.cnpj || null // Usar CNPJ como fallback se não houver ID
       }));
     }
   }, [vendor]);
