@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { syncProductsToWordPress, clearWordPressProducts, setupWordPressWebhook } from '../services/wordpress';
+import { syncProductsToWordPress, clearWordPressProducts, setupWordPressWebhook, checkWooCommerceConnection } from '../services/wordpress';
+import WooCommerceConnectionTest from './WooCommerceConnectionTest';
+import WooCommerceConfigCheck from './WooCommerceConfigCheck';
 
 /**
  * Componente para sincronização com WordPress
@@ -22,18 +24,18 @@ const WordPressSync = ({ selectedItems, items }) => {
 
       // Filtrar apenas os itens selecionados
       const selectedProducts = items.filter((_, index) => selectedItems.includes(index));
-      
+
       // Sincronizar com WordPress
       const result = await syncProductsToWordPress(selectedProducts);
-      
+
       setSyncResult({
         success: true,
         message: `${result.count || selectedProducts.length} produtos sincronizados com sucesso!`
       });
-      
+
     } catch (error) {
       console.error('Erro ao sincronizar com WordPress:', error);
-      
+
       setSyncResult({
         success: false,
         message: `Erro ao sincronizar: ${error.message}`
@@ -52,16 +54,16 @@ const WordPressSync = ({ selectedItems, items }) => {
     try {
       setIsSyncing(true);
       setSyncResult(null);
-      
+
       const result = await clearWordPressProducts();
-      
+
       setSyncResult({
         success: true,
         message: `Produtos limpos com sucesso! ${result.count || 0} produtos removidos.`
       });
     } catch (error) {
       console.error('Erro ao limpar produtos no WordPress:', error);
-      
+
       setSyncResult({
         success: false,
         message: `Erro ao limpar produtos: ${error.message}`
@@ -76,18 +78,18 @@ const WordPressSync = ({ selectedItems, items }) => {
     try {
       setIsSyncing(true);
       setSyncResult(null);
-      
+
       const result = await setupWordPressWebhook();
-      
+
       setSyncResult({
         success: true,
         message: `Webhook configurado com sucesso!`
       });
-      
+
       setShowWebhookInfo(true);
     } catch (error) {
       console.error('Erro ao configurar webhook:', error);
-      
+
       setSyncResult({
         success: false,
         message: `Erro ao configurar webhook: ${error.message}`
@@ -100,7 +102,13 @@ const WordPressSync = ({ selectedItems, items }) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mt-4">
       <h3 className="text-lg font-semibold">Exportar para o WordPress</h3>
-      
+
+      {/* Componentes de diagnóstico */}
+      <div className="diagnostics-container">
+        <WooCommerceConnectionTest />
+        <WooCommerceConfigCheck />
+      </div>
+
       <div className="mt-4 flex flex-wrap gap-2">
         <button
           onClick={handleSyncToWordPress}
@@ -109,7 +117,7 @@ const WordPressSync = ({ selectedItems, items }) => {
         >
           {isSyncing ? 'Sincronizando...' : 'Sincronizar Produtos Selecionados'}
         </button>
-        
+
         <button
           onClick={handleClearWordPress}
           disabled={isSyncing}
@@ -117,7 +125,7 @@ const WordPressSync = ({ selectedItems, items }) => {
         >
           Limpar Produtos
         </button>
-        
+
         <button
           onClick={handleSetupWebhook}
           disabled={isSyncing}
@@ -126,13 +134,13 @@ const WordPressSync = ({ selectedItems, items }) => {
           Configurar Webhook
         </button>
       </div>
-      
+
       {syncResult && (
         <div className={`mt-4 p-3 rounded-md ${syncResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
           {syncResult.message}
         </div>
       )}
-      
+
       {showWebhookInfo && (
         <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
           <h4 className="font-semibold text-blue-800">URL do Webhook do PDV Vendas</h4>

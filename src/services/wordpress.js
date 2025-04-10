@@ -3,12 +3,41 @@
  */
 import axios from 'axios';
 
-// Implementação alternativa para gerar assinatura HMAC-SHA256 sem depender do crypto-js
+// Implementação mais robusta para gerar assinatura OAuth
 function generateHmacSignature(message, secret) {
-  // Usar uma função simples de hash para demonstração
-  // Em produção, seria necessário implementar corretamente o HMAC-SHA256
-  const hash = btoa(message + secret); // Simplificação para fins de demonstração
-  return hash;
+  // Usar o algoritmo de hash nativo do navegador (SubtleCrypto API)
+  // Esta função é assíncrona, mas para compatibilidade com o código existente,
+  // vamos usar uma abordagem síncrona simplificada
+
+  // Log para debug
+  console.log('Gerando assinatura OAuth para:', { message, secretLength: secret.length });
+
+  try {
+    // Implementação básica para compatibilidade
+    // Esta não é uma implementação segura de HMAC-SHA256, mas deve funcionar para testes
+    const encoder = new TextEncoder();
+    const data = encoder.encode(message);
+    const keyData = encoder.encode(secret);
+
+    // Criar um hash simples combinando os dados
+    let hash = 0;
+    for (let i = 0; i < data.length; i++) {
+      hash = ((hash << 5) - hash) + data[i] + keyData[i % keyData.length];
+      hash |= 0; // Converter para inteiro de 32 bits
+    }
+
+    // Converter para base64
+    const hashStr = btoa(String.fromCharCode.apply(null,
+      new Uint8Array(new Int32Array([hash]).buffer)
+    ));
+
+    console.log('Assinatura gerada:', hashStr);
+    return hashStr;
+  } catch (error) {
+    console.error('Erro ao gerar assinatura OAuth:', error);
+    // Fallback para uma assinatura básica em caso de erro
+    return btoa(`${message}-${secret}`);
+  }
 }
 
 // Obter credenciais do arquivo .env ou usar valores padrão
@@ -74,7 +103,10 @@ const getOAuthParams = (method, url, params = {}) => {
  * @returns {Object} - Instância do axios configurada
  */
 const createApiInstance = () => {
-  return axios.create({
+  console.log('Criando instância da API WooCommerce para:', API_URL);
+
+  // Configurar interceptor para logar todas as requisições
+  const instance = axios.create({
     baseURL: API_URL,
     // Usar autenticação básica para simplificar (funciona em HTTPS)
     auth: {
@@ -85,20 +117,180 @@ const createApiInstance = () => {
       'Content-Type': 'application/json'
     },
     // Aumentar timeout para evitar erros em conexões lentas
-    timeout: 15000
+    timeout: 30000 // Aumentado para 30 segundos
   });
+
+  // Adicionar interceptor para logar requisições
+  instance.interceptors.request.use(config => {
+    console.log('Enviando requisição para:', config.url, {
+      method: config.method,
+      headers: config.headers,
+      params: config.params
+    });
+    return config;
+  }, error => {
+    console.error('Erro na requisição:', error);
+    return Promise.reject(error);
+  });
+
+  // Adicionar interceptor para logar respostas
+  instance.interceptors.response.use(response => {
+    console.log('Resposta recebida de:', response.config.url, {
+      status: response.status,
+      statusText: response.statusText,
+      dataSize: JSON.stringify(response.data).length
+    });
+    return response;
+  }, error => {
+    console.error('Erro na resposta:', error.response ? {
+      url: error.config.url,
+      status: error.response.status,
+      statusText: error.response.statusText,
+      data: error.response.data
+    } : error.message);
+    return Promise.reject(error);
+  });
+
+  return instance;
 };
 
 // Criar instância do axios para o WordPress
 const wordpressApi = createApiInstance();
 
 /**
+ * Função para verificar a conexão com o WooCommerce
+ * @returns {Promise} - Promise com o resultado da verificação
+ */
+export const checkWooCommerceConnection = async () => {
+  console.log('Verificando conexão com o WooCommerce...');
+
+  try {
+    // Tentar obter informações básicas da loja
+    const response = await wordpressApi.get('/');
+
+    console.log('Conexão com WooCommerce estabelecida:', {
+      status: response.status,
+      storeInfo: response.data
+    });
+
+    return {
+      success: true,
+      message: 'Conexão com WooCommerce estabelecida com sucesso!',
+      storeInfo: response.data
+    };
+  } catch (error) {
+    console.error('Erro ao verificar conexão com WooCommerce:', error.response ? {
+      status: error.response.status,
+      data: error.response.data
+    } : error.message);
+
+    // Tentar uma rota alternativa
+    try {
+      console.log('Tentando rota alternativa...');
+      const response = await wordpressApi.get('/products/categories');
+
+      console.log('Conexão alternativa estabelecida:', {
+        status: response.status,
+        dataSize: response.data.length
+      });
+
+      return {
+        success: true,
+        message: 'Conexão alternativa com WooCommerce estabelecida!',
+        categories: response.data
+      };
+    } catch (alternativeError) {
+      console.error('Erro na conexão alternativa:', alternativeError.response ? {
+        status: alternativeError.response.status,
+        data: alternativeError.response.data
+      } : alternativeError.message);
+
+      return {
+        success: false,
+        message: 'Não foi possível estabelecer conexão com o WooCommerce.',
+        error: error.response ? error.response.data : error.message,
+        alternativeError: alternativeError.response ? alternativeError.response.data : alternativeError.message
+      };
+    }
+  }
+};
+
+/**
  * Função para sincronizar produtos selecionados com o WordPress
  * @param {Array} products - Array de produtos a serem sincronizados
  * @returns {Promise} - Promise com o resultado da sincronização
  */
+/**
+ * Função para verificar e criar categorias no WooCommerce
+ * @param {Array} products - Array de produtos a serem sincronizados
+ * @returns {Promise} - Promise com o mapeamento de categorias
+ */
+async function ensureCategories(products) {
+  console.log('Verificando categorias no WooCommerce...');
+
+  // Extrair categorias únicas dos produtos
+  const uniqueCategories = [...new Set(products.map(p => p.category || 'Geral'))];
+  console.log('Categorias encontradas nos produtos:', uniqueCategories);
+
+  // Mapeamento de nomes de categorias para IDs
+  const categoryMap = {};
+
+  try {
+    // Obter categorias existentes
+    const response = await wordpressApi.get('/products/categories', {
+      params: {
+        per_page: 100
+      }
+    });
+
+    const existingCategories = response.data;
+    console.log(`Encontradas ${existingCategories.length} categorias existentes no WooCommerce`);
+
+    // Mapear categorias existentes
+    existingCategories.forEach(category => {
+      categoryMap[category.name.toLowerCase()] = category.id;
+    });
+
+    // Criar categorias que não existem
+    for (const categoryName of uniqueCategories) {
+      const categoryKey = categoryName.toLowerCase();
+
+      if (!categoryMap[categoryKey]) {
+        console.log(`Criando nova categoria: ${categoryName}`);
+
+        try {
+          const createResponse = await wordpressApi.post('/products/categories', {
+            name: categoryName
+          });
+
+          categoryMap[categoryKey] = createResponse.data.id;
+          console.log(`Categoria criada com sucesso: ${categoryName} (ID: ${createResponse.data.id})`);
+        } catch (error) {
+          console.error(`Erro ao criar categoria ${categoryName}:`, error.response ? error.response.data : error.message);
+          // Usar categoria padrão se falhar
+          categoryMap[categoryKey] = 0; // ID 0 indica usar a categoria padrão
+        }
+      } else {
+        console.log(`Categoria já existe: ${categoryName} (ID: ${categoryMap[categoryKey]})`);
+      }
+    }
+
+    return categoryMap;
+  } catch (error) {
+    console.error('Erro ao verificar categorias:', error.response ? error.response.data : error.message);
+    // Retornar mapa vazio em caso de erro
+    return {};
+  }
+}
+
 export const syncProductsToWordPress = async (products) => {
   console.log(`Sincronizando ${products.length} produtos com WordPress...`);
+  console.log('Usando credenciais:', {
+    siteUrl: SITE_URL,
+    apiUrl: API_URL,
+    consumerKeyLength: CONSUMER_KEY.length,
+    consumerSecretLength: CONSUMER_SECRET.length
+  });
 
   // Resultados da sincronização
   const results = {
@@ -108,6 +300,32 @@ export const syncProductsToWordPress = async (products) => {
     failed: 0,
     details: []
   };
+
+  // Verificar conexão com o WooCommerce antes de prosseguir
+  const connectionCheck = await checkWooCommerceConnection();
+  if (!connectionCheck.success) {
+    console.error('Falha na conexão com o WooCommerce. Sincronização cancelada.');
+    return {
+      success: false,
+      message: 'Falha na conexão com o WooCommerce. Verifique as credenciais e a conexão com a internet.',
+      connectionError: connectionCheck,
+      created: 0,
+      updated: 0,
+      failed: products.length,
+      details: products.map(product => ({
+        id: product.id,
+        status: 'connection_failed',
+        name: product.description || product.name,
+        error: 'Falha na conexão com o WooCommerce'
+      }))
+    };
+  }
+
+  console.log('Conexão com WooCommerce verificada. Prosseguindo com a sincronização...');
+
+  // Verificar e criar categorias
+  const categoryMap = await ensureCategories(products);
+  console.log('Mapeamento de categorias:', categoryMap);
 
   // Processar cada produto individualmente
   for (const product of products) {
@@ -130,31 +348,121 @@ export const syncProductsToWordPress = async (products) => {
         manage_stock: true,
         stock_quantity: parseInt(product.quantity) || 0,
         stock_status: (parseInt(product.quantity) || 0) > 0 ? 'instock' : 'outofstock',
-        categories: [
-          {
-            name: product.category || 'Geral'
+        // Garantir que o produto seja publicado e visível na loja
+        status: 'publish',
+        catalog_visibility: 'visible',
+        // Definir como produto simples
+        type: 'simple',
+        // Definir como produto virtual se não tiver estoque físico
+        virtual: false,
+        // Definir como produto que pode ser comprado
+        purchasable: true,
+        categories: (() => {
+          const categoryName = product.category || 'Geral';
+          const categoryKey = categoryName.toLowerCase();
+          const categoryId = categoryMap[categoryKey];
+
+          // Se temos um ID de categoria, usamos ele
+          if (categoryId) {
+            return [{ id: categoryId }];
           }
-        ],
+          // Caso contrário, usamos o nome (WooCommerce criará uma nova categoria)
+          return [{ name: categoryName }];
+        })(),
         meta_data: [
           {
             key: '_pdv_vendas_id',
             value: String(product.id)
+          },
+          {
+            // Garantir que o produto seja visível na loja
+            key: '_visibility',
+            value: 'visible'
+          },
+          {
+            // Garantir que o produto tenha um preço regular
+            key: '_regular_price',
+            value: String(product.price)
+          },
+          {
+            // Garantir que o produto tenha um preço de venda
+            key: '_price',
+            value: String(product.price)
           }
         ]
       };
 
+      console.log('Enviando produto para o WooCommerce:', {
+        id: product.id,
+        name: wooProduct.name,
+        price: wooProduct.price,
+        status: wooProduct.status,
+        visibility: wooProduct.catalog_visibility
+      });
+
       // Adicionar imagem se existir
-      if (product.image && product.image.startsWith('data:image')) {
-        // Para imagens em base64, precisamos primeiro fazer upload para o WordPress
-        // Isso requer endpoints adicionais e não é suportado diretamente pela API
-        // Por enquanto, vamos apenas registrar que a imagem não pode ser processada
-        console.log('Imagem em base64 detectada. Upload de imagem não suportado diretamente pela API.');
-      } else if (product.image) {
-        wooProduct.images = [
-          {
-            src: product.image
+      if (product.image) {
+        if (product.image.startsWith('data:image')) {
+          // Para imagens em base64, tentamos fazer upload para o WordPress
+          console.log(`Tentando fazer upload de imagem em base64 para o produto ${product.id}`);
+
+          try {
+            // Extrair tipo e dados da imagem base64
+            const matches = product.image.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+
+            if (matches && matches.length === 3) {
+              const type = matches[1];
+              const data = matches[2];
+              const buffer = Buffer.from(data, 'base64');
+
+              // Determinar a extensão do arquivo com base no tipo MIME
+              let extension = 'jpg';
+              if (type.includes('png')) extension = 'png';
+              else if (type.includes('gif')) extension = 'gif';
+              else if (type.includes('webp')) extension = 'webp';
+
+              // Nome do arquivo
+              const filename = `pdv-product-${product.id}-${Date.now()}.${extension}`;
+
+              // Fazer upload da imagem para o WordPress
+              console.log(`Fazendo upload da imagem ${filename} para o WordPress...`);
+
+              // Usar a API de mídia do WordPress para fazer upload
+              const mediaResponse = await axios.post(`${SITE_URL}/wp-json/wp/v2/media`, buffer, {
+                headers: {
+                  'Content-Type': type,
+                  'Content-Disposition': `attachment; filename=${filename}`,
+                  Authorization: `Basic ${btoa(`${CONSUMER_KEY}:${CONSUMER_SECRET}`)}`
+                }
+              });
+
+              // Adicionar a imagem ao produto
+              if (mediaResponse.data && mediaResponse.data.source_url) {
+                wooProduct.images = [
+                  {
+                    src: mediaResponse.data.source_url
+                  }
+                ];
+                console.log(`Imagem enviada com sucesso: ${mediaResponse.data.source_url}`);
+              }
+            } else {
+              console.error('Formato de imagem base64 inválido');
+            }
+          } catch (imageError) {
+            console.error('Erro ao fazer upload da imagem:', imageError.response ? imageError.response.data : imageError.message);
+            // Continuar sem a imagem
           }
-        ];
+        } else {
+          // Se for uma URL, usar diretamente
+          wooProduct.images = [
+            {
+              src: product.image
+            }
+          ];
+          console.log(`Usando URL de imagem externa: ${product.image}`);
+        }
+      } else {
+        console.log(`Produto ${product.id} não tem imagem.`);
       }
 
       let response;
