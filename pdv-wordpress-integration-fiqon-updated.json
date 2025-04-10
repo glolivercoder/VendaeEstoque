@@ -1,0 +1,460 @@
+{
+  "fiqon_webhook_integration": {
+    "version": "1.0.0",
+    "name": "PDV Vendas - WordPress Integration",
+    "description": "Integração bidirecional entre o aplicativo PDV Vendas e o site WordPress com sincronização de itens selecionados",
+    "created_at": "2023-11-15T12:00:00Z",
+    "updated_at": "2023-11-15T12:00:00Z",
+    "auth": {
+      "wordpress": {
+        "type": "api_key",
+        "api_key": "OxCq4oUPrd5hqxPEq1zdjEd4",
+        "username": "gloliverx",
+        "password": "OxCq4oUPrd5hqxPEq1zdjEd4",
+        "headers": {
+          "X-PDV-API-Key": "OxCq4oUPrd5hqxPEq1zdjEd4",
+          "X-PDV-Username": "gloliverx",
+          "X-PDV-Password": "OxCq4oUPrd5hqxPEq1zdjEd4"
+        }
+      }
+    },
+    "endpoints": {
+      "wordpress_base_url": "https://achadinhoshopp.com.br/loja/wp-json/pdv-vendas/v1",
+      "pdv_webhook_url": "https://api.pdvvendas.com/webhook",
+      "fiqon_webhook_url": "https://webhook.fiqon.com/pdv-wordpress",
+      "endpoints": [
+        {
+          "name": "sync_products",
+          "method": "POST",
+          "url": "{{wordpress_base_url}}/sync",
+          "description": "Sincronizar produtos do PDV Vendas para o WordPress",
+          "auth": "wordpress",
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        {
+          "name": "clear_products",
+          "method": "POST",
+          "url": "{{wordpress_base_url}}/clear",
+          "description": "Limpar produtos existentes no WordPress",
+          "auth": "wordpress",
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        {
+          "name": "update_stock",
+          "method": "POST",
+          "url": "{{wordpress_base_url}}/stock",
+          "description": "Atualizar estoque no WordPress",
+          "auth": "wordpress",
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        {
+          "name": "get_products",
+          "method": "GET",
+          "url": "{{wordpress_base_url}}/get-products",
+          "description": "Obter produtos do WordPress",
+          "auth": "wordpress"
+        },
+        {
+          "name": "sales_webhook",
+          "method": "POST",
+          "url": "{{wordpress_base_url}}/sales-webhook",
+          "description": "Processar webhook de vendas",
+          "auth": "wordpress",
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        {
+          "name": "pdv_stock_update",
+          "method": "POST",
+          "url": "{{pdv_webhook_url}}/stock-update",
+          "description": "Atualizar estoque no PDV Vendas",
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        {
+          "name": "pdv_get_selected_items",
+          "method": "GET",
+          "url": "{{pdv_webhook_url}}/get-selected-items",
+          "description": "Obter itens selecionados no console do PDV Vendas",
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        {
+          "name": "fiqon_webhook",
+          "method": "POST",
+          "url": "{{fiqon_webhook_url}}",
+          "description": "Webhook do Fiqon para processamento de eventos",
+          "headers": {
+            "Content-Type": "application/json",
+            "X-Fiqon-Signature": "{{settings.fiqon_signature}}"
+          }
+        }
+      ]
+    },
+    "flows": [
+      {
+        "name": "selected_items_sync",
+        "description": "Sincronizar apenas os itens selecionados no console do PDV Vendas para o WordPress",
+        "trigger": {
+          "type": "webhook",
+          "endpoint": "/selected-items-sync"
+        },
+        "steps": [
+          {
+            "name": "get_selected_items",
+            "type": "api_call",
+            "endpoint": "pdv_get_selected_items",
+            "description": "Obter os itens que estão selecionados no console do navegador"
+          },
+          {
+            "name": "clear_existing_products",
+            "type": "api_call",
+            "endpoint": "clear_products",
+            "condition": "{{input.clear_existing === true}}"
+          },
+          {
+            "name": "format_selected_products",
+            "type": "transform",
+            "input": "{{steps.get_selected_items.response.items}}",
+            "transformation": {
+              "map": "product => ({id: product.id, description: product.description, itemDescription: product.itemDescription || '', price: product.price, quantity: product.quantity || 0, category: product.category || 'Geral', image: product.image || '', additionalImages: product.additionalImages || []})"
+            },
+            "output": "formatted_selected_products"
+          },
+          {
+            "name": "sync_selected_products",
+            "type": "api_call",
+            "endpoint": "sync_products",
+            "payload": {
+              "products": "{{formatted_selected_products}}"
+            }
+          },
+          {
+            "name": "notify_fiqon",
+            "type": "api_call",
+            "endpoint": "fiqon_webhook",
+            "payload": {
+              "event": "selected_items_synced",
+              "timestamp": "{{Date.now()}}",
+              "products_count": "{{formatted_selected_products.length}}",
+              "success": "{{steps.sync_selected_products.success}}"
+            }
+          }
+        ],
+        "output": {
+          "success": "{{steps.sync_selected_products.success}}",
+          "message": "{{steps.sync_selected_products.success ? 'Itens selecionados sincronizados com sucesso' : 'Erro ao sincronizar itens selecionados'}}",
+          "count": "{{steps.sync_selected_products.response.count}}",
+          "details": "{{steps.sync_selected_products.response}}"
+        }
+      },
+      {
+        "name": "pdv_to_wordpress_sync",
+        "description": "Sincronizar produtos selecionados do PDV Vendas para o WordPress",
+        "trigger": {
+          "type": "webhook",
+          "endpoint": "/pdv-to-wordpress"
+        },
+        "steps": [
+          {
+            "name": "clear_existing_products",
+            "type": "api_call",
+            "endpoint": "clear_products",
+            "condition": "{{input.clear_existing === true}}"
+          },
+          {
+            "name": "format_products",
+            "type": "transform",
+            "input": "{{input.products}}",
+            "transformation": {
+              "map": "product => ({id: product.id, description: product.description, itemDescription: product.itemDescription || '', price: product.price, quantity: product.quantity || 0, category: product.category || 'Geral', image: product.image || '', additionalImages: product.additionalImages || []})"
+            },
+            "output": "formatted_products"
+          },
+          {
+            "name": "sync_products",
+            "type": "api_call",
+            "endpoint": "sync_products",
+            "payload": {
+              "products": "{{formatted_products}}"
+            }
+          }
+        ],
+        "output": {
+          "success": "{{steps.sync_products.success}}",
+          "message": "{{steps.sync_products.success ? 'Produtos sincronizados com sucesso' : 'Erro ao sincronizar produtos'}}",
+          "count": "{{steps.sync_products.response.count}}",
+          "details": "{{steps.sync_products.response}}"
+        }
+      },
+      {
+        "name": "wordpress_to_pdv_sync",
+        "description": "Sincronizar produtos do WordPress para o PDV Vendas",
+        "trigger": {
+          "type": "webhook",
+          "endpoint": "/wordpress-to-pdv"
+        },
+        "steps": [
+          {
+            "name": "get_wordpress_products",
+            "type": "api_call",
+            "endpoint": "get_products",
+            "query_params": {
+              "category": "{{input.category}}",
+              "limit": "{{input.limit}}"
+            }
+          },
+          {
+            "name": "format_products_for_pdv",
+            "type": "transform",
+            "input": "{{steps.get_wordpress_products.response.products}}",
+            "transformation": {
+              "map": "product => ({id: product.id, description: product.description, price: product.price, quantity: product.quantity, category: product.category, image: product.image})"
+            },
+            "output": "formatted_products_for_pdv"
+          },
+          {
+            "name": "update_pdv_stock",
+            "type": "api_call",
+            "endpoint": "pdv_stock_update",
+            "payload": {
+              "products": "{{formatted_products_for_pdv}}"
+            }
+          }
+        ],
+        "output": {
+          "success": "{{steps.update_pdv_stock.success}}",
+          "message": "{{steps.update_pdv_stock.success ? 'Estoque atualizado com sucesso no PDV Vendas' : 'Erro ao atualizar estoque no PDV Vendas'}}",
+          "products": "{{formatted_products_for_pdv}}"
+        }
+      },
+      {
+        "name": "wordpress_sales_webhook",
+        "description": "Processar vendas do WordPress e atualizar estoque no PDV Vendas",
+        "trigger": {
+          "type": "webhook",
+          "endpoint": "/wordpress-sales"
+        },
+        "steps": [
+          {
+            "name": "process_sales_webhook",
+            "type": "api_call",
+            "endpoint": "sales_webhook",
+            "payload": {
+              "order_id": "{{input.order_id}}"
+            }
+          },
+          {
+            "name": "extract_sold_items",
+            "type": "transform",
+            "input": "{{steps.process_sales_webhook.response.items}}",
+            "transformation": {
+              "map": "item => ({id: item.pdv_id, quantity: item.quantity, name: item.name})"
+            },
+            "output": "sold_items"
+          },
+          {
+            "name": "update_pdv_stock_after_sale",
+            "type": "api_call",
+            "endpoint": "pdv_stock_update",
+            "payload": {
+              "products": "{{sold_items}}",
+              "is_sale": true
+            }
+          },
+          {
+            "name": "notify_fiqon_sale",
+            "type": "api_call",
+            "endpoint": "fiqon_webhook",
+            "payload": {
+              "event": "wordpress_sale_processed",
+              "timestamp": "{{Date.now()}}",
+              "order_id": "{{input.order_id}}",
+              "items_count": "{{sold_items.length}}",
+              "success": "{{steps.update_pdv_stock_after_sale.success}}"
+            }
+          }
+        ],
+        "output": {
+          "success": "{{steps.update_pdv_stock_after_sale.success}}",
+          "message": "{{steps.update_pdv_stock_after_sale.success ? 'Estoque atualizado após venda no WordPress' : 'Erro ao atualizar estoque após venda'}}",
+          "order_id": "{{input.order_id}}",
+          "items": "{{sold_items}}"
+        }
+      },
+      {
+        "name": "pdv_stock_update_to_wordpress",
+        "description": "Atualizar estoque no WordPress quando houver alterações no PDV Vendas",
+        "trigger": {
+          "type": "webhook",
+          "endpoint": "/pdv-stock-update"
+        },
+        "steps": [
+          {
+            "name": "format_stock_update",
+            "type": "transform",
+            "input": "{{input.products}}",
+            "transformation": {
+              "map": "product => ({id: product.id, quantity: product.quantity})"
+            },
+            "output": "stock_updates"
+          },
+          {
+            "name": "update_wordpress_stock",
+            "type": "api_call",
+            "endpoint": "update_stock",
+            "payload": {
+              "products": "{{stock_updates}}"
+            }
+          }
+        ],
+        "output": {
+          "success": "{{steps.update_wordpress_stock.success}}",
+          "message": "{{steps.update_wordpress_stock.success ? 'Estoque atualizado com sucesso no WordPress' : 'Erro ao atualizar estoque no WordPress'}}",
+          "updated_count": "{{steps.update_wordpress_stock.response.updated_count}}",
+          "details": "{{steps.update_wordpress_stock.response}}"
+        }
+      },
+      {
+        "name": "bidirectional_sync",
+        "description": "Sincronização bidirecional entre PDV Vendas e WordPress",
+        "trigger": {
+          "type": "webhook",
+          "endpoint": "/bidirectional-sync"
+        },
+        "steps": [
+          {
+            "name": "pdv_to_wordpress",
+            "type": "flow",
+            "flow": "pdv_to_wordpress_sync",
+            "input": {
+              "products": "{{input.products}}",
+              "clear_existing": "{{input.clear_existing}}"
+            }
+          },
+          {
+            "name": "wordpress_to_pdv",
+            "type": "flow",
+            "flow": "wordpress_to_pdv_sync",
+            "input": {
+              "category": "{{input.category}}",
+              "limit": "{{input.limit}}"
+            }
+          }
+        ],
+        "output": {
+          "pdv_to_wordpress": "{{steps.pdv_to_wordpress}}",
+          "wordpress_to_pdv": "{{steps.wordpress_to_pdv}}"
+        }
+      },
+      {
+        "name": "console_selected_items_sync",
+        "description": "Sincronizar itens selecionados no console do navegador para o WordPress",
+        "trigger": {
+          "type": "ui_event",
+          "event": "click",
+          "selector": "#sync-selected-button"
+        },
+        "steps": [
+          {
+            "name": "get_console_selected_items",
+            "type": "browser_script",
+            "script": "() => { return Array.from(document.querySelectorAll('input[type=\"checkbox\"]:checked')).map(checkbox => { const row = checkbox.closest('tr'); return { id: row.dataset.itemId, description: row.querySelector('.item-description').textContent, price: parseFloat(row.querySelector('.item-price').textContent.replace('R$', '').trim()), quantity: parseInt(row.querySelector('.item-quantity').textContent), category: row.querySelector('.item-category').textContent, image: row.querySelector('.item-image') ? row.querySelector('.item-image').src : '' }; }); }"
+          },
+          {
+            "name": "format_console_selected_items",
+            "type": "transform",
+            "input": "{{steps.get_console_selected_items.result}}",
+            "transformation": {
+              "map": "product => ({id: product.id, description: product.description, itemDescription: '', price: product.price, quantity: product.quantity, category: product.category, image: product.image})"
+            },
+            "output": "formatted_console_items"
+          },
+          {
+            "name": "sync_console_selected_items",
+            "type": "api_call",
+            "endpoint": "sync_products",
+            "payload": {
+              "products": "{{formatted_console_items}}"
+            }
+          },
+          {
+            "name": "show_sync_result",
+            "type": "browser_script",
+            "script": "(result) => { alert(`Sincronização concluída: ${result.success ? 'Sucesso' : 'Erro'}. ${result.message}`); }",
+            "args": {
+              "success": "{{steps.sync_console_selected_items.success}}",
+              "message": "{{steps.sync_console_selected_items.success ? `${formatted_console_items.length} itens sincronizados com sucesso` : 'Erro ao sincronizar itens'}}"
+            }
+          }
+        ],
+        "output": {
+          "success": "{{steps.sync_console_selected_items.success}}",
+          "message": "{{steps.sync_console_selected_items.success ? `${formatted_console_items.length} itens sincronizados com sucesso` : 'Erro ao sincronizar itens'}}",
+          "items": "{{formatted_console_items}}"
+        }
+      }
+    ],
+    "schedules": [
+      {
+        "name": "auto_sync_schedule",
+        "description": "Sincronização automática a cada hora",
+        "schedule": "0 * * * *",
+        "flow": "bidirectional_sync",
+        "input": {
+          "clear_existing": false,
+          "limit": 100
+        }
+      },
+      {
+        "name": "selected_items_sync_schedule",
+        "description": "Sincronização dos itens selecionados a cada 15 minutos",
+        "schedule": "*/15 * * * *",
+        "flow": "selected_items_sync",
+        "input": {
+          "clear_existing": false
+        }
+      }
+    ],
+    "settings": {
+      "retry": {
+        "max_attempts": 3,
+        "initial_interval": 5000,
+        "multiplier": 2
+      },
+      "timeout": 30000,
+      "logging": {
+        "level": "info",
+        "include_request_body": true,
+        "include_response_body": true
+      },
+      "fiqon_signature": "OxCq4oUPrd5hqxPEq1zdjEd4-signature",
+      "browser_integration": {
+        "enabled": true,
+        "selector_mapping": {
+          "item_checkbox": "input[type=\"checkbox\"].item-selector",
+          "sync_button": "#sync-selected-button",
+          "item_row": "tr.item-row",
+          "item_description": ".item-description",
+          "item_price": ".item-price",
+          "item_quantity": ".item-quantity",
+          "item_category": ".item-category",
+          "item_image": ".item-image"
+        }
+      }
+    },
+    "ui_integration": {
+      "inject_script": true,
+      "script_content": "function setupFiqonIntegration() { const syncButton = document.querySelector('#sync-selected-button'); if (!syncButton) { const buttonContainer = document.querySelector('.sync-buttons-container') || document.querySelector('.actions-container') || document.body; const newButton = document.createElement('button'); newButton.id = 'sync-selected-button'; newButton.className = 'btn btn-primary'; newButton.innerHTML = '<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"currentColor\" class=\"bi bi-cloud-upload\" viewBox=\"0 0 16 16\"><path fill-rule=\"evenodd\" d=\"M4.406 1.342A5.53 5.53 0 0 1 8 0c2.69 0 4.923 2 5.166 4.579C14.758 4.804 16 6.137 16 7.773 16 9.569 14.502 11 12.687 11H10a.5.5 0 0 1 0-1h2.688C13.979 10 15 8.988 15 7.773c0-1.216-1.02-2.228-2.313-2.228h-.5v-.5C12.188 2.825 10.328 1 8 1a4.53 4.53 0 0 0-2.941 1.1c-.757.652-1.153 1.438-1.153 2.055v.448l-.445.049C2.064 4.805 1 5.952 1 7.318 1 8.785 2.23 10 3.781 10H6a.5.5 0 0 1 0 1H3.781C1.708 11 0 9.366 0 7.318c0-1.763 1.266-3.223 2.942-3.593.143-.863.698-1.723 1.464-2.383z\"/><path fill-rule=\"evenodd\" d=\"M7.646 4.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 5.707V14.5a.5.5 0 0 1-1 0V5.707L5.354 7.854a.5.5 0 1 1-.708-.708l3-3z\"/></svg> Sincronizar Selecionados com WordPress'; newButton.style.cssText = 'margin: 10px; padding: 8px 16px; display: flex; align-items: center; gap: 8px;'; buttonContainer.appendChild(newButton); newButton.addEventListener('click', function() { const selectedItems = Array.from(document.querySelectorAll('input[type=\"checkbox\"]:checked')).map(checkbox => { const row = checkbox.closest('tr'); return { id: row.dataset.itemId || row.id, description: row.querySelector('.item-description')?.textContent || 'Produto', price: parseFloat((row.querySelector('.item-price')?.textContent || '0').replace('R$', '').trim()), quantity: parseInt(row.querySelector('.item-quantity')?.textContent || '0'), category: row.querySelector('.item-category')?.textContent || 'Geral', image: row.querySelector('.item-image')?.src || '' }; }); if (selectedItems.length === 0) { alert('Por favor, selecione pelo menos um item para sincronizar.'); return; } const event = new CustomEvent('fiqon:sync-selected', { detail: { items: selectedItems } }); document.dispatchEvent(event); alert(`Iniciando sincronização de ${selectedItems.length} itens selecionados...`); }); } } document.addEventListener('DOMContentLoaded', setupFiqonIntegration); setTimeout(setupFiqonIntegration, 1000);"
+    }
+  }
+}

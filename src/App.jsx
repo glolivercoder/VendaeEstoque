@@ -23,9 +23,10 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearSca
 import { Pie, Bar } from 'react-chartjs-2';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
-import { syncProductsToHostinger, configureHostingerApp } from './services/hostinger';
+import { syncProductsToWordPress, clearWordPressProducts, setupWordPressWebhook } from './services/wordpress';
 import MagicWandButton from './components/MagicWandButton';
 import MagicCaptureButton from './components/MagicCaptureButton';
+import WordPressSync from './components/WordPressSync';
 
 // Registrar componentes do Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -148,10 +149,12 @@ function App() {
   const [showAddItem, setShowAddItem] = useState(false);
   const [showSiteExporter, setShowSiteExporter] = useState(false);
   const [showVendorsTab, setShowVendorsTab] = useState(false);
-  const [hostingerConfig, setHostingerConfig] = useState({
-    site_url: '',
-    api_key: '',
-    site_id: ''
+  // Estado para configurações do WordPress
+  const [wordpressConfig] = useState({
+    apiUrl: import.meta.env.VITE_WORDPRESS_API_URL || 'https://achadinhoshopp.com.br/loja/wp-json/pdv-vendas/v1',
+    apiKey: import.meta.env.VITE_WORDPRESS_API_KEY || 'OxCq4oUPrd5hqxPEq1zdjEd4',
+    username: import.meta.env.VITE_WORDPRESS_USERNAME || 'gloliverx',
+    password: import.meta.env.VITE_WORDPRESS_PASSWORD || 'OxCq4oUPrd5hqxPEq1zdjEd4'
   });
   const [showPixQRCode, setShowPixQRCode] = useState(false);
   const [qrCodeImage, setQRCodeImage] = useState('/path/to/qr-code.png');
@@ -256,11 +259,7 @@ function App() {
         }
       }
 
-      // Load Hostinger configuration from localStorage
-      const savedHostingerConfig = localStorage.getItem('hostingerConfig');
-      if (savedHostingerConfig) {
-        setHostingerConfig(JSON.parse(savedHostingerConfig));
-      }
+      // Configurações do WordPress já carregadas do .env
 
       // Set default vendor with null safety
       const defaultVendor = vendorsList?.find(v => v?.document === '0727887807') || {
@@ -1553,26 +1552,24 @@ ${item?.client?.cpf || ''}
     setShowAddClient(true);
   };
 
-  // Add new function for Hostinger sync
-  const handleHostingerSync = async () => {
+  // Função para sincronizar produtos com WordPress
+  const handleWordPressSync = async () => {
     try {
       const selectedProducts = items.filter((_, index) => selectedItems.includes(index));
-      await syncProductsToHostinger(selectedProducts);
-      alert('Products successfully synced to Hostinger site!');
+      await syncProductsToWordPress(selectedProducts);
+      alert('Produtos sincronizados com sucesso para o WordPress!');
     } catch (error) {
-      alert('Error syncing products: ' + error.message);
+      alert('Erro ao sincronizar produtos: ' + error.message);
     }
   };
 
-  // Add new function for Hostinger configuration
-  const handleHostingerConfig = async () => {
+  // Função para configurar webhook do WordPress
+  const handleSetupWebhook = async () => {
     try {
-      await configureHostingerApp(hostingerConfig);
-      localStorage.setItem('hostingerConfig', JSON.stringify(hostingerConfig));
-      setShowHostingerConfig(false);
-      alert('Hostinger configuration saved successfully!');
+      await setupWordPressWebhook();
+      alert('Webhook do WordPress configurado com sucesso!');
     } catch (error) {
-      alert('Error saving configuration: ' + error.message);
+      alert('Erro ao configurar webhook do WordPress: ' + error.message);
     }
   };
 
@@ -1801,7 +1798,12 @@ ${item?.client?.cpf || ''}
         sales: salesData || [],
         minStockAlert: minStockAlert || {},
         ignoreStock: ignoreStock || {},
-        hostingerConfig: hostingerConfig || { site_url: '', api_key: '', site_id: '' },
+        wordpressConfig: wordpressConfig || {
+          apiUrl: import.meta.env.VITE_WORDPRESS_API_URL || 'https://achadinhoshopp.com.br/loja/wp-json/pdv-vendas/v1',
+          apiKey: import.meta.env.VITE_WORDPRESS_API_KEY || 'OxCq4oUPrd5hqxPEq1zdjEd4',
+          username: import.meta.env.VITE_WORDPRESS_USERNAME || 'gloliverx',
+          password: import.meta.env.VITE_WORDPRESS_PASSWORD || 'OxCq4oUPrd5hqxPEq1zdjEd4'
+        },
         timestamp: new Date().toISOString()
       };
 
@@ -2061,10 +2063,7 @@ ${item?.client?.cpf || ''}
               localStorage.setItem('ignoreStock', JSON.stringify(backupData.ignoreStock));
             }
 
-            if (backupData.hostingerConfig) {
-              setHostingerConfig(backupData.hostingerConfig);
-              localStorage.setItem('hostingerConfig', JSON.stringify(backupData.hostingerConfig));
-            }
+            // WordPress config já está configurado via .env
 
             // Salvar no localStorage como backup temporário
             localStorage.setItem('pdvBackupTemp', JSON.stringify(backupData));
@@ -3014,7 +3013,7 @@ ${item?.client?.cpf || ''}
                 Fornecedores
               </button>
 
-              {/* Site Exporter Sync button */}
+              {/* WordPress Sync button */}
               <button
                 onClick={() => setShowSiteExporter(!showSiteExporter)}
                 className={`w-full ${
@@ -3024,7 +3023,7 @@ ${item?.client?.cpf || ''}
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
-                Site Exporter Sync
+                WordPress Sync
                 <svg
                   className={`w-5 h-5 transform ${showSiteExporter ? 'rotate-180' : ''}`}
                   fill="none"
@@ -3395,49 +3394,7 @@ ${item?.client?.cpf || ''}
 
             {/* Site Exporter Sync button and content */}
             {showSiteExporter && (
-              <div className="bg-white rounded-lg shadow-md p-6 mt-4">
-                <h3 className="text-lg font-semibold">Exportar para o Site</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <input
-                      type="text"
-                      value={hostingerConfig.site_url}
-                      onChange={(e) => setHostingerConfig({ ...hostingerConfig, site_url: e.target.value })}
-                      placeholder="URL do Site"
-                      className="flex-1 px-3 py-2 border rounded-md"
-                    />
-                    <input
-                      type="text"
-                      value={hostingerConfig.api_key}
-                      onChange={(e) => setHostingerConfig({ ...hostingerConfig, api_key: e.target.value })}
-                      placeholder="API Key"
-                      className="flex-1 px-3 py-2 border rounded-md"
-                    />
-                    <input
-                      type="text"
-                      value={hostingerConfig.site_id}
-                      onChange={(e) => setHostingerConfig({ ...hostingerConfig, site_id: e.target.value })}
-                      placeholder="Site ID"
-                      className="flex-1 px-3 py-2 border rounded-md"
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={handleHostingerConfig}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                    >
-                      Salvar Configuração
-                    </button>
-                    <button
-                      onClick={handleHostingerSync}
-                      className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                      disabled={selectedItems.length === 0}
-                    >
-                      Sincronizar Produtos Selecionados
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <WordPressSync selectedItems={selectedItems} items={items} />
             )}
           </div>
         </div>

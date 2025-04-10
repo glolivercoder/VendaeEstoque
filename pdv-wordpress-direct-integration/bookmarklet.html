@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDV Vendas - WordPress Sync Bookmarklet</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #21759b;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        .bookmarklet {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #21759b;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .bookmarklet:hover {
+            background-color: #135e7c;
+        }
+        .instructions {
+            background-color: #f9f9f9;
+            border-left: 4px solid #21759b;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+        }
+        .note {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffb300;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>PDV Vendas - WordPress Sync Bookmarklet</h1>
+    
+    <p>Este bookmarklet permite sincronizar facilmente os elementos selecionados no PDV Vendas com o WordPress.</p>
+    
+    <div class="instructions">
+        <h2>Instruções</h2>
+        <ol>
+            <li>Arraste o botão abaixo para a barra de favoritos do seu navegador</li>
+            <li>Acesse o PDV Vendas</li>
+            <li>Inicie o MCP Browser Tools com o comando: <code>npx @agentdeskai/browser-tools-mcp@latest</code></li>
+            <li>Selecione um elemento usando o MCP Browser Tools</li>
+            <li>Clique no bookmarklet na sua barra de favoritos</li>
+            <li>O elemento selecionado será sincronizado com o WordPress</li>
+        </ol>
+    </div>
+    
+    <p>Arraste este botão para sua barra de favoritos:</p>
+    
+    <a href="javascript:(function(){var s=document.createElement('script');s.src='https://achadinhoshopp.com.br/loja/wp-content/plugins/pdv-wordpress-direct-integration/assets/js/pdv-sync-bookmarklet.js';document.body.appendChild(s);})();" class="bookmarklet">PDV → WordPress Sync</a>
+    
+    <div class="note">
+        <h3>Nota</h3>
+        <p>Se o bookmarklet não funcionar, você pode copiar e colar o seguinte código diretamente no console do navegador:</p>
+        <pre><code>fetch('https://achadinhoshopp.com.br/loja/wp-content/plugins/pdv-wordpress-direct-integration/assets/js/pdv-sync-bookmarklet.js')
+.then(response => response.text())
+.then(code => {
+    const script = document.createElement('script');
+    script.textContent = code;
+    document.body.appendChild(script);
+});</code></pre>
+    </div>
+    
+    <h2>Credenciais Utilizadas</h2>
+    <ul>
+        <li><strong>API Key:</strong> <code>OxCq4oUPrd5hqxPEq1zdjEd4</code></li>
+        <li><strong>Username:</strong> <code>gloliverx</code></li>
+        <li><strong>Password:</strong> <code>OxCq4oUPrd5hqxPEq1zdjEd4</code></li>
+    </ul>
+    
+    <p>Estas credenciais estão pré-configuradas no script e são usadas para autenticar as requisições ao WordPress.</p>
+    
+    <h2>Solução de Problemas</h2>
+    <ul>
+        <li>Certifique-se de que o MCP Browser Tools está em execução</li>
+        <li>Verifique se você selecionou um elemento antes de clicar no bookmarklet</li>
+        <li>Verifique o console do navegador para mensagens de erro</li>
+        <li>Certifique-se de que o plugin está instalado e ativado no WordPress</li>
+    </ul>
+</body>
+</html>

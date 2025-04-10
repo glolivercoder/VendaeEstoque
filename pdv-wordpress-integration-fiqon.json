@@ -1,0 +1,298 @@
+{
+  "fiqon_webhook_integration": {
+    "version": "1.0.0",
+    "name": "PDV Vendas - WordPress Integration",
+    "description": "Integração bidirecional entre o aplicativo PDV Vendas e o site WordPress",
+    "created_at": "2023-11-15T12:00:00Z",
+    "updated_at": "2023-11-15T12:00:00Z",
+    "auth": {
+      "wordpress": {
+        "type": "api_key",
+        "api_key": "OxCq4oUPrd5hqxPEq1zdjEd4",
+        "username": "gloliverx",
+        "password": "OxCq4oUPrd5hqxPEq1zdjEd4",
+        "headers": {
+          "X-PDV-API-Key": "OxCq4oUPrd5hqxPEq1zdjEd4",
+          "X-PDV-Username": "gloliverx",
+          "X-PDV-Password": "OxCq4oUPrd5hqxPEq1zdjEd4"
+        }
+      }
+    },
+    "endpoints": {
+      "wordpress_base_url": "https://achadinhoshopp.com.br/loja/wp-json/pdv-vendas/v1",
+      "pdv_webhook_url": "{{PDV_WEBHOOK_URL}}",
+      "endpoints": [
+        {
+          "name": "sync_products",
+          "method": "POST",
+          "url": "{{wordpress_base_url}}/sync",
+          "description": "Sincronizar produtos do PDV Vendas para o WordPress",
+          "auth": "wordpress",
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        {
+          "name": "clear_products",
+          "method": "POST",
+          "url": "{{wordpress_base_url}}/clear",
+          "description": "Limpar produtos existentes no WordPress",
+          "auth": "wordpress",
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        {
+          "name": "update_stock",
+          "method": "POST",
+          "url": "{{wordpress_base_url}}/stock",
+          "description": "Atualizar estoque no WordPress",
+          "auth": "wordpress",
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        {
+          "name": "get_products",
+          "method": "GET",
+          "url": "{{wordpress_base_url}}/get-products",
+          "description": "Obter produtos do WordPress",
+          "auth": "wordpress"
+        },
+        {
+          "name": "sales_webhook",
+          "method": "POST",
+          "url": "{{wordpress_base_url}}/sales-webhook",
+          "description": "Processar webhook de vendas",
+          "auth": "wordpress",
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        {
+          "name": "pdv_stock_update",
+          "method": "POST",
+          "url": "{{pdv_webhook_url}}/stock-update",
+          "description": "Atualizar estoque no PDV Vendas",
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        }
+      ]
+    },
+    "flows": [
+      {
+        "name": "pdv_to_wordpress_sync",
+        "description": "Sincronizar produtos selecionados do PDV Vendas para o WordPress",
+        "trigger": {
+          "type": "webhook",
+          "endpoint": "/pdv-to-wordpress"
+        },
+        "steps": [
+          {
+            "name": "clear_existing_products",
+            "type": "api_call",
+            "endpoint": "clear_products",
+            "condition": "{{input.clear_existing === true}}"
+          },
+          {
+            "name": "format_products",
+            "type": "transform",
+            "input": "{{input.products}}",
+            "transformation": {
+              "map": "product => ({id: product.id, description: product.description, itemDescription: product.itemDescription || '', price: product.price, quantity: product.quantity || 0, category: product.category || 'Geral', image: product.image || '', additionalImages: product.additionalImages || []})"
+            },
+            "output": "formatted_products"
+          },
+          {
+            "name": "sync_products",
+            "type": "api_call",
+            "endpoint": "sync_products",
+            "payload": {
+              "products": "{{formatted_products}}"
+            }
+          }
+        ],
+        "output": {
+          "success": "{{steps.sync_products.success}}",
+          "message": "{{steps.sync_products.success ? 'Produtos sincronizados com sucesso' : 'Erro ao sincronizar produtos'}}",
+          "count": "{{steps.sync_products.response.count}}",
+          "details": "{{steps.sync_products.response}}"
+        }
+      },
+      {
+        "name": "wordpress_to_pdv_sync",
+        "description": "Sincronizar produtos do WordPress para o PDV Vendas",
+        "trigger": {
+          "type": "webhook",
+          "endpoint": "/wordpress-to-pdv"
+        },
+        "steps": [
+          {
+            "name": "get_wordpress_products",
+            "type": "api_call",
+            "endpoint": "get_products",
+            "query_params": {
+              "category": "{{input.category}}",
+              "limit": "{{input.limit}}"
+            }
+          },
+          {
+            "name": "format_products_for_pdv",
+            "type": "transform",
+            "input": "{{steps.get_wordpress_products.response.products}}",
+            "transformation": {
+              "map": "product => ({id: product.id, description: product.description, price: product.price, quantity: product.quantity, category: product.category, image: product.image})"
+            },
+            "output": "formatted_products_for_pdv"
+          },
+          {
+            "name": "update_pdv_stock",
+            "type": "api_call",
+            "endpoint": "pdv_stock_update",
+            "payload": {
+              "products": "{{formatted_products_for_pdv}}"
+            }
+          }
+        ],
+        "output": {
+          "success": "{{steps.update_pdv_stock.success}}",
+          "message": "{{steps.update_pdv_stock.success ? 'Estoque atualizado com sucesso no PDV Vendas' : 'Erro ao atualizar estoque no PDV Vendas'}}",
+          "products": "{{formatted_products_for_pdv}}"
+        }
+      },
+      {
+        "name": "wordpress_sales_webhook",
+        "description": "Processar vendas do WordPress e atualizar estoque no PDV Vendas",
+        "trigger": {
+          "type": "webhook",
+          "endpoint": "/wordpress-sales"
+        },
+        "steps": [
+          {
+            "name": "process_sales_webhook",
+            "type": "api_call",
+            "endpoint": "sales_webhook",
+            "payload": {
+              "order_id": "{{input.order_id}}"
+            }
+          },
+          {
+            "name": "extract_sold_items",
+            "type": "transform",
+            "input": "{{steps.process_sales_webhook.response.items}}",
+            "transformation": {
+              "map": "item => ({id: item.pdv_id, quantity: item.quantity, name: item.name})"
+            },
+            "output": "sold_items"
+          },
+          {
+            "name": "update_pdv_stock_after_sale",
+            "type": "api_call",
+            "endpoint": "pdv_stock_update",
+            "payload": {
+              "products": "{{sold_items}}",
+              "is_sale": true
+            }
+          }
+        ],
+        "output": {
+          "success": "{{steps.update_pdv_stock_after_sale.success}}",
+          "message": "{{steps.update_pdv_stock_after_sale.success ? 'Estoque atualizado após venda no WordPress' : 'Erro ao atualizar estoque após venda'}}",
+          "order_id": "{{input.order_id}}",
+          "items": "{{sold_items}}"
+        }
+      },
+      {
+        "name": "pdv_stock_update_to_wordpress",
+        "description": "Atualizar estoque no WordPress quando houver alterações no PDV Vendas",
+        "trigger": {
+          "type": "webhook",
+          "endpoint": "/pdv-stock-update"
+        },
+        "steps": [
+          {
+            "name": "format_stock_update",
+            "type": "transform",
+            "input": "{{input.products}}",
+            "transformation": {
+              "map": "product => ({id: product.id, quantity: product.quantity})"
+            },
+            "output": "stock_updates"
+          },
+          {
+            "name": "update_wordpress_stock",
+            "type": "api_call",
+            "endpoint": "update_stock",
+            "payload": {
+              "products": "{{stock_updates}}"
+            }
+          }
+        ],
+        "output": {
+          "success": "{{steps.update_wordpress_stock.success}}",
+          "message": "{{steps.update_wordpress_stock.success ? 'Estoque atualizado com sucesso no WordPress' : 'Erro ao atualizar estoque no WordPress'}}",
+          "updated_count": "{{steps.update_wordpress_stock.response.updated_count}}",
+          "details": "{{steps.update_wordpress_stock.response}}"
+        }
+      },
+      {
+        "name": "bidirectional_sync",
+        "description": "Sincronização bidirecional entre PDV Vendas e WordPress",
+        "trigger": {
+          "type": "webhook",
+          "endpoint": "/bidirectional-sync"
+        },
+        "steps": [
+          {
+            "name": "pdv_to_wordpress",
+            "type": "flow",
+            "flow": "pdv_to_wordpress_sync",
+            "input": {
+              "products": "{{input.products}}",
+              "clear_existing": "{{input.clear_existing}}"
+            }
+          },
+          {
+            "name": "wordpress_to_pdv",
+            "type": "flow",
+            "flow": "wordpress_to_pdv_sync",
+            "input": {
+              "category": "{{input.category}}",
+              "limit": "{{input.limit}}"
+            }
+          }
+        ],
+        "output": {
+          "pdv_to_wordpress": "{{steps.pdv_to_wordpress}}",
+          "wordpress_to_pdv": "{{steps.wordpress_to_pdv}}"
+        }
+      }
+    ],
+    "schedules": [
+      {
+        "name": "auto_sync_schedule",
+        "description": "Sincronização automática a cada hora",
+        "schedule": "0 * * * *",
+        "flow": "bidirectional_sync",
+        "input": {
+          "clear_existing": false,
+          "limit": 100
+        }
+      }
+    ],
+    "settings": {
+      "retry": {
+        "max_attempts": 3,
+        "initial_interval": 5000,
+        "multiplier": 2
+      },
+      "timeout": 30000,
+      "logging": {
+        "level": "info",
+        "include_request_body": true,
+        "include_response_body": true
+      }
+    }
+  }
+}
