@@ -413,7 +413,6 @@ export const syncProductsToWordPress = async (products) => {
             if (matches && matches.length === 3) {
               const type = matches[1];
               const data = matches[2];
-              const buffer = Buffer.from(data, 'base64');
 
               // Determinar a extensão do arquivo com base no tipo MIME
               let extension = 'jpg';
@@ -427,11 +426,40 @@ export const syncProductsToWordPress = async (products) => {
               // Fazer upload da imagem para o WordPress
               console.log(`Fazendo upload da imagem ${filename} para o WordPress...`);
 
+              // Converter a imagem base64 para um formato que o WordPress possa processar
               // Usar a API de mídia do WordPress para fazer upload
-              const mediaResponse = await axios.post(`${SITE_URL}/wp-json/wp/v2/media`, buffer, {
+              // Método alternativo: enviar a imagem como formData
+              const formData = new FormData();
+
+              // Criar um blob a partir dos dados base64
+              const byteCharacters = atob(data);
+              const byteArrays = [];
+
+              for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+                const slice = byteCharacters.slice(offset, offset + 512);
+
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) {
+                  byteNumbers[i] = slice.charCodeAt(i);
+                }
+
+                const byteArray = new Uint8Array(byteNumbers);
+                byteArrays.push(byteArray);
+              }
+
+              const blob = new Blob(byteArrays, {type});
+
+              // Adicionar o arquivo ao formData
+              formData.append('file', blob, filename);
+              formData.append('title', product.description || product.name);
+              formData.append('caption', `Imagem do produto: ${product.description || product.name}`);
+              formData.append('alt_text', product.description || product.name);
+
+              // Usar a API de mídia do WordPress para fazer upload
+              const mediaResponse = await axios.post(`${SITE_URL}/wp-json/wp/v2/media`, formData, {
                 headers: {
-                  'Content-Type': type,
                   'Content-Disposition': `attachment; filename=${filename}`,
+                  'Content-Type': 'multipart/form-data',
                   Authorization: `Basic ${btoa(`${CONSUMER_KEY}:${CONSUMER_SECRET}`)}`
                 }
               });
@@ -440,10 +468,97 @@ export const syncProductsToWordPress = async (products) => {
               if (mediaResponse.data && mediaResponse.data.source_url) {
                 wooProduct.images = [
                   {
-                    src: mediaResponse.data.source_url
+                    src: mediaResponse.data.source_url,
+                    id: mediaResponse.data.id,
+                    alt: product.description || product.name,
+                    name: filename
                   }
                 ];
                 console.log(`Imagem enviada com sucesso: ${mediaResponse.data.source_url}`);
+
+                // Verificar se há imagens adicionais
+                if (product.additionalImages && Array.isArray(product.additionalImages) && product.additionalImages.length > 0) {
+                  console.log(`Produto ${product.id} tem ${product.additionalImages.length} imagens adicionais. Tentando fazer upload...`);
+
+                  // Processar cada imagem adicional
+                  for (let i = 0; i < product.additionalImages.length; i++) {
+                    try {
+                      const additionalImage = product.additionalImages[i];
+                      if (additionalImage && additionalImage.startsWith('data:image')) {
+                        const addMatches = additionalImage.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+
+                        if (addMatches && addMatches.length === 3) {
+                          const addType = addMatches[1];
+                          const addData = addMatches[2];
+
+                          // Determinar a extensão do arquivo
+                          let addExtension = 'jpg';
+                          if (addType.includes('png')) addExtension = 'png';
+                          else if (addType.includes('gif')) addExtension = 'gif';
+                          else if (addType.includes('webp')) addExtension = 'webp';
+
+                          // Nome do arquivo
+                          const addFilename = `pdv-product-${product.id}-additional-${i}-${Date.now()}.${addExtension}`;
+
+                          // Criar um blob a partir dos dados base64
+                          const addByteCharacters = atob(addData);
+                          const addByteArrays = [];
+
+                          for (let offset = 0; offset < addByteCharacters.length; offset += 512) {
+                            const slice = addByteCharacters.slice(offset, offset + 512);
+
+                            const addByteNumbers = new Array(slice.length);
+                            for (let j = 0; j < slice.length; j++) {
+                              addByteNumbers[j] = slice.charCodeAt(j);
+                            }
+
+                            const addByteArray = new Uint8Array(addByteNumbers);
+                            addByteArrays.push(addByteArray);
+                          }
+
+                          const addBlob = new Blob(addByteArrays, {type: addType});
+
+                          // Adicionar o arquivo ao formData
+                          const addFormData = new FormData();
+                          addFormData.append('file', addBlob, addFilename);
+                          addFormData.append('title', `${product.description || product.name} - Imagem ${i+1}`);
+                          addFormData.append('caption', `Imagem adicional ${i+1} do produto: ${product.description || product.name}`);
+                          addFormData.append('alt_text', `${product.description || product.name} - Imagem ${i+1}`);
+
+                          // Fazer upload da imagem adicional
+                          const addMediaResponse = await axios.post(`${SITE_URL}/wp-json/wp/v2/media`, addFormData, {
+                            headers: {
+                              'Content-Disposition': `attachment; filename=${addFilename}`,
+                              'Content-Type': 'multipart/form-data',
+                              Authorization: `Basic ${btoa(`${CONSUMER_KEY}:${CONSUMER_SECRET}`)}`
+                            }
+                          });
+
+                          // Adicionar a imagem adicional ao produto
+                          if (addMediaResponse.data && addMediaResponse.data.source_url) {
+                            wooProduct.images.push({
+                              src: addMediaResponse.data.source_url,
+                              id: addMediaResponse.data.id,
+                              alt: `${product.description || product.name} - Imagem ${i+1}`,
+                              name: addFilename
+                            });
+                            console.log(`Imagem adicional ${i+1} enviada com sucesso: ${addMediaResponse.data.source_url}`);
+                          }
+                        }
+                      } else if (additionalImage && (additionalImage.startsWith('http://') || additionalImage.startsWith('https://'))) {
+                        // Se for uma URL, usar diretamente
+                        wooProduct.images.push({
+                          src: additionalImage,
+                          alt: `${product.description || product.name} - Imagem ${i+1}`
+                        });
+                        console.log(`Usando URL de imagem adicional ${i+1}: ${additionalImage}`);
+                      }
+                    } catch (addImageError) {
+                      console.error(`Erro ao fazer upload da imagem adicional ${i+1}:`, addImageError.response ? addImageError.response.data : addImageError.message);
+                      // Continuar com as próximas imagens
+                    }
+                  }
+                }
               }
             } else {
               console.error('Formato de imagem base64 inválido');
