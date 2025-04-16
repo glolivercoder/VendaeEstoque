@@ -1,0 +1,164 @@
+{
+  "name": "PDV Vendas - Sincronização de Estoque",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "woocommerce/estoque",
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "name": "WooCommerce Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Processar dados do estoque\nconst data = $input.json;\n\n// Verificar se é um produto do PDV Vendas\nif (!data.meta_data || !data.meta_data.find(meta => meta.key === \"_pdv_vendas_product\" && meta.value === \"true\")) {\n  return { success: false, message: \"Não é um produto do PDV Vendas\" };\n}\n\nconst pdvVendasId = data.meta_data.find(meta => meta.key === \"_pdv_vendas_id\");\nconst productId = pdvVendasId ? pdvVendasId.value : data.sku;\nconst newStock = data.stock_quantity;\n\nreturn {\n  produto_id: productId,\n  estoque: newStock\n};"
+      },
+      "name": "Process WooCommerce Stock",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.pdvvendas.com/webhook/atualizar-estoque",
+        "authentication": "predefinedCredentialType",
+        "method": "POST",
+        "bodyParametersUi": {
+          "parameter": [
+            {
+              "name": "produto_id",
+              "value": "={{$json.produto_id}}"
+            },
+            {
+              "name": "estoque",
+              "value": "={{$json.estoque}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Update PDV Vendas Stock",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        670,
+        300
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "PDV Vendas API",
+          "name": "PDV Vendas API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pdv-vendas/estoque",
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "name": "PDV Vendas Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Processar dados do estoque do PDV Vendas\nconst data = $input.json;\n\n// Verificar se temos o ID do produto\nif (!data.produto_id) {\n  return { success: false, message: \"ID do produto não fornecido\" };\n}\n\nreturn {\n  sku: data.produto_id.toString(),\n  stock_quantity: data.estoque\n};"
+      },
+      "name": "Process PDV Vendas Stock",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        460,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "resource": "product",
+        "operation": "update",
+        "id": "={{$json.sku}}",
+        "updateFields": {
+          "stock_quantity": "={{$json.stock_quantity}}"
+        }
+      },
+      "name": "Update WooCommerce Stock",
+      "type": "n8n-nodes-base.wooCommerce",
+      "typeVersion": 1,
+      "position": [
+        670,
+        500
+      ],
+      "credentials": {
+        "wooCommerceApi": {
+          "id": "WooCommerce Achadinho",
+          "name": "WooCommerce Achadinho"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "WooCommerce Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process WooCommerce Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process WooCommerce Stock": {
+      "main": [
+        [
+          {
+            "node": "Update PDV Vendas Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PDV Vendas Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process PDV Vendas Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process PDV Vendas Stock": {
+      "main": [
+        [
+          {
+            "node": "Update WooCommerce Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

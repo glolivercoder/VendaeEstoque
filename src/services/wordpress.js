@@ -338,25 +338,17 @@ export const syncProductsToWordPress = async (products) => {
       });
 
       // Formatar produto para o formato do WooCommerce
+      // Simplificar o objeto para evitar erros de validação
       const wooProduct = {
         name: product.description || product.name,
+        type: 'simple',
+        regular_price: String(product.price),
         description: product.itemDescription || product.description || product.name,
         short_description: product.description || product.name,
-        regular_price: String(product.price),
-        price: String(product.price),
         sku: `PDV-${product.id}`,
         manage_stock: true,
         stock_quantity: parseInt(product.quantity) || 0,
-        stock_status: (parseInt(product.quantity) || 0) > 0 ? 'instock' : 'outofstock',
-        // Garantir que o produto seja publicado e visível na loja
         status: 'publish',
-        catalog_visibility: 'visible',
-        // Definir como produto simples
-        type: 'simple',
-        // Definir como produto virtual se não tiver estoque físico
-        virtual: false,
-        // Definir como produto que pode ser comprado
-        purchasable: true,
         categories: (() => {
           const categoryName = product.category || 'Geral';
           const categoryKey = categoryName.toLowerCase();
@@ -368,36 +360,14 @@ export const syncProductsToWordPress = async (products) => {
           }
           // Caso contrário, usamos o nome (WooCommerce criará uma nova categoria)
           return [{ name: categoryName }];
-        })(),
-        meta_data: [
-          {
-            key: '_pdv_vendas_id',
-            value: String(product.id)
-          },
-          {
-            // Garantir que o produto seja visível na loja
-            key: '_visibility',
-            value: 'visible'
-          },
-          {
-            // Garantir que o produto tenha um preço regular
-            key: '_regular_price',
-            value: String(product.price)
-          },
-          {
-            // Garantir que o produto tenha um preço de venda
-            key: '_price',
-            value: String(product.price)
-          }
-        ]
+        })()
       };
 
       console.log('Enviando produto para o WooCommerce:', {
         id: product.id,
         name: wooProduct.name,
-        price: wooProduct.price,
-        status: wooProduct.status,
-        visibility: wooProduct.catalog_visibility
+        price: wooProduct.regular_price, // Usar regular_price em vez de price (que não existe no objeto)
+        status: wooProduct.status
       });
 
       // Adicionar imagem se existir
@@ -456,11 +426,28 @@ export const syncProductsToWordPress = async (products) => {
               formData.append('alt_text', product.description || product.name);
 
               // Usar a API de mídia do WordPress para fazer upload
+              // Obter credenciais do WordPress do localStorage se disponível
+              let wpUsername = localStorage.getItem('wp_username') || '';
+              let wpPassword = localStorage.getItem('wp_password') || '';
+
+              // Se não houver credenciais no localStorage, solicitar ao usuário
+              if (!wpUsername || !wpPassword) {
+                wpUsername = prompt('Digite seu nome de usuário do WordPress:', '');
+                wpPassword = prompt('Digite sua senha de aplicativo do WordPress:', '');
+
+                if (wpUsername && wpPassword) {
+                  // Salvar credenciais no localStorage para uso futuro
+                  localStorage.setItem('wp_username', wpUsername);
+                  localStorage.setItem('wp_password', wpPassword);
+                }
+              }
+
+              // Usar as credenciais fornecidas pelo usuário
               const mediaResponse = await axios.post(`${SITE_URL}/wp-json/wp/v2/media`, formData, {
                 headers: {
                   'Content-Disposition': `attachment; filename=${filename}`,
                   'Content-Type': 'multipart/form-data',
-                  Authorization: `Basic ${btoa(`${CONSUMER_KEY}:${CONSUMER_SECRET}`)}`
+                  Authorization: `Basic ${btoa(`${wpUsername}:${wpPassword}`)}`
                 }
               });
 
@@ -530,7 +517,7 @@ export const syncProductsToWordPress = async (products) => {
                             headers: {
                               'Content-Disposition': `attachment; filename=${addFilename}`,
                               'Content-Type': 'multipart/form-data',
-                              Authorization: `Basic ${btoa(`${CONSUMER_KEY}:${CONSUMER_SECRET}`)}`
+                              Authorization: `Basic ${btoa(`${wpUsername}:${wpPassword}`)}`
                             }
                           });
 
@@ -595,15 +582,28 @@ export const syncProductsToWordPress = async (products) => {
         });
         console.log(`Produto atualizado: ${product.description || product.name}`);
       } else {
-        response = await wordpressApi.post('/products', wooProduct);
-        results.created++;
-        results.details.push({
-          id: product.id,
-          woocommerce_id: response.data.id,
-          status: 'created',
-          name: product.description || product.name
-        });
-        console.log(`Produto criado: ${product.description || product.name}`);
+        // Exibir os dados completos que serão enviados
+        console.log('Dados completos do produto a serem enviados:', JSON.stringify(wooProduct, null, 2));
+
+        try {
+          response = await wordpressApi.post('/products', wooProduct);
+          results.created++;
+          results.details.push({
+            id: product.id,
+            woocommerce_id: response.data.id,
+            status: 'created',
+            name: product.description || product.name
+          });
+          console.log(`Produto criado: ${product.description || product.name}`);
+        } catch (postError) {
+          // Exibir detalhes do erro
+          console.error('Detalhes do erro de criação:', {
+            status: postError.response?.status,
+            statusText: postError.response?.statusText,
+            data: postError.response?.data
+          });
+          throw postError; // Re-lançar o erro para ser capturado pelo catch externo
+        }
       }
     } catch (error) {
       console.error(`Erro ao sincronizar produto ${product.id}:`, error);

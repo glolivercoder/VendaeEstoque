@@ -1,0 +1,8 @@
+Este é um arquivo de texto que representa um banner.jpg.
+
+Na implementação real, você precisará substituir este arquivo por uma imagem real no formato JPG.
+O banner deve ter aproximadamente 1200x300 pixels e deve incluir:
+- O logotipo da Achadinho Shopp
+- Cores que combinam com o tema do aplicativo PDV Vendas
+- Texto promocional como "Os melhores produtos com os melhores preços"
+- Design limpo e profissional

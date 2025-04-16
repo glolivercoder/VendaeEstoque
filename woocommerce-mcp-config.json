@@ -1,0 +1,45 @@
+{
+  "woocommerce": {
+    "url": "https://achadinhoshopp.com.br/loja",
+    "consumer_key": "ck_d106765e36b9a6af0d22bd22571388ec3ad67378",
+    "consumer_secret": "cs_0d5d0255c002e137d48be4da75d5d87363278bd6",
+    "version": "wc/v3"
+  },
+  "pdv_vendas": {
+    "url": "http://localhost:3000",
+    "api_key": "OxCq4oUPrd5hqxPEq1zdjEd4",
+    "username": "gloliverx",
+    "password": "Juli@3110"
+  },
+  "mcp": {
+    "url": "http://localhost:3025",
+    "version": "v1"
+  },
+  "webhooks": {
+    "product_updated": {
+      "name": "PDV Vendas - Atualização de Produto",
+      "topic": "product.updated",
+      "delivery_url": "http://localhost:3000/api/webhooks/woocommerce/estoque"
+    },
+    "product_created": {
+      "name": "PDV Vendas - Criação de Produto",
+      "topic": "product.created",
+      "delivery_url": "http://localhost:3000/api/webhooks/woocommerce/produto"
+    },
+    "order_updated": {
+      "name": "PDV Vendas - Atualização de Pedido",
+      "topic": "order.updated",
+      "delivery_url": "http://localhost:3000/api/webhooks/woocommerce/pedido"
+    }
+  },
+  "sync": {
+    "interval": 300,
+    "batch_size": 50,
+    "enabled": true
+  },
+  "logging": {
+    "level": "info",
+    "file": "logs/woocommerce-mcp.log",
+    "console": true
+  }
+}

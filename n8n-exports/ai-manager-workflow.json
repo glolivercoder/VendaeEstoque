@@ -1,0 +1,420 @@
+{
+  "name": "PDV Vendas - IA Manager",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pdv-vendas/ai-manager",
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "id": "2l2l2l2l-2l2l-2l2l-2l2l-2l2l2l2l2l2l",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extrair dados da requisição\nconst data = $input.json;\n\n// Verificar se temos uma mensagem\nif (!data.message) {\n  return { success: false, message: \"Mensagem não fornecida\" };\n}\n\n// Determinar o tipo de consulta\nconst message = data.message.toLowerCase();\nlet queryType = 'general';\n\nif (message.includes('produto') || message.includes('especificação') || message.includes('detalhe')) {\n  queryType = 'product';\n} else if (message.includes('frete') || message.includes('entrega') || message.includes('envio')) {\n  queryType = 'shipping';\n} else if (message.includes('pedido') || message.includes('compra') || message.includes('status')) {\n  queryType = 'order';\n} else if (message.includes('suporte') || message.includes('ajuda') || message.includes('problema')) {\n  queryType = 'support';\n}\n\nreturn {\n  original_message: data.message,\n  query_type: queryType,\n  customer_id: data.customer_id || 'anonymous',\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "3m3m3m3m-3m3m-3m3m-3m3m-3m3m3m3m3m3m",
+      "name": "Process Query",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.query_type }}",
+              "operation": "equal",
+              "value2": "product"
+            }
+          ]
+        }
+      },
+      "id": "4n4n4n4n-4n4n-4n4n-4n4n-4n4n4n4n4n4n",
+      "name": "Product Query?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.query_type }}",
+              "operation": "equal",
+              "value2": "shipping"
+            }
+          ]
+        }
+      },
+      "id": "5o5o5o5o-5o5o-5o5o-5o5o-5o5o5o5o5o5o",
+      "name": "Shipping Query?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.query_type }}",
+              "operation": "equal",
+              "value2": "order"
+            }
+          ]
+        }
+      },
+      "id": "6p6p6p6p-6p6p-6p6p-6p6p-6p6p6p6p6p6p",
+      "name": "Order Query?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        650,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "queryAuth",
+        "method": "POST",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyCiofVjzaD6b7-G3worRYHWuuKyZ580VQs"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{\"role\": \"user\", \"parts\": [{\"text\": \"Você é um assistente especializado em fornecer informações sobre produtos. Responda de forma detalhada e profissional sobre as especificações, características e benefícios dos produtos mencionados na consulta.\\n\\nConsulta do cliente: {{ $json.original_message }}\"}]}]"
+            }
+          ]
+        }
+      },
+      "id": "7q7q7q7q-7q7q-7q7q-7q7q-7q7q7q7q7q7q",
+      "name": "Gemini - Product Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        850,
+        250
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.deepseek.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "deepseek-chat"
+            },
+            {
+              "name": "messages",
+              "value": "=[{\"role\": \"system\", \"content\": \"Você é um assistente especializado em informações de frete e entrega. Forneça informações precisas sobre prazos, custos e métodos de entrega.\"}, {\"role\": \"user\", \"content\": \"{{ $json.original_message }}\"}]"
+            },
+            {
+              "name": "temperature",
+              "value": 0.7
+            }
+          ]
+        }
+      },
+      "id": "8r8r8r8r-8r8r-8r8r-8r8r-8r8r8r8r8r8r",
+      "name": "Deepseek - Shipping Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        850,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "queryAuth",
+        "method": "POST",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyCiofVjzaD6b7-G3worRYHWuuKyZ580VQs"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{\"role\": \"user\", \"parts\": [{\"text\": \"Você é um assistente especializado em fornecer informações sobre pedidos e status de compras. Responda de forma clara e objetiva sobre o status, prazos e detalhes dos pedidos mencionados na consulta.\\n\\nConsulta do cliente: {{ $json.original_message }}\"}]}]"
+            }
+          ]
+        }
+      },
+      "id": "9s9s9s9s-9s9s-9s9s-9s9s-9s9s9s9s9s9s",
+      "name": "Gemini - Order Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        850,
+        550
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.deepseek.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "deepseek-chat"
+            },
+            {
+              "name": "messages",
+              "value": "=[{\"role\": \"system\", \"content\": \"Você é um assistente de suporte técnico especializado em resolver problemas e fornecer ajuda para clientes. Seja empático, claro e objetivo nas suas respostas.\"}, {\"role\": \"user\", \"content\": \"{{ $json.original_message }}\"}]"
+            },
+            {
+              "name": "temperature",
+              "value": 0.7
+            }
+          ]
+        }
+      },
+      "id": "0t0t0t0t-0t0t-0t0t-0t0t-0t0t0t0t0t0t",
+      "name": "Deepseek - Support",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        850,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "queryAuth",
+        "method": "POST",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyCiofVjzaD6b7-G3worRYHWuuKyZ580VQs"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{\"role\": \"user\", \"parts\": [{\"text\": \"Você é um assistente virtual para uma loja online. Responda de forma educada e prestativa às perguntas gerais dos clientes.\\n\\nConsulta do cliente: {{ $json.original_message }}\"}]}]"
+            }
+          ]
+        }
+      },
+      "id": "1u1u1u1u-1u1u-1u1u-1u1u-1u1u1u1u1u1u",
+      "name": "Gemini - General Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        850,
+        850
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Processar resposta da IA\nconst data = $input.json;\n\n// Extrair a resposta da IA dependendo da fonte\nlet aiResponse = '';\n\n// Resposta do Gemini\nif (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {\n  aiResponse = data.candidates[0].content.parts[0].text;\n}\n// Resposta do Deepseek\nelse if (data.choices && data.choices[0] && data.choices[0].message) {\n  aiResponse = data.choices[0].message.content;\n}\n// Fallback\nelse {\n  aiResponse = 'Não foi possível obter uma resposta da IA. Por favor, tente novamente mais tarde.';\n}\n\nreturn {\n  success: true,\n  message: \"IA processou a solicitação com sucesso\",\n  ai_response: aiResponse,\n  query_type: $node[\"Process Query\"].json[\"query_type\"],\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "2v2v2v2v-2v2v-2v2v-2v2v-2v2v2v2v2v2v",
+      "name": "Format AI Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        550
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Query": {
+      "main": [
+        [
+          {
+            "node": "Product Query?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Product Query?": {
+      "main": [
+        [
+          {
+            "node": "Gemini - Product Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Shipping Query?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shipping Query?": {
+      "main": [
+        [
+          {
+            "node": "Deepseek - Shipping Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Order Query?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order Query?": {
+      "main": [
+        [
+          {
+            "node": "Gemini - Order Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Deepseek - Support",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Product Info": {
+      "main": [
+        [
+          {
+            "node": "Format AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deepseek - Shipping Info": {
+      "main": [
+        [
+          {
+            "node": "Format AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Order Info": {
+      "main": [
+        [
+          {
+            "node": "Format AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deepseek - Support": {
+      "main": [
+        [
+          {
+            "node": "Format AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - General Info": {
+      "main": [
+        [
+          {
+            "node": "Format AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "4a5b6c7d-8e9f-0g1h-2i3j-4k5l6m7n8o9p",
+  "id": "4",
+  "meta": {
+    "instanceId": "1a2b3c4d5e6f7g8h9i0j"
+  },
+  "tags": []
+}

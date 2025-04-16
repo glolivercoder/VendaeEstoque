@@ -1,0 +1,88 @@
+{
+  "name": "PDV Vendas - Sincronização de Estoque (PDV → WooCommerce)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pdv-vendas/estoque",
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Processar dados do estoque do PDV Vendas\nconst data = $input.json;\n\n// Verificar se temos o ID do produto\nif (!data.produto_id) {\n  return { success: false, message: \"ID do produto não fornecido\" };\n}\n\nreturn {\n  sku: data.produto_id.toString(),\n  stock_quantity: data.estoque\n};"
+      },
+      "name": "Process PDV Stock Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "credentials",
+        "operation": "update",
+        "resource": "product",
+        "productId": "={{ $json.sku }}",
+        "updateFields": {
+          "stock_quantity": "={{ $json.stock_quantity }}",
+          "manage_stock": true
+        }
+      },
+      "name": "WooCommerce",
+      "type": "n8n-nodes-base.wooCommerce",
+      "typeVersion": 1,
+      "position": [650, 300],
+      "credentials": {
+        "wooCommerceApi": {
+          "id": "GkrrrvYLWEXDyECP",
+          "name": "WooCommerce Achadinho"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process PDV Stock Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process PDV Stock Data": {
+      "main": [
+        [
+          {
+            "node": "WooCommerce",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [
+    {
+      "id": "gdQamNvfQMvNgx4s",
+      "name": "PDV Vendas"
+    },
+    {
+      "id": "FLcLRrkmKgt6WMMa",
+      "name": "WooCommerce"
+    },
+    {
+      "id": "kZDdlmzUnGSD8nYC",
+      "name": "Integration"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "wordpress": {
+    "site_url": "https://achadinhoshopp.com.br/loja",
+    "api_url": "https://achadinhoshopp.com.br/loja/wp-json",
+    "username": "seu-usuario-wordpress",
+    "app_password": "senha-de-aplicativo-gerada"
+  },
+  "woocommerce": {
+    "consumer_key": "consumer-key-gerada",
+    "consumer_secret": "consumer-secret-gerada"
+  },
+  "pdv_vendas": {
+    "api_url": "https://api.pdvvendas.com",
+    "username": "usuario-pdv-vendas",
+    "password": "senha-pdv-vendas"
+  },
+  "n8n": {
+    "base_url": "http://localhost:5679",
+    "webhooks": {
+      "product_sync": "http://localhost:5679/webhook/pdv-vendas/produtos",
+      "inventory_sync_woo": "http://localhost:5679/webhook/woocommerce/estoque",
+      "inventory_sync_pdv": "http://localhost:5679/webhook/pdv-vendas/estoque",
+      "ai_manager": "http://localhost:5679/webhook/pdv-vendas/ai-manager"
+    }
+  },
+  "ai": {
+    "provider": "claude",
+    "api_key": "sua-api-key-da-anthropic"
+  },
+  "email": {
+    "from": "system@pdvvendas.com",
+    "to": "admin@achadinhoshopp.com.br",
+    "subject_prefix": "[PDV Vendas Integration] "
+  },
+  "css": {
+    "product_list": "/* Custom CSS for PDV Vendas products */\n.woocommerce ul.products li.product {\n  text-align: center;\n  padding: 15px;\n  border-radius: 8px;\n  transition: all 0.3s ease;\n  box-shadow: 0 2px 5px rgba(0,0,0,0.1);\n}\n\n.woocommerce ul.products li.product:hover {\n  transform: translateY(-5px);\n  box-shadow: 0 5px 15px rgba(0,0,0,0.1);\n}\n\n.woocommerce ul.products li.product img {\n  border-radius: 5px;\n  margin-bottom: 10px;\n  width: 100%;\n  height: auto;\n  object-fit: contain;\n}\n\n.woocommerce ul.products li.product .price {\n  color: #4CAF50;\n  font-weight: bold;\n  font-size: 1.2em;\n}\n\n.woocommerce ul.products li.product .button {\n  background-color: #4CAF50;\n  color: white;\n  border-radius: 4px;\n  margin-top: 10px;\n}\n\n.woocommerce ul.products li.product .button:hover {\n  background-color: #45a049;\n}"
+  }
+}

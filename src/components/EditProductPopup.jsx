@@ -256,6 +256,16 @@ const EditProductPopup = ({
           />
         </div>
         <div className="form-group">
+          <label>SKU:</label>
+          <input
+            type="text"
+            name="sku"
+            value={editedItem.sku || ''}
+            onChange={handleInputChange}
+            placeholder="Código do produto (opcional)"
+          />
+        </div>
+        <div className="form-group">
           <label>Preu00e7o:</label>
           <input
             type="number"

@@ -1,0 +1,118 @@
+{
+  "name": "PDV Vendas - Sincronização de Estoque via MCP",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pdv-vendas/mcp/estoque",
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "id": "5e5e5e5e-5e5e-5e5e-5e5e-5e5e5e5e5e5e",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Processar dados de estoque\nconst data = $input.json;\n\n// Verificar se temos os dados necessários\nif (!data.produto_id || data.estoque === undefined) {\n  return { success: false, message: \"Dados de estoque incompletos\" };\n}\n\n// Preparar dados para o MCP\nreturn {\n  product_id: data.produto_id,\n  stock_quantity: parseInt(data.estoque, 10),\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "6f6f6f6f-6f6f-6f6f-6f6f-6f6f6f6f6f6f",
+      "name": "Prepare Stock Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:3025/api/woocommerce/products/update-stock",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "product_id",
+              "value": "={{ $json.product_id }}"
+            },
+            {
+              "name": "stock_quantity",
+              "value": "={{ $json.stock_quantity }}"
+            }
+          ]
+        }
+      },
+      "id": "7g7g7g7g-7g7g-7g7g-7g7g-7g7g7g7g7g7g",
+      "name": "MCP WooCommerce API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Processar resposta do MCP\nconst data = $input.json;\n\n// Verificar se temos os dados necessários\nif (!data.id) {\n  return { success: false, message: \"Estoque não atualizado no WooCommerce\" };\n}\n\nreturn {\n  success: true,\n  message: `Estoque do produto ${data.id} atualizado com sucesso para ${data.stock_quantity} no WooCommerce`,\n  woocommerce_id: data.id,\n  woocommerce_sku: data.sku,\n  woocommerce_stock: data.stock_quantity,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "8h8h8h8h-8h8h-8h8h-8h8h-8h8h8h8h8h8h",
+      "name": "Process Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare Stock Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Stock Data": {
+      "main": [
+        [
+          {
+            "node": "MCP WooCommerce API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP WooCommerce API": {
+      "main": [
+        [
+          {
+            "node": "Process Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "2a3b4c5d-6e7f-8g9h-0i1j-2k3l4m5n6o7p",
+  "id": "7",
+  "meta": {
+    "instanceId": "1a2b3c4d5e6f7g8h9i0j"
+  },
+  "tags": []
+}

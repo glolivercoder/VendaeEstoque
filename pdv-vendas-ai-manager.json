@@ -1,0 +1,78 @@
+{
+  "name": "PDV Vendas - IA Manager",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pdv-vendas/ai-manager",
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "credentialType": "anthropicApi",
+        "operation": "completion",
+        "model": "claude-3-opus-20240229",
+        "system": "Você é um assistente especializado em gerenciar a integração entre PDV Vendas e WooCommerce. Sua função é analisar dados, identificar problemas e sugerir soluções.",
+        "messages": {
+          "messageValues": {
+            "message": "={{$json.message}}"
+          }
+        }
+      },
+      "name": "Claude AI",
+      "type": "n8n-nodes-base.anthropic",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Formatar resposta da IA\nconst aiResponse = $input.json;\n\nreturn {\n  success: true,\n  message: \"IA processou a solicitação com sucesso\",\n  ai_response: aiResponse.content || aiResponse.text || aiResponse.choices[0].message.content,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Format Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        670,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Claude AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude AI": {
+      "main": [
+        [
+          {
+            "node": "Format Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

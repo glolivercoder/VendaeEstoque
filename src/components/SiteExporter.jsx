@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { syncProductsToHostinger } from '../services/hostinger';
+import { syncProductsToWooCommerce } from '../services/woocommerce-basic';
+import WooCommerceMCP from './WooCommerceMCP';
 
-const SiteExporter = ({ 
-  showSiteExporter, 
-  setShowSiteExporter, 
+const SiteExporter = ({
+  showSiteExporter,
+  setShowSiteExporter,
   items,
   hostingerConfig,
   exportType,
@@ -58,7 +60,7 @@ const SiteExporter = ({
 
   const handleExport = async () => {
     if (exportMethod === 'hostinger' && (!hostingerConfig.site_url || !hostingerConfig.api_key)) {
-      alert('Por favor, configure as informau00e7u00f5es do Hostinger antes de exportar.');
+      alert('Por favor, configure as informações do Hostinger antes de exportar.');
       return;
     }
 
@@ -76,7 +78,13 @@ const SiteExporter = ({
         const result = await syncProductsToHostinger(itemsToExport, hostingerConfig);
         setExportResult({
           success: true,
-          message: `Exportau00e7u00e3o concluída com sucesso! ${result.syncedCount} produtos sincronizados.`
+          message: `Exportação concluída com sucesso! ${result.syncedCount} produtos sincronizados.`
+        });
+      } else if (exportMethod === 'woocommerce') {
+        const result = await syncProductsToWooCommerce(itemsToExport);
+        setExportResult({
+          success: true,
+          message: `Exportação para WooCommerce concluída! ${result.created} produtos criados, ${result.updated} atualizados.`
         });
       } else if (exportMethod === 'json') {
         // Export as JSON file
@@ -192,6 +200,16 @@ const SiteExporter = ({
               <input
                 type="radio"
                 name="exportMethod"
+                value="woocommerce"
+                checked={exportMethod === 'woocommerce'}
+                onChange={handleExportMethodChange}
+              />
+              WooCommerce
+            </label>
+            <label>
+              <input
+                type="radio"
+                name="exportMethod"
                 value="json"
                 checked={exportMethod === 'json'}
                 onChange={handleExportMethodChange}
@@ -211,7 +229,7 @@ const SiteExporter = ({
           </div>
         </div>
 
-        {exportMethod === 'hostinger' && (
+        {(exportMethod === 'hostinger' || exportMethod === 'woocommerce') && (
           <div className="contact-info">
             <h3>Informau00e7u00f5es de Contato</h3>
             {showContactForm ? (
@@ -340,6 +358,10 @@ const SiteExporter = ({
         <div className={`export-result ${exportResult.success ? 'success' : 'error'}`}>
           <p>{exportResult.message}</p>
         </div>
+      )}
+
+      {exportMethod === 'woocommerce' && (
+        <WooCommerceMCP selectedItems={selectedItems} items={items} />
       )}
     </div>
   );

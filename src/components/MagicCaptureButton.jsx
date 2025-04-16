@@ -123,7 +123,9 @@ const MagicCaptureButton = ({ onProductDataExtracted }) => {
       const prompt = `Analise esta imagem de um produto e me retorne um JSON com as informações encontradas.
       Identifique os seguintes campos específicos:
       - Nome do produto
-      - Descrição detalhada (crie uma descrição persuasiva destacando as qualidades do produto)
+      - SKU ou código do produto (se visível)
+      - Especificações técnicas (liste as características técnicas do produto em formato objetivo)
+      - Copy de vendas (crie uma descrição persuasiva destacando os benefícios e qualidades do produto)
       - Categoria do produto
       - Preço sugerido (se visível)
       - Código de barras (se visível)
@@ -135,7 +137,9 @@ const MagicCaptureButton = ({ onProductDataExtracted }) => {
       {
         "fields": [
           {"name": "description", "value": "Nome do produto"},
-          {"name": "itemDescription", "value": "Descrição detalhada e persuasiva do produto"},
+          {"name": "sku", "value": "SKU ou código do produto"},
+          {"name": "technicalSpecs", "value": "Especificações técnicas do produto em formato objetivo"},
+          {"name": "salesCopy", "value": "Copy de vendas persuasiva destacando benefícios"},
           {"name": "category", "value": "Categoria do produto"},
           {"name": "price", "value": "Preço sugerido"},
           {"name": "barcode", "value": "${barcodeResult || ''}"}
@@ -143,7 +147,8 @@ const MagicCaptureButton = ({ onProductDataExtracted }) => {
       }
 
       Se não conseguir identificar algum campo, deixe o valor como string vazia.
-      Seja criativo na descrição detalhada, destacando os benefícios e qualidades do produto.`;
+      Divida claramente as especificações técnicas (formato objetivo) da copy de vendas (formato persuasivo).
+      Na copy de vendas, seja criativo e persuasivo, destacando os benefícios e qualidades do produto.`;
 
       console.log("Enviando imagem para o Gemini...");
       const result = await GeminiService.model.generateContent([prompt, imagePart]);
@@ -186,6 +191,7 @@ const MagicCaptureButton = ({ onProductDataExtracted }) => {
   const mapFieldsToProductForm = (data) => {
     const mappedData = {
       description: '',
+      sku: '',
       itemDescription: '',
       category: '',
       price: '',
@@ -198,9 +204,32 @@ const MagicCaptureButton = ({ onProductDataExtracted }) => {
 
     data.fields.forEach(field => {
       if (field.name && field.value) {
-        mappedData[field.name] = field.value;
+        // Mapear campos especiais
+        if (field.name === 'technicalSpecs') {
+          // Guardar especificações técnicas para combinar depois
+          mappedData['technicalSpecs'] = field.value;
+        } else if (field.name === 'salesCopy') {
+          // Guardar copy de vendas para combinar depois
+          mappedData['salesCopy'] = field.value;
+        } else {
+          // Outros campos mapeados diretamente
+          mappedData[field.name] = field.value;
+        }
       }
     });
+
+    // Combinar especificações técnicas e copy de vendas em itemDescription
+    if (mappedData['technicalSpecs'] && mappedData['salesCopy']) {
+      mappedData['itemDescription'] = `**Especificações Técnicas:**\n${mappedData['technicalSpecs']}\n\n**Descrição:**\n${mappedData['salesCopy']}`;
+    } else if (mappedData['technicalSpecs']) {
+      mappedData['itemDescription'] = `**Especificações Técnicas:**\n${mappedData['technicalSpecs']}`;
+    } else if (mappedData['salesCopy']) {
+      mappedData['itemDescription'] = `**Descrição:**\n${mappedData['salesCopy']}`;
+    }
+
+    // Remover campos temporários
+    delete mappedData['technicalSpecs'];
+    delete mappedData['salesCopy'];
 
     return mappedData;
   };

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { syncProductsToWordPress, clearWordPressProducts, setupWordPressWebhook, checkWooCommerceConnection } from '../services/wordpress';
 import WooCommerceConnectionTest from './WooCommerceConnectionTest';
 import WooCommerceConfigCheck from './WooCommerceConfigCheck';
+import WooCommerceCredentialsForm from './WooCommerceCredentialsForm';
 
 /**
  * Componente para sincronização com WordPress
@@ -102,6 +103,9 @@ const WordPressSync = ({ selectedItems, items }) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mt-4">
       <h3 className="text-lg font-semibold">Exportar para o WordPress</h3>
+
+      {/* Formulário de credenciais */}
+      <WooCommerceCredentialsForm />
 
       {/* Componentes de diagnóstico */}
       <div className="diagnostics-container">

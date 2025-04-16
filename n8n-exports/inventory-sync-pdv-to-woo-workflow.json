@@ -1,0 +1,87 @@
+{
+  "name": "PDV Vendas - Sincronização de Estoque (PDV → WooCommerce)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pdv-vendas/estoque",
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "id": "9i9i9i9i-9i9i-9i9i-9i9i-9i9i9i9i9i9i",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Processar dados do estoque do PDV Vendas\nconst data = $input.json;\n\n// Verificar se temos o ID do produto\nif (!data.produto_id) {\n  return { success: false, message: \"ID do produto não fornecido\" };\n}\n\nreturn {\n  sku: data.produto_id.toString(),\n  stock_quantity: data.estoque\n};"
+      },
+      "id": "0j0j0j0j-0j0j-0j0j-0j0j-0j0j0j0j0j0j",
+      "name": "Process PDV Stock Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "operation": "update",
+        "resource": "product",
+        "productId": "={{ $json.sku }}",
+        "updateFields": {
+          "stock_quantity": "={{ $json.stock_quantity }}",
+          "manage_stock": true
+        }
+      },
+      "id": "1k1k1k1k-1k1k-1k1k-1k1k-1k1k1k1k1k1k",
+      "name": "WooCommerce",
+      "type": "n8n-nodes-base.wooCommerce",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process PDV Stock Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process PDV Stock Data": {
+      "main": [
+        [
+          {
+            "node": "WooCommerce",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "3a4b5c6d-7e8f-9g0h-1i2j-3k4l5m6n7o8p",
+  "id": "3",
+  "meta": {
+    "instanceId": "1a2b3c4d5e6f7g8h9i0j"
+  },
+  "tags": []
+}

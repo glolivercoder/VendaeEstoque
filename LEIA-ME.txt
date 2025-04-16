@@ -1,0 +1,70 @@
+===================================================
+  INTEGRAÇÃO PDV VENDAS COM WOOCOMMERCE
+===================================================
+
+Esta solução permite sincronizar produtos do PDV Vendas para o WooCommerce
+usando a API oficial do WooCommerce.
+
+INSTALAÇÃO RÁPIDA:
+-----------------
+1. Execute o arquivo "INSTALAR-TUDO.bat" e siga as instruções na tela
+   - Este script instalará automaticamente PHP, Composer e a integração
+   - Se a instalação automática falhar, o script tentará o método manual
+
+INSTALAÇÃO MANUAL:
+-----------------
+Se preferir instalar manualmente:
+
+1. Execute "baixar-php-manual.bat" para baixar e instalar o PHP manualmente
+   - Este script abrirá o navegador para baixar o PHP e guiará você na instalação
+   - Alternativa: Execute "instalar-php.bat" para tentar a instalação automática
+
+2. Execute "instalar-composer.bat" para instalar o Composer (se necessário)
+
+3. Execute "instalar-integracao-woocommerce.bat" para instalar a integração
+
+COMO USAR:
+---------
+Após a instalação:
+
+1. Execute "export-pdv-products.bat" para exportar os produtos do PDV Vendas
+   - Siga as instruções na tela para exportar os produtos do navegador
+   - Escolha um dos scripts disponíveis:
+     * Script padrão: para exportação normal
+     * Script avançado: para casos onde o padrão falha
+     * Script de diagnóstico: para identificar problemas
+   - Salve o arquivo JSON na pasta "data"
+
+2. Execute "sync-products.bat" para sincronizar os produtos com o WooCommerce
+   - O script irá criar/atualizar os produtos no WooCommerce
+   - As imagens serão sincronizadas automaticamente
+   - O script detecta automaticamente o arquivo JSON exportado
+
+REQUISITOS:
+----------
+- Windows 7/8/10/11
+- Acesso à internet para download dos componentes
+- Credenciais da API WooCommerce (já configuradas no arquivo .env)
+- PDV Vendas instalado e funcionando
+
+ARQUIVOS INCLUÍDOS:
+-----------------
+- INSTALAR-TUDO.bat - Script de instalação completa
+- instalar-php.bat - Instala o PHP automaticamente
+- baixar-php-manual.bat - Guia para instalação manual do PHP
+- instalar-composer.bat - Instala o Composer
+- instalar-integracao-woocommerce.bat - Instala a integração
+- export-pdv-products.bat - Exporta produtos do PDV Vendas
+- export-products-browser.js - Script padrão para executar no navegador
+- export-products-flexible.js - Script avançado para casos problemáticos
+- diagnostico-indexeddb.js - Script para diagnosticar problemas de banco de dados
+- sync-products.bat - Sincroniza produtos com o WooCommerce
+- sync-products-to-woocommerce.php - Script principal de sincronização
+- README-WOOCOMMERCE-API.md - Documentação detalhada (em inglês)
+
+SUPORTE:
+-------
+Para mais informações, consulte o arquivo README-WOOCOMMERCE-API.md
+ou entre em contato com o desenvolvedor.
+
+===================================================

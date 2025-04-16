@@ -1,0 +1,96 @@
+{
+  "name": "PDV Vendas - Sincronização de Estoque (WooCommerce → PDV)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "woocommerce/estoque",
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Processar dados de estoque do WooCommerce\nconst data = $input.json;\n\n// Verificar se temos os dados necessários\nif (!data.product_id || data.stock_quantity === undefined) {\n  return { success: false, message: \"Dados de estoque incompletos\" };\n}\n\nreturn {\n  produto_id: data.product_id,\n  estoque: parseInt(data.stock_quantity, 10)\n};"
+      },
+      "name": "Process Stock Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "url": "=https://api.pdvvendas.com/webhook/atualizar-estoque",
+        "method": "POST",
+        "authentication": "predefinedCredentialType",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "produto_id",
+              "value": "={{ $json.produto_id }}"
+            },
+            {
+              "name": "estoque",
+              "value": "={{ $json.estoque }}"
+            }
+          ]
+        }
+      },
+      "name": "Update PDV Vendas Stock",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [650, 300],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "eJsziqkQhDcRQFGu",
+          "name": "PDV Vendas API"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process Stock Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Stock Data": {
+      "main": [
+        [
+          {
+            "node": "Update PDV Vendas Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [
+    {
+      "id": "gdQamNvfQMvNgx4s",
+      "name": "PDV Vendas"
+    },
+    {
+      "id": "FLcLRrkmKgt6WMMa",
+      "name": "WooCommerce"
+    },
+    {
+      "id": "kZDdlmzUnGSD8nYC",
+      "name": "Integration"
+    }
+  ]
+}

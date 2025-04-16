@@ -1,0 +1,174 @@
+{
+  "name": "PDV Vendas - Análise de Produtos",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pdv-vendas/analise-produto",
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "id": "3w3w3w3w-3w3w-3w3w-3w3w-3w3w3w3w3w3w",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extrair dados do produto\nconst data = $input.json;\n\n// Verificar se temos os dados necessários\nif (!data.nome || !data.descricao) {\n  return { success: false, message: \"Dados do produto incompletos\" };\n}\n\n// Preparar dados para análise\nreturn {\n  produto: {\n    nome: data.nome,\n    descricao: data.descricao,\n    preco: data.preco || 0,\n    categorias: data.categorias || [],\n    imagens: data.imagens || []\n  },\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "4x4x4x4x-4x4x-4x4x-4x4x-4x4x4x4x4x4x",
+      "name": "Process Product Data",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.deepseek.com/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "method": "POST",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "deepseek-chat"
+            },
+            {
+              "name": "messages",
+              "value": "=[{\"role\": \"system\", \"content\": \"Você é um especialista em análise de produtos e marketing. Sua tarefa é analisar os dados do produto e fornecer insights sobre como melhorar a descrição, sugerir palavras-chave para SEO, e recomendar estratégias de precificação.\"}, {\"role\": \"user\", \"content\": \"Analise este produto:\\n\\nNome: {{ $json.produto.nome }}\\n\\nDescrição: {{ $json.produto.descricao }}\\n\\nPreço: {{ $json.produto.preco }}\\n\\nCategorias: {{ $json.produto.categorias | join(', ') }}\\n\\nForneça insights sobre:\\n1. Como melhorar a descrição do produto\\n2. Palavras-chave para SEO\\n3. Estratégias de precificação\\n4. Sugestões para aumentar as vendas\"}]"
+            },
+            {
+              "name": "temperature",
+              "value": 0.7
+            }
+          ]
+        }
+      },
+      "id": "5y5y5y5y-5y5y-5y5y-5y5y-5y5y5y5y5y5y",
+      "name": "Deepseek - Product Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        650,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "queryAuth",
+        "method": "POST",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": "AIzaSyCiofVjzaD6b7-G3worRYHWuuKyZ580VQs"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contents",
+              "value": "=[{\"role\": \"user\", \"parts\": [{\"text\": \"Você é um especialista em otimização de produtos para e-commerce. Analise este produto e sugira melhorias para a descrição, imagens e categorização.\\n\\nProduto: {{ $json.produto.nome }}\\nDescrição: {{ $json.produto.descricao }}\\nPreço: {{ $json.produto.preco }}\\n\\nForneça sugestões específicas para:\\n1. Melhorar o título do produto\\n2. Otimizar a descrição para conversão\\n3. Categorias adicionais que poderiam ser relevantes\\n4. Tipos de imagens que seriam mais eficazes\"}]}]"
+            }
+          ]
+        }
+      },
+      "id": "6z6z6z6z-6z6z-6z6z-6z6z-6z6z6z6z6z6z",
+      "name": "Gemini - Product Optimization",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        650,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Combinar análises\nconst deepseekAnalysis = $input.json;\nconst geminiAnalysis = $input.json;\n\n// Extrair conteúdo da resposta do Deepseek\nlet deepseekContent = '';\nif (deepseekAnalysis.choices && deepseekAnalysis.choices[0] && deepseekAnalysis.choices[0].message) {\n  deepseekContent = deepseekAnalysis.choices[0].message.content;\n}\n\n// Extrair conteúdo da resposta do Gemini\nlet geminiContent = '';\nif (geminiAnalysis.candidates && geminiAnalysis.candidates[0] && geminiAnalysis.candidates[0].content && geminiAnalysis.candidates[0].content.parts && geminiAnalysis.candidates[0].content.parts[0]) {\n  geminiContent = geminiAnalysis.candidates[0].content.parts[0].text;\n}\n\nreturn {\n  success: true,\n  produto: $node[\"Process Product Data\"].json.produto,\n  analise_marketing: deepseekContent,\n  otimizacao_ecommerce: geminiContent,\n  timestamp: new Date().toISOString(),\n  sugestoes_combinadas: {\n    titulo: \"Sugestões para melhorar o título e nome do produto\",\n    descricao: \"Sugestões para otimizar a descrição do produto\",\n    seo: \"Palavras-chave e estratégias de SEO recomendadas\",\n    preco: \"Estratégias de precificação sugeridas\",\n    categorias: \"Categorias adicionais recomendadas\",\n    imagens: \"Sugestões para melhorar as imagens do produto\"\n  }\n};"
+      },
+      "id": "7a7a7a7a-7a7a-7a7a-7a7a-7a7a7a7a7a7a",
+      "name": "Combine Analyses",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        850,
+        375
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process Product Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Product Data": {
+      "main": [
+        [
+          {
+            "node": "Deepseek - Product Analysis",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gemini - Product Optimization",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deepseek - Product Analysis": {
+      "main": [
+        [
+          {
+            "node": "Combine Analyses",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Product Optimization": {
+      "main": [
+        [
+          {
+            "node": "Combine Analyses",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "5a6b7c8d-9e0f-1g2h-3i4j-5k6l7m8n9o0p",
+  "id": "5",
+  "meta": {
+    "instanceId": "1a2b3c4d5e6f7g8h9i0j"
+  },
+  "tags": []
+}

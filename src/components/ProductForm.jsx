@@ -1,12 +1,12 @@
 import { useState } from 'react';
 
-const ProductForm = ({ 
-  newItem, 
-  setNewItem, 
-  categories, 
-  handleAddItem, 
-  setShowAddItem, 
-  showNewCategoryInput, 
+const ProductForm = ({
+  newItem,
+  setNewItem,
+  categories,
+  handleAddItem,
+  setShowAddItem,
+  showNewCategoryInput,
   setShowNewCategoryInput,
   newCategory,
   setNewCategory,
@@ -52,6 +52,16 @@ const ProductForm = ({
             value={newItem.description}
             onChange={handleInputChange}
             placeholder="Nome do produto"
+          />
+        </div>
+        <div className="form-group">
+          <label>SKU:</label>
+          <input
+            type="text"
+            name="sku"
+            value={newItem.sku || ''}
+            onChange={handleInputChange}
+            placeholder="Código do produto (opcional)"
           />
         </div>
         <div className="form-group">

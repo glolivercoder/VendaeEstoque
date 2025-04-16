@@ -45,6 +45,7 @@ const initDB = () => {
       // Create products store
       const productsStore = db.createObjectStore('products', { keyPath: 'id', autoIncrement: true });
       productsStore.createIndex('description', 'description', { unique: true });
+      productsStore.createIndex('sku', 'sku', { unique: false });
 
       // Create vendors store
       const vendorsStore = db.createObjectStore('vendors', { keyPath: 'id', autoIncrement: true });

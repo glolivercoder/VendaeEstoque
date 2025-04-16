@@ -1,0 +1,171 @@
+{
+  "name": "PDV Vendas - Monitoramento IA",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "minutesInterval": 6
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://achadinhoshopp.com.br/loja/wp-json/wc/v3/products?per_page=5",
+        "authentication": "predefinedCredentialType",
+        "method": "GET",
+        "options": {}
+      },
+      "name": "Get WooCommerce Products",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        460,
+        300
+      ],
+      "credentials": {
+        "wooCommerceApi": {
+          "id": "WooCommerce Achadinho",
+          "name": "WooCommerce Achadinho"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.pdvvendas.com/produtos",
+        "authentication": "predefinedCredentialType",
+        "method": "GET",
+        "options": {}
+      },
+      "name": "Get PDV Vendas Products",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        670,
+        300
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "PDV Vendas API",
+          "name": "PDV Vendas API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Preparar dados para análise da IA\nconst wooCommerceData = $node[\"Get WooCommerce Products\"].json;\nconst pdvVendasData = $node[\"Get PDV Vendas Products\"].json;\n\nreturn {\n  prompt: `Analise os dados da integração entre PDV Vendas e WooCommerce:\n  \n  Dados do WooCommerce:\n  ${JSON.stringify(wooCommerceData, null, 2)}\n  \n  Dados do PDV Vendas:\n  ${JSON.stringify(pdvVendasData, null, 2)}\n  \n  Por favor, identifique:\n  1. Se há discrepâncias entre os produtos\n  2. Se há problemas de sincronização de estoque\n  3. Se há problemas com imagens ou dados de produtos\n  4. Recomendações para melhorar a integração`\n};"
+      },
+      "name": "Prepare AI Analysis",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "credentialType": "anthropicApi",
+        "operation": "completion",
+        "model": "claude-3-opus-20240229",
+        "messages": {
+          "messageValues": {
+            "message": "={{$json.prompt}}"
+          }
+        }
+      },
+      "name": "Claude AI Analysis",
+      "type": "n8n-nodes-base.anthropic",
+      "typeVersion": 1,
+      "position": [
+        1090,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "system@pdvvendas.com",
+        "toEmail": "admin@achadinhoshopp.com.br",
+        "subject": "Relatório de Monitoramento da Integração PDV Vendas - WooCommerce",
+        "text": "=Relatório de Monitoramento da Integração\n\n{{$node[\"Claude AI Analysis\"].json.content}}\n\nGerado automaticamente pelo sistema de monitoramento.",
+        "options": {}
+      },
+      "name": "Send Email Report",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get WooCommerce Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get WooCommerce Products": {
+      "main": [
+        [
+          {
+            "node": "Get PDV Vendas Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get PDV Vendas Products": {
+      "main": [
+        [
+          {
+            "node": "Prepare AI Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare AI Analysis": {
+      "main": [
+        [
+          {
+            "node": "Claude AI Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude AI Analysis": {
+      "main": [
+        [
+          {
+            "node": "Send Email Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -27,6 +27,7 @@ import { syncProductsToWordPress, clearWordPressProducts, setupWordPressWebhook 
 import MagicWandButton from './components/MagicWandButton';
 import MagicCaptureButton from './components/MagicCaptureButton';
 import WordPressSync from './components/WordPressSync';
+import WooCommerceMCP from './components/WooCommerceMCP';
 
 // Registrar componentes do Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);

@@ -1,0 +1,359 @@
+{
+  "name": "PDV Vendas - IA Manager",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pdv-vendas/ai-manager",
+        "options": {
+          "responseMode": "lastNode"
+        }
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "// Extrair dados da requisição\nconst data = $input.json;\n\n// Verificar se temos uma mensagem\nif (!data.message) {\n  return { success: false, message: \"Mensagem não fornecida\" };\n}\n\n// Determinar o tipo de consulta\nconst message = data.message.toLowerCase();\nlet queryType = 'general';\n\nif (message.includes('produto') || message.includes('especificação') || message.includes('detalhe')) {\n  queryType = 'product';\n} else if (message.includes('frete') || message.includes('entrega') || message.includes('envio')) {\n  queryType = 'shipping';\n} else if (message.includes('pedido') || message.includes('compra') || message.includes('status')) {\n  queryType = 'order';\n} else if (message.includes('suporte') || message.includes('ajuda') || message.includes('problema')) {\n  queryType = 'support';\n}\n\nreturn {\n  original_message: data.message,\n  query_type: queryType,\n  customer_id: data.customer_id || 'anonymous',\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Process Query",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.query_type }}",
+              "operation": "equal",
+              "value2": "product"
+            }
+          ]
+        }
+      },
+      "name": "Product Query?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.query_type }}",
+              "operation": "equal",
+              "value2": "shipping"
+            }
+          ]
+        }
+      },
+      "name": "Shipping Query?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 450]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.query_type }}",
+              "operation": "equal",
+              "value2": "order"
+            }
+          ]
+        }
+      },
+      "name": "Order Query?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [650, 600]
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "operation": "completion",
+        "model": "gemini-1.5-flash",
+        "prompt": "=Você é um assistente especializado em fornecer informações sobre produtos. Responda de forma detalhada e profissional sobre as especificações, características e benefícios dos produtos mencionados na consulta.\n\nConsulta do cliente: {{ $json.original_message }}"
+      },
+      "name": "Gemini - Product Info",
+      "type": "n8n-nodes-base.googleAi",
+      "typeVersion": 1,
+      "position": [850, 250],
+      "credentials": {
+        "googleAiApi": {
+          "id": "1",
+          "name": "Google AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.deepseek.com/v1/chat/completions",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "deepseek-chat"
+            },
+            {
+              "name": "messages",
+              "value": "=[{\"role\": \"system\", \"content\": \"Você é um assistente especializado em informações de frete e entrega. Forneça informações precisas sobre prazos, custos e métodos de entrega.\"}, {\"role\": \"user\", \"content\": \"{{ $json.original_message }}\"}]"
+            },
+            {
+              "name": "temperature",
+              "value": 0.7
+            }
+          ]
+        }
+      },
+      "name": "Deepseek - Shipping Info",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 400],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "Deepseek API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "operation": "completion",
+        "model": "gemini-1.5-flash",
+        "prompt": "=Você é um assistente especializado em fornecer informações sobre pedidos e status de compras. Responda de forma clara e objetiva sobre o status, prazos e detalhes dos pedidos mencionados na consulta.\n\nConsulta do cliente: {{ $json.original_message }}"
+      },
+      "name": "Gemini - Order Info",
+      "type": "n8n-nodes-base.googleAi",
+      "typeVersion": 1,
+      "position": [850, 550],
+      "credentials": {
+        "googleAiApi": {
+          "id": "1",
+          "name": "Google AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.deepseek.com/v1/chat/completions",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "deepseek-chat"
+            },
+            {
+              "name": "messages",
+              "value": "=[{\"role\": \"system\", \"content\": \"Você é um assistente de suporte técnico especializado em resolver problemas e fornecer ajuda para clientes. Seja empático, claro e objetivo nas suas respostas.\"}, {\"role\": \"user\", \"content\": \"{{ $json.original_message }}\"}]"
+            },
+            {
+              "name": "temperature",
+              "value": 0.7
+            }
+          ]
+        }
+      },
+      "name": "Deepseek - Support",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [850, 700],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "2",
+          "name": "Deepseek API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "operation": "completion",
+        "model": "gemini-1.5-flash",
+        "prompt": "=Você é um assistente virtual para uma loja online. Responda de forma educada e prestativa às perguntas gerais dos clientes.\n\nConsulta do cliente: {{ $json.original_message }}"
+      },
+      "name": "Gemini - General Info",
+      "type": "n8n-nodes-base.googleAi",
+      "typeVersion": 1,
+      "position": [850, 850],
+      "credentials": {
+        "googleAiApi": {
+          "id": "1",
+          "name": "Google AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Processar resposta da IA\nconst data = $input.json;\n\n// Extrair a resposta da IA dependendo da fonte\nlet aiResponse = '';\n\nif (data.text) {\n  // Resposta do Gemini\n  aiResponse = data.text;\n} else if (data.choices && data.choices[0] && data.choices[0].message) {\n  // Resposta do Deepseek\n  aiResponse = data.choices[0].message.content;\n} else {\n  // Fallback\n  aiResponse = 'Não foi possível obter uma resposta da IA. Por favor, tente novamente mais tarde.';\n}\n\nreturn {\n  success: true,\n  message: \"IA processou a solicitação com sucesso\",\n  ai_response: aiResponse,\n  query_type: $node[\"Process Query\"].json[\"query_type\"],\n  timestamp: new Date().toISOString()\n};"
+      },
+      "name": "Format AI Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [1050, 550]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Query": {
+      "main": [
+        [
+          {
+            "node": "Product Query?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Product Query?": {
+      "main": [
+        [
+          {
+            "node": "Gemini - Product Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Shipping Query?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shipping Query?": {
+      "main": [
+        [
+          {
+            "node": "Deepseek - Shipping Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Order Query?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order Query?": {
+      "main": [
+        [
+          {
+            "node": "Gemini - Order Info",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Deepseek - Support",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Product Info": {
+      "main": [
+        [
+          {
+            "node": "Format AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deepseek - Shipping Info": {
+      "main": [
+        [
+          {
+            "node": "Format AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - Order Info": {
+      "main": [
+        [
+          {
+            "node": "Format AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deepseek - Support": {
+      "main": [
+        [
+          {
+            "node": "Format AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini - General Info": {
+      "main": [
+        [
+          {
+            "node": "Format AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {},
+  "tags": [
+    {
+      "id": "gdQamNvfQMvNgx4s",
+      "name": "PDV Vendas"
+    },
+    {
+      "id": "FLcLRrkmKgt6WMMa",
+      "name": "WooCommerce"
+    },
+    {
+      "id": "kZDdlmzUnGSD8nYC",
+      "name": "Integration"
+    }
+  ]
+}
