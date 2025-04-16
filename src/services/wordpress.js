@@ -330,10 +330,11 @@ export const syncProductsToWordPress = async (products) => {
   // Processar cada produto individualmente
   for (const product of products) {
     try {
-      // Verificar se o produto já existe no WooCommerce
+      // Verificar se o produto já existe no WooCommerce (incluindo produtos na lixeira)
       const existingProducts = await wordpressApi.get('/products', {
         params: {
-          sku: `PDV-${product.id}`
+          sku: `PDV-${product.id}`,
+          status: 'any' // Buscar produtos em qualquer status, incluindo na lixeira
         }
       });
 
@@ -569,18 +570,45 @@ export const syncProductsToWordPress = async (products) => {
 
       let response;
 
-      // Atualizar produto existente ou criar novo
+      // Atualizar produto existente, restaurar da lixeira, ou criar novo
       if (existingProducts.data && existingProducts.data.length > 0) {
         const existingProduct = existingProducts.data[0];
-        response = await wordpressApi.put(`/products/${existingProduct.id}`, wooProduct);
-        results.updated++;
-        results.details.push({
-          id: product.id,
-          woocommerce_id: existingProduct.id,
-          status: 'updated',
-          name: product.description || product.name
-        });
-        console.log(`Produto atualizado: ${product.description || product.name}`);
+
+        // Verificar se o produto está na lixeira
+        if (existingProduct.status === 'trash') {
+          console.log(`Produto ${product.description || product.name} está na lixeira. Restaurando...`);
+
+          // Primeiro, restaurar o produto da lixeira
+          await wordpressApi.put(`/products/${existingProduct.id}`, {
+            status: 'draft'
+          });
+
+          // Depois, atualizar com os novos dados
+          response = await wordpressApi.put(`/products/${existingProduct.id}`, {
+            ...wooProduct,
+            status: 'publish' // Garantir que o produto seja publicado
+          });
+
+          results.updated++;
+          results.details.push({
+            id: product.id,
+            woocommerce_id: existingProduct.id,
+            status: 'restored_and_updated',
+            name: product.description || product.name
+          });
+          console.log(`Produto restaurado e atualizado: ${product.description || product.name}`);
+        } else {
+          // Produto existe e não está na lixeira, apenas atualizar
+          response = await wordpressApi.put(`/products/${existingProduct.id}`, wooProduct);
+          results.updated++;
+          results.details.push({
+            id: product.id,
+            woocommerce_id: existingProduct.id,
+            status: 'updated',
+            name: product.description || product.name
+          });
+          console.log(`Produto atualizado: ${product.description || product.name}`);
+        }
       } else {
         // Exibir os dados completos que serão enviados
         console.log('Dados completos do produto a serem enviados:', JSON.stringify(wooProduct, null, 2));
@@ -657,11 +685,35 @@ export const clearWordPressProducts = async () => {
 
     for (const product of pdvProducts) {
       try {
+        // Excluir permanentemente o produto (force=true)
+        // Isso garante que o produto não vá para a lixeira, mas seja completamente removido
         await wordpressApi.delete(`/products/${product.id}`, {
           params: {
-            force: true // Excluir permanentemente
+            force: true
           }
         });
+
+        // Verificar se o produto ainda existe mesmo após a exclusão (pode acontecer em alguns casos)
+        try {
+          const checkProduct = await wordpressApi.get(`/products/${product.id}`, {
+            params: {
+              status: 'any' // Verificar em todos os status, incluindo lixeira
+            }
+          });
+
+          // Se chegou aqui, o produto ainda existe de alguma forma
+          console.log(`Produto ${product.id} ainda existe após exclusão. Tentando novamente...`);
+
+          // Tentar excluir novamente com método alternativo
+          await wordpressApi.post(`/products/batch`, {
+            delete: [product.id]
+          });
+        } catch (checkError) {
+          // Se der erro 404, é porque o produto foi realmente excluído, o que é bom
+          if (checkError.response && checkError.response.status === 404) {
+            console.log(`Produto ${product.id} excluído com sucesso.`);
+          }
+        }
 
         results.count++;
         results.details.push({
