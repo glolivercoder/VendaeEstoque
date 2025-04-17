@@ -1,0 +1,333 @@
+/*
+Theme Name: VendaEstoque WooCommerce Theme
+Theme URI: https://achadinhoshopp.com.br/
+Author: glolivercoder
+Author URI: https://achadinhoshopp.com.br/
+Description: Tema personalizado para a loja VendaEstoque com suporte completo ao WooCommerce e exibição de produtos na página inicial.
+Version: 1.0
+Requires at least: 5.0
+Tested up to: 6.7
+Requires PHP: 7.4
+License: GNU General Public License v2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: vendaestoque
+Tags: e-commerce, woocommerce, custom-colors, custom-logo, custom-menu, featured-images, responsive
+
+Este tema foi criado especificamente para a loja VendaEstoque.
+*/
+
+/* Cores principais do PDV Vendas */
+:root {
+  --pdv-primary: #6a90e2;
+  --pdv-secondary: #7e5ce3;
+  --pdv-background: #f9f9f9;
+  --pdv-text: #333333;
+  --pdv-light-text: #666666;
+  --pdv-success: #4caf50;
+  --pdv-warning: #ff9800;
+  --pdv-error: #f44336;
+  --pdv-border: #e0e0e0;
+}
+
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.6;
+  color: var(--pdv-text);
+  background-color: var(--pdv-background);
+}
+
+a {
+  color: var(--pdv-primary);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: var(--pdv-secondary);
+}
+
+/* Header */
+.site-header {
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 1rem 0;
+}
+
+.site-branding {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.site-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.site-description {
+  font-size: 0.9rem;
+  color: var(--pdv-light-text);
+}
+
+/* Navegação */
+.main-navigation ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.main-navigation li {
+  margin-right: 1.5rem;
+}
+
+.main-navigation a {
+  font-weight: 500;
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* WooCommerce Customizations */
+.woocommerce ul.products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.woocommerce ul.products li.product {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  padding: 1rem;
+  text-align: center;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.woocommerce ul.products li.product:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.woocommerce ul.products li.product img {
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.woocommerce ul.products li.product .woocommerce-loop-product__title {
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 0.5rem 0;
+  color: var(--pdv-text);
+}
+
+.woocommerce ul.products li.product .price {
+  color: var(--pdv-primary);
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.woocommerce ul.products li.product .button {
+  background-color: var(--pdv-primary);
+  color: white;
+  border-radius: 4px;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  transition: background-color 0.3s ease;
+}
+
+.woocommerce ul.products li.product .button:hover {
+  background-color: var(--pdv-secondary);
+}
+
+/* Página de produto único */
+.woocommerce div.product div.images {
+  margin-bottom: 2rem;
+}
+
+.woocommerce div.product div.summary {
+  margin-bottom: 2rem;
+}
+
+.woocommerce div.product .product_title {
+  font-size: 1.8rem;
+  margin-bottom: 1rem;
+}
+
+.woocommerce div.product p.price {
+  color: var(--pdv-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.woocommerce div.product form.cart .button {
+  background-color: var(--pdv-primary);
+  color: white;
+  font-weight: 500;
+  padding: 0.8rem 1.5rem;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.woocommerce div.product form.cart .button:hover {
+  background-color: var(--pdv-secondary);
+}
+
+/* Carrinho */
+.woocommerce-cart table.cart td.actions .coupon .input-text {
+  width: 150px;
+  padding: 0.5rem;
+}
+
+.woocommerce-cart .wc-proceed-to-checkout a.checkout-button {
+  background-color: var(--pdv-primary);
+  color: white;
+  font-weight: 500;
+}
+
+.woocommerce-cart .wc-proceed-to-checkout a.checkout-button:hover {
+  background-color: var(--pdv-secondary);
+}
+
+/* Checkout */
+.woocommerce-checkout #payment {
+  background-color: #fff;
+  border-radius: 8px;
+}
+
+.woocommerce-checkout #payment div.payment_box {
+  background-color: #f7f7f7;
+}
+
+/* Página inicial */
+.home-products-section {
+  padding: 3rem 0;
+}
+
+.home-products-section h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  color: var(--pdv-text);
+}
+
+/* Footer */
+.site-footer {
+  background-color: #333;
+  color: #fff;
+  padding: 3rem 0;
+  margin-top: 3rem;
+}
+
+.footer-widgets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.footer-widget-title {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+.site-info {
+  text-align: center;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .woocommerce ul.products {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+  
+  .main-navigation ul {
+    flex-direction: column;
+  }
+  
+  .main-navigation li {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .woocommerce ul.products {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Suporte para vídeos na galeria de produtos */
+.woocommerce-product-gallery .woocommerce-product-gallery__image {
+  position: relative;
+}
+
+.product-video-container {
+  position: relative;
+  padding-bottom: 56.25%; /* Proporção 16:9 */
+  height: 0;
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.product-video-container iframe,
+.product-video-container video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.video-thumbnail {
+  position: relative;
+  display: inline-block;
+}
+
+.video-thumbnail::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23ffffff"><path d="M8 5v14l11-7z"/></svg>');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  pointer-events: none;
+}
+
+.video-thumbnail::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}

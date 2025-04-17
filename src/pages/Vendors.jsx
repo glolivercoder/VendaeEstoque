@@ -57,7 +57,14 @@ const Vendors = ({
     email: '',
     whatsapp: '',
     telegram: '',
-    instagram: ''
+    instagram: '',
+    cep: '',
+    address: '',
+    number: '',
+    complement: '',
+    neighborhood: '',
+    city: '',
+    state: ''
   });
 
   // Filter vendors when search term changes
@@ -80,6 +87,38 @@ const Vendors = ({
     setFilteredVendors(vendors || []);
   }, [vendors]);
 
+  // Função para formatar CEP
+  const formatCep = (value) => {
+    return value
+      .replace(/\D/g, '')
+      .replace(/(\d{5})(\d)/, '$1-$2')
+      .replace(/(-\d{3})\d+?$/, '$1');
+  };
+
+  // Função para buscar endereço pelo CEP
+  const handleCepSearch = async (cepValue) => {
+    try {
+      const cep = cepValue.replace(/\D/g, '');
+      if (cep.length !== 8) return;
+
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+
+      if (!data.erro) {
+        return {
+          address: data.logradouro || '',
+          neighborhood: data.bairro || '',
+          city: data.localidade || '',
+          state: data.uf || ''
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+      return null;
+    }
+  };
+
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -90,6 +129,20 @@ const Vendors = ({
       formattedValue = formatCNPJ(value);
     } else if (name === 'whatsapp' || name === 'telegram') {
       formattedValue = formatPhoneNumber(value);
+    } else if (name === 'cep') {
+      formattedValue = formatCep(value);
+
+      // Buscar endereço automaticamente quando o CEP estiver completo
+      if (formattedValue.replace(/\D/g, '').length === 8) {
+        handleCepSearch(formattedValue).then(addressData => {
+          if (addressData) {
+            setFormData(prev => ({
+              ...prev,
+              ...addressData
+            }));
+          }
+        });
+      }
     }
 
     setFormData({
@@ -124,7 +177,14 @@ const Vendors = ({
       email: '',
       whatsapp: '',
       telegram: '',
-      instagram: ''
+      instagram: '',
+      cep: '',
+      address: '',
+      number: '',
+      complement: '',
+      neighborhood: '',
+      city: '',
+      state: ''
     });
     setIsEditing(false);
     setSelectedVendor(null);
@@ -141,7 +201,14 @@ const Vendors = ({
       email: vendor.email || '',
       whatsapp: vendor.whatsapp || '',
       telegram: vendor.telegram || '',
-      instagram: vendor.instagram || ''
+      instagram: vendor.instagram || '',
+      cep: vendor.cep || '',
+      address: vendor.address || '',
+      number: vendor.number || '',
+      complement: vendor.complement || '',
+      neighborhood: vendor.neighborhood || '',
+      city: vendor.city || '',
+      state: vendor.state || ''
     });
     setIsEditing(true);
   };
@@ -244,11 +311,25 @@ const Vendors = ({
 
         {/* Unified View */}
         <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-xl font-semibold mb-4 text-primary border-b pb-2">
-            {isEditing ? 'Editar Fornecedor' : 'Adicionar Fornecedor'}
-          </h3>
+          <div className="flex justify-between items-center mb-4 border-b pb-2">
+            <h3 className="text-xl font-semibold text-primary">
+              {isEditing ? 'Editar Fornecedor' : 'Adicionar Fornecedor'}
+            </h3>
+            {!isEditing && (
+              <button
+                type="submit"
+                form="vendorForm"
+                className="bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 flex items-center justify-center transition-colors"
+                title="Confirmar cadastro"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </button>
+            )}
+          </div>
 
-          <form onSubmit={handleSubmit}>
+          <form id="vendorForm" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Nome */}
               <div className="col-span-2">
@@ -426,6 +507,103 @@ const Vendors = ({
                     </button>
                   )}
                 </div>
+              </div>
+
+              {/* Endereço - Título */}
+              <div className="col-span-2 mt-4">
+                <h4 className="text-lg font-medium text-primary border-b pb-2">Endereço</h4>
+              </div>
+
+              {/* CEP */}
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1 text-gray-700">CEP</label>
+                <input
+                  type="text"
+                  name="cep"
+                  value={formData.cep}
+                  onChange={handleInputChange}
+                  placeholder="00000-000"
+                  className="w-full p-2 border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+
+              {/* Endereço */}
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1 text-gray-700">Endereço</label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  placeholder="Rua, Avenida, etc."
+                  className="w-full p-2 border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+
+              {/* Número */}
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1 text-gray-700">Número</label>
+                <input
+                  type="text"
+                  name="number"
+                  value={formData.number}
+                  onChange={handleInputChange}
+                  placeholder="Número"
+                  className="w-full p-2 border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+
+              {/* Complemento */}
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1 text-gray-700">Complemento</label>
+                <input
+                  type="text"
+                  name="complement"
+                  value={formData.complement}
+                  onChange={handleInputChange}
+                  placeholder="Apto, Sala, etc."
+                  className="w-full p-2 border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+
+              {/* Bairro */}
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1 text-gray-700">Bairro</label>
+                <input
+                  type="text"
+                  name="neighborhood"
+                  value={formData.neighborhood}
+                  onChange={handleInputChange}
+                  placeholder="Bairro"
+                  className="w-full p-2 border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+
+              {/* Cidade */}
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1 text-gray-700">Cidade</label>
+                <input
+                  type="text"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleInputChange}
+                  placeholder="Cidade"
+                  className="w-full p-2 border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+
+              {/* Estado */}
+              <div className="relative">
+                <label className="block text-sm font-medium mb-1 text-gray-700">Estado</label>
+                <input
+                  type="text"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleInputChange}
+                  placeholder="UF"
+                  className="w-full p-2 border rounded bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-transparent"
+                  maxLength="2"
+                />
               </div>
             </div>
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './styles/ImageStyles.css';
 import {
   addProduct,
@@ -660,107 +660,103 @@ ${item?.client?.cpf || ''}
     URL.revokeObjectURL(url);
   };
 
-  // Função para gerar dados de exemplo para os gráficos com datas variadas
-  const generateSampleSalesData = () => {
-    const today = new Date();
 
-    // Criar datas variadas para o histórico
-    const dates = [];
-    // Data atual
-    dates.push(new Date(today));
-    // Ontem
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    dates.push(yesterday);
-    // Semana passada
-    const lastWeek = new Date(today);
-    lastWeek.setDate(lastWeek.getDate() - 7);
-    dates.push(lastWeek);
-    // Mês passado
-    const lastMonth = new Date(today);
-    lastMonth.setMonth(lastMonth.getMonth() - 1);
-    dates.push(lastMonth);
-    // Três meses atrás
-    const threeMonthsAgo = new Date(today);
-    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-    dates.push(threeMonthsAgo);
-
-    // Produtos variados
-    const products = [
-      { name: 'Smartphone XYZ', price: 1200, quantity: 2 },
-      { name: 'Notebook ABC', price: 3500, quantity: 1 },
-      { name: 'Fone de Ouvido', price: 150, quantity: 5 },
-      { name: 'Mouse sem fio', price: 80, quantity: 8 },
-      { name: 'Teclado mecânico', price: 250, quantity: 3 },
-      { name: 'Monitor 24"', price: 900, quantity: 2 },
-      { name: 'Cadeira gamer', price: 1500, quantity: 1 },
-      { name: 'Impressora', price: 450, quantity: 2 },
-      { name: 'Caixa de som', price: 120, quantity: 4 },
-      { name: 'Pendrive 64GB', price: 60, quantity: 10 }
-    ];
-
-    // Métodos de pagamento
-    const paymentMethods = ['dinheiro', 'cartao', 'pix'];
-
-    // Gerar vendas com datas variadas
-    const sampleSales = [];
-    let id = 1;
-
-    dates.forEach(date => {
-      // Formatar data no padrão brasileiro
-      const formattedDate = formatDateToBrazilian(date.toISOString().split('T')[0]);
-
-      // Gerar 2-3 vendas para cada data
-      const numSales = 2 + Math.floor(Math.random() * 2); // 2 ou 3 vendas
-
-      for (let i = 0; i < numSales; i++) {
-        // Selecionar produto aleatório
-        const productIndex = Math.floor(Math.random() * products.length);
-        const product = products[productIndex];
-
-        // Selecionar método de pagamento aleatório
-        const paymentMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
-
-        // Quantidade aleatória (entre 1 e a quantidade máxima do produto)
-        const quantity = 1 + Math.floor(Math.random() * product.quantity);
-
-        // Calcular total
-        const total = product.price * quantity;
-
-        sampleSales.push({
-          id: id++,
-          date: formattedDate,
-          client: 'Cliente não especificado',
-          clientDoc: '',
-          clientCpf: '',
-          vendor: 'Vendedor não especificado',
-          vendorDoc: '',
-          product: product.name,
-          quantity: quantity,
-          price: product.price,
-          total: total,
-          paymentMethod: paymentMethod
-        });
-      }
-    });
-
-    return sampleSales;
-  };
 
   // Carregar dados de vendas de exemplo ao iniciar apenas se não houver dados existentes
   useEffect(() => {
+    // Função para gerar dados de exemplo dentro do useEffect
+    const generateSampleData = () => {
+      const today = new Date();
+
+      // Criar datas variadas para o histórico
+      const dates = [];
+      // Data atual
+      dates.push(new Date(today));
+      // Ontem
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      dates.push(yesterday);
+      // Semana passada
+      const lastWeek = new Date(today);
+      lastWeek.setDate(lastWeek.getDate() - 7);
+      dates.push(lastWeek);
+      // Mês passado
+      const lastMonth = new Date(today);
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+      dates.push(lastMonth);
+
+      // Produtos variados
+      const products = [
+        { name: 'Ventilador G-Fire Cooler', price: 250, quantity: 5 },
+        { name: 'Notebook ABC', price: 3500, quantity: 1 },
+        { name: 'Fone de Ouvido', price: 150, quantity: 5 },
+        { name: 'Mouse sem fio', price: 80, quantity: 8 },
+        { name: 'Teclado mecânico', price: 250, quantity: 3 }
+      ];
+
+      // Métodos de pagamento
+      const paymentMethods = ['dinheiro', 'cartao', 'pix'];
+
+      // Gerar vendas com datas variadas
+      const sampleSales = [];
+      let id = 1;
+
+      dates.forEach(date => {
+        // Formatar data no padrão brasileiro
+        const formattedDate = formatDateToBrazilian(date.toISOString().split('T')[0]);
+
+        // Gerar 2-3 vendas para cada data
+        const numSales = 2 + Math.floor(Math.random() * 2); // 2 ou 3 vendas
+
+        for (let i = 0; i < numSales; i++) {
+          // Selecionar produto aleatório
+          const productIndex = Math.floor(Math.random() * products.length);
+          const product = products[productIndex];
+
+          // Selecionar método de pagamento aleatório
+          const paymentMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
+
+          // Quantidade aleatória (entre 1 e a quantidade máxima do produto)
+          const quantity = 1 + Math.floor(Math.random() * product.quantity);
+
+          // Calcular total
+          const total = product.price * quantity;
+
+          sampleSales.push({
+            id: id++,
+            date: formattedDate,
+            client: 'Cliente não especificado',
+            clientDoc: '',
+            clientCpf: '',
+            vendor: 'Vendedor não especificado',
+            vendorDoc: '',
+            product: product.name,
+            quantity: quantity,
+            price: product.price,
+            total: total,
+            paymentMethod: paymentMethod
+          });
+        }
+      });
+
+      return sampleSales;
+    };
+
     // Verificar se já existem dados no localStorage
     const savedSalesData = localStorage.getItem('salesData');
     if (!savedSalesData || JSON.parse(savedSalesData).length === 0) {
       console.log("Nenhum dado de vendas encontrado, gerando dados de exemplo...");
-      setSalesData(generateSampleSalesData());
+      const sampleData = generateSampleData();
+      console.log("Dados de exemplo gerados:", sampleData);
+      setSalesData(sampleData);
     } else {
       console.log("Dados de vendas existentes encontrados, não gerando dados de exemplo.");
+      console.log("Dados carregados do localStorage:", JSON.parse(savedSalesData));
     }
   }, []);
 
   // Função getFilteredSalesData melhorada para trabalhar com o formato brasileiro e histórico de vendas
-  const getFilteredSalesData = () => {
+  const getFilteredSalesData = useCallback(() => {
     console.log("Filtrando vendas para:", reportType, reportStartDate, reportEndDate);
 
     const realSalesData = [];
@@ -829,42 +825,37 @@ ${item?.client?.cpf || ''}
       return filtered;
     }
 
+    // Normalizar todas as datas para o formato brasileiro DD/MM/YYYY
+    filtered = filtered.map(sale => {
+      if (!sale.date) return sale;
+
+      let normalizedDate = sale.date;
+
+      // Converter de ISO para brasileiro se necessário
+      if (normalizedDate.includes('-') && !normalizedDate.includes('/')) {
+        const dateParts = normalizedDate.split('-');
+        if (dateParts.length === 3) {
+          normalizedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+        }
+      }
+
+      return { ...sale, normalizedDate };
+    });
+
     if (reportType === 'day') {
       console.log("Filtrando por dia:", reportStartDate);
       filtered = filtered.filter(sale => {
-        // Verificar se a data é válida
-        if (!sale.date) {
-          console.log("Venda sem data:", sale);
-          return false;
+        if (!sale.normalizedDate) return false;
+        const matches = sale.normalizedDate === reportStartDate;
+        if (matches) {
+          console.log("Venda correspondente encontrada:", sale);
         }
-
-        try {
-          // Normalizar a data para o formato brasileiro se necessário
-          let saleDate = sale.date;
-
-          // Verificar se a data está no formato ISO (YYYY-MM-DD) e converter
-          if (saleDate.includes('-') && !saleDate.includes('/')) {
-            const dateParts = saleDate.split('-');
-            if (dateParts.length === 3) {
-              saleDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-            }
-          }
-
-          // Comparar as strings de data no formato brasileiro
-          const matches = saleDate === reportStartDate;
-          if (matches) {
-            console.log("Venda correspondente encontrada:", sale);
-          }
-          return matches;
-        } catch (e) {
-          console.error("Erro ao processar data:", sale.date, e);
-          return false;
-        }
+        return matches;
       });
     } else if (reportType === 'month') {
       console.log("Filtrando por mês:", reportStartDate);
       // Extrair mês e ano do formato brasileiro
-      const [_day, month, year] = (reportStartDate || '').split('/');
+      const [day, month, year] = (reportStartDate || '').split('/');
 
       if (!month || !year) {
         console.error("Data de início inválida:", reportStartDate);
@@ -872,41 +863,16 @@ ${item?.client?.cpf || ''}
       }
 
       filtered = filtered.filter(sale => {
-        try {
-          // Verificar se a data é válida
-          if (!sale.date) {
-            console.log("Venda sem data:", sale);
-            return false;
-          }
+        if (!sale.normalizedDate) return false;
 
-          // Normalizar a data para o formato brasileiro se necessário
-          let saleDate = sale.date;
+        const [saleDay, saleMonth, saleYear] = sale.normalizedDate.split('/');
+        if (!saleMonth || !saleYear) return false;
 
-          // Verificar se a data está no formato ISO (YYYY-MM-DD) e converter
-          if (saleDate.includes('-') && !saleDate.includes('/')) {
-            const dateParts = saleDate.split('-');
-            if (dateParts.length === 3) {
-              saleDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-            }
-          }
-
-          // Converter a data de venda do formato brasileiro para comparação
-          const [_saleDay, saleMonth, saleYear] = saleDate.split('/');
-
-          if (!saleMonth || !saleYear) {
-            console.log("Data de venda inválida:", saleDate);
-            return false;
-          }
-
-          const matches = parseInt(saleYear) === parseInt(year) && parseInt(saleMonth) === parseInt(month);
-          if (matches) {
-            console.log("Venda correspondente encontrada:", sale);
-          }
-          return matches;
-        } catch (e) {
-          console.error("Erro ao processar data:", sale.date, e);
-          return false;
+        const matches = parseInt(saleYear) === parseInt(year) && parseInt(saleMonth) === parseInt(month);
+        if (matches) {
+          console.log("Venda correspondente encontrada:", sale);
         }
+        return matches;
       });
     } else if (reportType === 'period') {
       console.log("Filtrando por período:", reportStartDate, "até", reportEndDate);
@@ -925,55 +891,31 @@ ${item?.client?.cpf || ''}
         const endYear = parseInt(endParts[2]);
 
         filtered = filtered.filter(sale => {
-          try {
-            // Verificar se a data é válida
-            if (!sale.date) {
-              console.log("Venda sem data:", sale);
-              return false;
-            }
+          if (!sale.normalizedDate) return false;
 
-            // Normalizar a data para o formato brasileiro se necessário
-            let saleDate = sale.date;
+          const [saleDay, saleMonth, saleYear] = sale.normalizedDate.split('/');
+          if (!saleDay || !saleMonth || !saleYear) return false;
 
-            // Verificar se a data está no formato ISO (YYYY-MM-DD) e converter
-            if (saleDate.includes('-') && !saleDate.includes('/')) {
-              const dateParts = saleDate.split('-');
-              if (dateParts.length === 3) {
-                saleDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-              }
-            }
+          const saleDayNum = parseInt(saleDay);
+          const saleMonthNum = parseInt(saleMonth);
+          const saleYearNum = parseInt(saleYear);
 
-            const [saleDay, saleMonth, saleYear] = saleDate.split('/');
+          // Comparar datas
+          const isAfterStart =
+            (saleYearNum > startYear) ||
+            (saleYearNum === startYear && saleMonthNum > startMonth) ||
+            (saleYearNum === startYear && saleMonthNum === startMonth && saleDayNum >= startDay);
 
-            if (!saleDay || !saleMonth || !saleYear) {
-              console.log("Data de venda inválida:", saleDate);
-              return false;
-            }
+          const isBeforeEnd =
+            (saleYearNum < endYear) ||
+            (saleYearNum === endYear && saleMonthNum < endMonth) ||
+            (saleYearNum === endYear && saleMonthNum === endMonth && saleDayNum <= endDay);
 
-            const saleDayNum = parseInt(saleDay);
-            const saleMonthNum = parseInt(saleMonth);
-            const saleYearNum = parseInt(saleYear);
-
-            // Comparar datas
-            const isAfterStart =
-              (saleYearNum > startYear) ||
-              (saleYearNum === startYear && saleMonthNum > startMonth) ||
-              (saleYearNum === startYear && saleMonthNum === startMonth && saleDayNum >= startDay);
-
-            const isBeforeEnd =
-              (saleYearNum < endYear) ||
-              (saleYearNum === endYear && saleMonthNum < endMonth) ||
-              (saleYearNum === endYear && saleMonthNum === endMonth && saleDayNum <= endDay);
-
-            const matches = isAfterStart && isBeforeEnd;
-            if (matches) {
-              console.log("Venda correspondente encontrada:", sale);
-            }
-            return matches;
-          } catch (e) {
-            console.error("Erro ao processar data:", sale.date, e);
-            return false;
+          const matches = isAfterStart && isBeforeEnd;
+          if (matches) {
+            console.log("Venda correspondente encontrada:", sale);
           }
+          return matches;
         });
       } else {
         console.error("Formato de data inválido:", reportStartDate, reportEndDate);
@@ -998,7 +940,7 @@ ${item?.client?.cpf || ''}
 
     console.log("Total de vendas após filtragem:", filtered.length);
     return filtered;
-  };
+  }, [reportType, reportStartDate, reportEndDate, items, categories, currentSale, selectedVendor, salesData, showSalesReport, reportSearchQuery]);
 
   // Função para exportar o relatório como imagem
   const exportAsImage = async () => {
@@ -1202,6 +1144,35 @@ ${item?.client?.cpf || ''}
     } else if (exportType === 'pdf') {
       exportAsPDF();
     }
+  };
+
+  // Função para calcular o valor total das compras para um item específico
+  const getItemTotalPurchases = (itemId) => {
+    if (!itemId) return 0;
+
+    // Obter a descrição do item selecionado
+    const selectedItem = items.find(item => item.id === itemId);
+    if (!selectedItem) return 0;
+
+    const itemDescription = selectedItem.description;
+    console.log("Calculando total de compras para o item:", itemDescription);
+
+    // Filtrar vendas pelo período selecionado
+    const filteredSales = getFilteredSalesData();
+    console.log("Vendas filtradas:", filteredSales.length);
+
+    // Calcular o total de compras para o item específico
+    const totalPurchases = filteredSales.reduce((total, sale) => {
+      // Verificar se o produto da venda contém a descrição do item selecionado
+      if (sale.product && sale.product.includes(itemDescription)) {
+        console.log("Venda correspondente encontrada:", sale);
+        return total + sale.total;
+      }
+      return total;
+    }, 0);
+
+    console.log("Total de compras calculado:", totalPurchases);
+    return totalPurchases;
   };
 
   const formatWhatsApp = (value) => {
@@ -1455,6 +1426,7 @@ ${item?.client?.cpf || ''}
   useEffect(() => {
     // Calcular totais por método de pagamento
     const filteredData = getFilteredSalesData();
+    console.log("Dados filtrados para cálculo de totais:", filteredData);
 
     // Calcular totais por método de pagamento
     const totals = {
@@ -1464,15 +1436,23 @@ ${item?.client?.cpf || ''}
     };
 
     filteredData.forEach(sale => {
-      const paymentMethod = sale.paymentMethod?.toLowerCase() || '';
+      // Garantir que o total seja um número válido
+      const saleTotal = typeof sale.total === 'number' ? Math.abs(sale.total) : 0;
+
+      const paymentMethod = (sale.paymentMethod || '').toLowerCase();
       if (paymentMethod.includes('dinheiro')) {
-        totals.totalCash += sale.total;
+        totals.totalCash += saleTotal;
       } else if (paymentMethod.includes('cartao') || paymentMethod.includes('cartão')) {
-        totals.totalCard += sale.total;
+        totals.totalCard += saleTotal;
       } else if (paymentMethod.includes('pix')) {
-        totals.totalPix += sale.total;
+        totals.totalPix += saleTotal;
+      } else {
+        // Se não tiver método de pagamento específico, adicionar ao dinheiro (padrão)
+        totals.totalCash += saleTotal;
       }
     });
+
+    console.log("Totais calculados:", totals);
 
     // Atualizar o resumo de vendas
     setSalesSummary(totals);
@@ -1483,7 +1463,7 @@ ${item?.client?.cpf || ''}
       setShowDashboard(false);
       setTimeout(() => setShowDashboard(true), 100);
     }
-  }, [reportStartDate, reportEndDate, reportType]);
+  }, [reportStartDate, reportEndDate, reportType, getFilteredSalesData, showDashboard]);
 
   // Garantir que as datas estejam no formato correto quando o tipo de relatório mudar
   useEffect(() => {
@@ -1510,6 +1490,7 @@ ${item?.client?.cpf || ''}
   useEffect(() => {
     // Calcular totais por método de pagamento
     const filteredData = getFilteredSalesData();
+    console.log("Dados filtrados para cálculo de totais (dados mudaram):", filteredData);
 
     // Calcular totais por método de pagamento
     const totals = {
@@ -1519,15 +1500,23 @@ ${item?.client?.cpf || ''}
     };
 
     filteredData.forEach(sale => {
-      const paymentMethod = sale.paymentMethod?.toLowerCase() || '';
+      // Garantir que o total seja um número válido
+      const saleTotal = typeof sale.total === 'number' ? Math.abs(sale.total) : 0;
+
+      const paymentMethod = (sale.paymentMethod || '').toLowerCase();
       if (paymentMethod.includes('dinheiro')) {
-        totals.totalCash += sale.total;
+        totals.totalCash += saleTotal;
       } else if (paymentMethod.includes('cartao') || paymentMethod.includes('cartão')) {
-        totals.totalCard += sale.total;
+        totals.totalCard += saleTotal;
       } else if (paymentMethod.includes('pix')) {
-        totals.totalPix += sale.total;
+        totals.totalPix += saleTotal;
+      } else {
+        // Se não tiver método de pagamento específico, adicionar ao dinheiro (padrão)
+        totals.totalCash += saleTotal;
       }
     });
+
+    console.log("Totais calculados (dados mudaram):", totals);
 
     // Atualizar o resumo de vendas
     setSalesSummary(totals);
@@ -1537,7 +1526,7 @@ ${item?.client?.cpf || ''}
       setShowDashboard(false);
       setTimeout(() => setShowDashboard(true), 100);
     }
-  }, [salesData, items]);
+  }, [salesData, items, getFilteredSalesData, showDashboard]);
 
   const handleEditClient = async (client) => {
     setNewClient({
@@ -3550,6 +3539,22 @@ ${item?.client?.cpf || ''}
                     </button>
                   </div>
 
+                  {/* Valor Total das Compras do Item Selecionado */}
+                  {selectedItems.length === 1 && items[selectedItems[0]] && (
+                    <div className="bg-white p-6 rounded-lg shadow-lg mb-4">
+                      <h4 className="text-lg font-medium mb-2">Valor Total das Compras do Item Selecionado</h4>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-gray-600">Item: {items[selectedItems[0]]?.description || 'Item não encontrado'}</p>
+                          <p className="text-gray-600">Período: {reportType === 'day' ? reportStartDate : reportType === 'month' ? `Mês ${reportStartDate.split('/')[1]}/${reportStartDate.split('/')[2]}` : `${reportStartDate} até ${reportEndDate}`}</p>
+                        </div>
+                        <div className="text-2xl font-bold text-blue-600">
+                          R$ {getItemTotalPurchases(items[selectedItems[0]]?.id).toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Tabela de Vendas */}
                   <div className="bg-white p-6 rounded-lg shadow-lg">
                     <h4 className="text-lg font-medium mb-4">Vendas no Período</h4>
@@ -3712,7 +3717,7 @@ ${item?.client?.cpf || ''}
                   </div>
 
                   {/* Sales Summary */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="bg-green-100 p-4 rounded-lg">
                       <h4 className="font-medium text-green-800">Total em Dinheiro</h4>
                       <p className="text-2xl font-bold text-green-600">
@@ -3729,6 +3734,12 @@ ${item?.client?.cpf || ''}
                       <h4 className="font-medium text-purple-800">Total em PIX</h4>
                       <p className="text-2xl font-bold text-purple-600">
                         R$ {salesSummary.totalPix.toFixed(2)}
+                      </p>
+                    </div>
+                    <div className="bg-yellow-100 p-4 rounded-lg">
+                      <h4 className="font-medium text-yellow-800">Total Geral</h4>
+                      <p className="text-2xl font-bold text-yellow-600">
+                        R$ {(salesSummary.totalCash + salesSummary.totalCard + salesSummary.totalPix).toFixed(2)}
                       </p>
                     </div>
                   </div>
@@ -3884,6 +3895,204 @@ ${item?.client?.cpf || ''}
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
+            </div>
+
+            {/* Seção de Mídias (Imagens e Vídeos) */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Mídias do Produto (Imagens e Vídeos)</label>
+              <div className="flex flex-col space-y-3">
+                {/* Preview da mídia principal */}
+                <div className="relative bg-gray-100 rounded-lg p-2 flex justify-center">
+                  {editingItem.image ? (
+                    editingItem.mediaType === 'video' ? (
+                      <video
+                        src={editingItem.image}
+                        controls
+                        className="max-h-48 max-w-full"
+                      />
+                    ) : (
+                      <img
+                        src={editingItem.image}
+                        alt={editingItem.description}
+                        className="max-h-48 object-contain"
+                      />
+                    )
+                  ) : (
+                    <div className="h-48 w-full flex items-center justify-center text-gray-400">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className="ml-2">Sem mídia</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Botões de ação para mídias */}
+                <div className="flex flex-wrap gap-2">
+                  <label className="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Substituir Mídia Principal
+                    <input
+                      type="file"
+                      accept="image/*,video/mp4,video/webm,video/ogg"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            // Determinar se é um vídeo ou imagem
+                            const isVideo = file.type.startsWith('video/');
+
+                            setEditingItem({
+                              ...editingItem,
+                              image: reader.result,
+                              mediaType: isVideo ? 'video' : 'image'
+                            });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+
+                  <label className="cursor-pointer bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Adicionar Mídia
+                    <input
+                      type="file"
+                      accept="image/*,video/mp4,video/webm,video/ogg"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            const newMedia = reader.result;
+                            const isVideo = file.type.startsWith('video/');
+                            const additionalImages = editingItem.additionalImages || [];
+                            const additionalMediaTypes = editingItem.additionalMediaTypes || [];
+
+                            setEditingItem({
+                              ...editingItem,
+                              additionalImages: [...additionalImages, newMedia],
+                              additionalMediaTypes: [...additionalMediaTypes, isVideo ? 'video' : 'image']
+                            });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+
+                {/* Miniaturas das imagens e vídeos adicionais */}
+                {editingItem.additionalImages && editingItem.additionalImages.length > 0 && (
+                  <div className="mt-2">
+                    <h4 className="text-sm font-medium mb-2">Mídias Adicionais</h4>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                      {editingItem.additionalImages.map((media, index) => {
+                        const isVideo = editingItem.additionalMediaTypes &&
+                                      editingItem.additionalMediaTypes[index] === 'video';
+
+                        return (
+                          <div key={index} className="relative group">
+                            {isVideo ? (
+                              <div className="h-20 w-full rounded border border-gray-200 bg-gray-100 flex items-center justify-center">
+                                <video
+                                  src={media}
+                                  className="h-20 w-full object-cover rounded"
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white bg-black bg-opacity-50 rounded-full p-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                </div>
+                              </div>
+                            ) : (
+                              <img
+                                src={media}
+                                alt={`Mídia ${index + 1}`}
+                                className="h-20 w-full object-cover rounded border border-gray-200"
+                              />
+                            )}
+                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
+                              <button
+                                onClick={() => {
+                                  const updatedImages = [...editingItem.additionalImages];
+                                  updatedImages.splice(index, 1);
+
+                                  // Também atualizar os tipos de mídia
+                                  const updatedMediaTypes = [...(editingItem.additionalMediaTypes || [])];
+                                  if (updatedMediaTypes.length > 0) {
+                                    updatedMediaTypes.splice(index, 1);
+                                  }
+
+                                  setEditingItem({
+                                    ...editingItem,
+                                    additionalImages: updatedImages,
+                                    additionalMediaTypes: updatedMediaTypes
+                                  });
+                                }}
+                                className="p-1 bg-red-500 rounded-full text-white"
+                                title="Remover mídia"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  // Definir como mídia principal
+                                  const newMainMedia = media;
+                                  const newMainMediaType = isVideo ? 'video' : 'image';
+                                  const updatedImages = [...editingItem.additionalImages];
+                                  updatedImages.splice(index, 1);
+
+                                  // Atualizar tipos de mídia
+                                  const updatedMediaTypes = [...(editingItem.additionalMediaTypes || [])];
+                                  if (updatedMediaTypes.length > 0) {
+                                    updatedMediaTypes.splice(index, 1);
+                                  }
+
+                                  // Se já existir uma mídia principal, movê-la para as adicionais
+                                  if (editingItem.image) {
+                                    updatedImages.unshift(editingItem.image);
+                                    if (editingItem.mediaType) {
+                                      updatedMediaTypes.unshift(editingItem.mediaType);
+                                    } else {
+                                      updatedMediaTypes.unshift('image'); // Assume imagem por padrão
+                                    }
+                                  }
+
+                                  setEditingItem({
+                                    ...editingItem,
+                                    image: newMainMedia,
+                                    mediaType: newMainMediaType,
+                                    additionalImages: updatedImages,
+                                    additionalMediaTypes: updatedMediaTypes
+                                  });
+                                }}
+                                className="p-1 bg-blue-500 rounded-full text-white ml-1"
+                                title="Definir como mídia principal"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
