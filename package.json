@@ -11,7 +11,11 @@
     "setup-webui": "node setup-web-ui.js",
     "configure-chevereto": "node configure-chevereto-webui.js",
     "start-webui": "node start-web-ui.js",
-    "install-extension": "node install-browser-extension.js"
+    "install-extension": "node install-browser-extension.js",
+    "test": "node run-tests.cjs",
+    "test:logs": "node -e \"console.log('Coletando logs do sistema...')\" && node run-tests.cjs > test-logs.txt 2>&1",
+    "debug:indexeddb": "node scripts/debug-indexeddb.js",
+    "check:database": "node scripts/check-database.js"
   },
   "dependencies": {
     "@capacitor/android": "^7.0.1",
@@ -32,6 +36,10 @@
     "tesseract.js": "^6.0.0"
   },
   "devDependencies": {
+    "@babel/plugin-transform-runtime": "^7.26.10",
+    "@babel/preset-env": "^7.26.9",
+    "@babel/preset-react": "^7.26.3",
+    "@babel/register": "^7.25.9",
     "@eslint/js": "^9.17.0",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",

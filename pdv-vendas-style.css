@@ -1,0 +1,215 @@
+/**
+ * CSS Personalizado para deixar o WooCommerce parecido com o PDV Vendas
+ * 
+ * Este CSS deve ser adicionado no Personalizador do WordPress ou
+ * através do plugin "Simple Custom CSS and JS"
+ */
+
+/* Cores principais do PDV Vendas */
+:root {
+  --pdv-primary: #4a90e2;
+  --pdv-secondary: #f5a623;
+  --pdv-background: #f9f9f9;
+  --pdv-text: #333333;
+  --pdv-light-text: #666666;
+  --pdv-border: #e0e0e0;
+  --pdv-success: #4caf50;
+  --pdv-error: #f44336;
+  --pdv-warning: #ff9800;
+}
+
+/* Estilo geral do site */
+body {
+  background-color: var(--pdv-background);
+  color: var(--pdv-text);
+  font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+}
+
+/* Cabeçalho */
+.site-header {
+  background-color: var(--pdv-primary);
+  color: white;
+  padding: 15px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.site-title a, 
+.site-description {
+  color: white !important;
+}
+
+/* Menu principal */
+.main-navigation {
+  background-color: var(--pdv-primary);
+}
+
+.main-navigation a {
+  color: white;
+  font-weight: 500;
+  padding: 12px 15px;
+}
+
+.main-navigation a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Botões */
+.button,
+.wp-element-button,
+.wp-block-button__link,
+.woocommerce #respond input#submit, 
+.woocommerce a.button, 
+.woocommerce button.button, 
+.woocommerce input.button {
+  background-color: var(--pdv-primary) !important;
+  color: white !important;
+  border-radius: 4px !important;
+  padding: 10px 20px !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  border: none !important;
+  transition: background-color 0.3s ease !important;
+}
+
+.button:hover,
+.wp-element-button:hover,
+.wp-block-button__link:hover,
+.woocommerce #respond input#submit:hover, 
+.woocommerce a.button:hover, 
+.woocommerce button.button:hover, 
+.woocommerce input.button:hover {
+  background-color: #3a80d2 !important;
+  color: white !important;
+}
+
+/* Produtos na página inicial */
+.woocommerce ul.products li.product {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding: 15px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.woocommerce ul.products li.product:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.woocommerce ul.products li.product .woocommerce-loop-product__title {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--pdv-text);
+  padding-top: 10px;
+}
+
+.woocommerce ul.products li.product .price {
+  color: var(--pdv-primary);
+  font-weight: 600;
+  font-size: 18px;
+}
+
+/* Página de produto individual */
+.woocommerce div.product div.images img {
+  border-radius: 8px;
+}
+
+.woocommerce div.product .product_title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--pdv-text);
+}
+
+.woocommerce div.product p.price {
+  color: var(--pdv-primary);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.woocommerce div.product .woocommerce-tabs ul.tabs li.active {
+  background-color: var(--pdv-primary);
+  border-color: var(--pdv-primary);
+}
+
+.woocommerce div.product .woocommerce-tabs ul.tabs li.active a {
+  color: white;
+}
+
+/* Carrinho */
+.woocommerce-cart table.cart td.actions .coupon .input-text {
+  padding: 10px 12px;
+  border-radius: 4px;
+}
+
+.woocommerce-cart .cart-collaterals .cart_totals h2 {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* Checkout */
+.woocommerce-checkout #payment {
+  background-color: white;
+  border-radius: 8px;
+}
+
+/* Mensagens */
+.woocommerce-message {
+  border-top-color: var(--pdv-success);
+}
+
+.woocommerce-message::before {
+  color: var(--pdv-success);
+}
+
+.woocommerce-error {
+  border-top-color: var(--pdv-error);
+}
+
+.woocommerce-error::before {
+  color: var(--pdv-error);
+}
+
+.woocommerce-info {
+  border-top-color: var(--pdv-primary);
+}
+
+.woocommerce-info::before {
+  color: var(--pdv-primary);
+}
+
+/* Rodapé */
+.site-footer {
+  background-color: #333;
+  color: white;
+  padding: 30px 0;
+}
+
+.site-footer a {
+  color: #ddd;
+}
+
+.site-footer a:hover {
+  color: white;
+}
+
+/* Responsividade para dispositivos móveis */
+@media (max-width: 768px) {
+  .woocommerce ul.products[class*=columns-] li.product, 
+  .woocommerce-page ul.products[class*=columns-] li.product {
+    width: 48%;
+    margin-right: 4%;
+  }
+  
+  .woocommerce ul.products[class*=columns-] li.product:nth-child(2n), 
+  .woocommerce-page ul.products[class*=columns-] li.product:nth-child(2n) {
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .woocommerce ul.products[class*=columns-] li.product, 
+  .woocommerce-page ul.products[class*=columns-] li.product {
+    width: 100%;
+    margin-right: 0;
+  }
+}

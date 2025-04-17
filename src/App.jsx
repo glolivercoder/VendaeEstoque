@@ -19,6 +19,7 @@ import {
   initializeDefaultVendor
 } from './services/database';
 import Vendors from './pages/Vendors';
+import TestPage from './pages/TestPage';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 import html2canvas from 'html2canvas';
@@ -175,6 +176,7 @@ function App() {
   const [backupLocation, setBackupLocation] = useState(localStorage.getItem('backupLocation') || '');
   const [autoBackup, setAutoBackup] = useState(localStorage.getItem('autoBackup') === 'true');
   const [showDescription, setShowDescription] = useState(true);
+  const [showTestPage, setShowTestPage] = useState(false);
 
   // Adicionar estado para categorias e nova categoria
   const [categories, setCategories] = useState(['Ferramentas', 'Instrumentos Musicais', 'Informática', 'Gadgets', 'Todos', 'Diversos']);
@@ -546,10 +548,12 @@ function App() {
         quantity: newItem.quantity || 0,
         sold: 0,
         image: newItem.image || '',
+        additionalImages: newItem.additionalImages || [],
         expirationDate: newItem.expirationDate || null,
         links: newItem.links || [],
         itemDescription: newItem.itemDescription || '',
-        category: newItem.category || 'Todos' // Adicionar categoria ao produto
+        category: newItem.category || 'Todos', // Adicionar categoria ao produto
+        sku: newItem.sku || ''
       };
 
       const productId = await addProduct(productData);
@@ -570,11 +574,13 @@ function App() {
         price: '',
         quantity: '',
         image: '',
+        additionalImages: [],
         links: [],
         expirationDate: null,
         checked: false,
         itemDescription: '',
-        category: 'Todos' // Resetar categoria para o padrão
+        category: 'Todos', // Resetar categoria para o padrão
+        sku: ''
       });
 
       setShowAddItem(false);
@@ -4273,6 +4279,22 @@ ${item?.client?.cpf || ''}
           </div>
         </div>
       )}
+
+      {/* Test Page */}
+      <TestPage showTestPage={showTestPage} setShowTestPage={setShowTestPage} />
+
+      {/* Floating Test Button */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <button
+          onClick={() => setShowTestPage(true)}
+          className="bg-purple-600 hover:bg-purple-700 text-white rounded-full p-3 shadow-lg flex items-center justify-center"
+          title="Abrir Console de Testes"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+        </button>
+      </div>
 
     </div>
   );

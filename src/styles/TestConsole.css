@@ -1,0 +1,181 @@
+/* Estilos para o componente TestConsole */
+
+.test-console {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.test-header {
+  padding: 16px;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #ccc;
+}
+
+.test-header h2 {
+  margin: 0 0 16px 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.test-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.test-buttons button {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+}
+
+.test-buttons button:hover:not(:disabled) {
+  background-color: #f0f0f0;
+}
+
+.test-buttons button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.test-buttons button.active {
+  background-color: #e6f7ff;
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.test-buttons .run-all-btn {
+  background-color: #52c41a;
+  color: white;
+  border-color: #52c41a;
+}
+
+.test-buttons .run-all-btn:hover:not(:disabled) {
+  background-color: #73d13d;
+}
+
+.test-buttons .clear-btn {
+  background-color: #ff4d4f;
+  color: white;
+  border-color: #ff4d4f;
+}
+
+.test-buttons .clear-btn:hover:not(:disabled) {
+  background-color: #ff7875;
+}
+
+.console-container {
+  flex: 1;
+  padding: 16px;
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  font-family: 'Courier New', monospace;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.log-entry {
+  margin-bottom: 4px;
+}
+
+.timestamp {
+  color: #6a9955;
+  margin-right: 8px;
+}
+
+.log-entry.info .log-message {
+  color: #d4d4d4;
+}
+
+.log-entry.error .log-message {
+  color: #f56c6c;
+}
+
+.log-entry.success .log-message {
+  color: #67c23a;
+}
+
+.loading-indicator {
+  margin-top: 16px;
+  color: #e6a23c;
+  font-style: italic;
+}
+
+.empty-console {
+  color: #909399;
+  font-style: italic;
+  text-align: center;
+  margin-top: 32px;
+}
+
+/* Estilos para a página de testes */
+.test-page-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.test-page-container {
+  width: 90%;
+  height: 90%;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.test-page-header {
+  padding: 16px;
+  background-color: #f0f2f5;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.test-page-header h1 {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #999;
+}
+
+.close-btn:hover {
+  color: #666;
+}
+
+.test-page-content {
+  flex: 1;
+  padding: 16px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}

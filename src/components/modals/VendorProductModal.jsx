@@ -67,18 +67,16 @@ const VendorProductModal = ({
   };
 
   const handleAdditionalImageChange = (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length > 0) {
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setFormData(prev => ({
-            ...prev,
-            additionalImages: [...prev.additionalImages, reader.result]
-          }));
-        };
-        reader.readAsDataURL(file);
-      });
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({
+          ...prev,
+          additionalImages: [...prev.additionalImages, reader.result]
+        }));
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -167,7 +165,7 @@ const VendorProductModal = ({
           {/* Imagem Principal */}
           <div>
             <label className="block text-sm font-medium mb-1">Imagem Principal</label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center relative">
               {formData.image ? (
                 <div className="relative">
                   <img
@@ -197,12 +195,15 @@ const VendorProductModal = ({
                   <p className="mt-1 text-sm text-gray-500">Clique para adicionar uma imagem</p>
                 </>
               )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className={formData.image ? "hidden" : "absolute inset-0 w-full h-full opacity-0 cursor-pointer"}
-              />
+              <label className="cursor-pointer absolute inset-0 w-full h-full flex items-center justify-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+                {!formData.image && <span className="sr-only">Selecionar imagem</span>}
+              </label>
             </div>
           </div>
 
@@ -230,18 +231,20 @@ const VendorProductModal = ({
                     </button>
                   </div>
                 ))}
-                <label className="border-2 border-dashed border-gray-300 rounded flex items-center justify-center h-20 cursor-pointer">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleAdditionalImageChange}
-                    className="hidden"
-                  />
-                </label>
+                <div className="relative">
+                  <label className="border-2 border-dashed border-gray-300 rounded flex items-center justify-center h-20 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAdditionalImageChange}
+                      className="hidden"
+                    />
+                    <span className="sr-only">Adicionar imagem</span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
