@@ -28,6 +28,7 @@ import { syncProductsToWordPress, clearWordPressProducts, setupWordPressWebhook 
 import MagicWandButton from './components/MagicWandButton';
 import MagicCaptureButton from './components/MagicCaptureButton';
 import WordPressSync from './components/WordPressSync';
+import SearchBar from './components/SearchBar';
 import BankQRCodeSelector from './components/QRCode_Bancos/BankQRCodeSelector';
 
 // Registrar componentes do Chart.js
@@ -181,6 +182,7 @@ function App() {
   const [backupLocation, setBackupLocation] = useState(localStorage.getItem('backupLocation') || '');
   const [autoBackup, setAutoBackup] = useState(localStorage.getItem('autoBackup') === 'true');
   const [showDescription, setShowDescription] = useState(true);
+  const [itemSearchQuery, setItemSearchQuery] = useState('');
   const [showTestPage, setShowTestPage] = useState(false);
 
   // Adicionar estado para categorias e nova categoria
@@ -406,7 +408,8 @@ function App() {
         // Update existing client
         const updatedClient = {
           ...selectedClient,
-          ...newClient
+          ...newClient,
+          document: newClient.cpf // Usar CPF como documento principal
         };
         await updateClient(updatedClient);
         const updatedClients = clients.map(c =>
@@ -416,7 +419,11 @@ function App() {
         setFilteredClients(updatedClients);
       } else {
         // Add new client
-        await addClient(newClient);
+        const clientData = {
+          ...newClient,
+          document: newClient.cpf // Usar CPF como documento principal
+        };
+        await addClient(clientData);
         const updatedClients = await getClients();
         setClients(updatedClients);
         setFilteredClients(updatedClients);
@@ -447,6 +454,7 @@ function App() {
   };
 
   const handleMultipleSales = async (paymentMethod) => {
+    // Para pagamentos PIX, apenas mostrar o QR code e não processar a venda ainda
     if (paymentMethod === 'pix') {
       setShowPixQRCode(true);
       return;
@@ -508,7 +516,7 @@ function App() {
         totalPix: paymentMethod === 'pix' ? prev.totalPix + Math.abs(totalAmount) : prev.totalPix
       }));
 
-      // Adicionar à lista de vendas com data local
+      // Adicionar à lista de vendas com data local - uma única entrada para toda a venda
       setSalesData(prev => [...prev, {
         id: Date.now(),
         date: localDate,
@@ -801,17 +809,25 @@ ${item?.client?.cpf || ''}
       }
     });
 
-    // Combinar com os dados existentes do localStorage/Vendas PDV
+    // Abordagem simplificada: apenas combinar os dados sem agrupamento complexo
+    // Normalizar os dados para garantir valores positivos
+    const normalizedSalesData = salesData.map(sale => ({
+      ...sale,
+      quantity: Math.abs(sale.quantity || 0),
+      price: Math.abs(sale.price || 0),
+      total: Math.abs(sale.total || 0),
+      // Normalizar o método de pagamento para facilitar a comparação
+      paymentMethod: sale.paymentMethod === 'fotos' ? 'pix' : sale.paymentMethod
+    }));
+
+    // Combinar os dados sem agrupamento
     const combinedData = [
       ...realSalesData,
-      ...salesData.map(sale => ({
-        ...sale,
-        quantity: Math.abs(sale.quantity || 0), // Garantir que a quantidade seja positiva
-        price: Math.abs(sale.price || 0), // Garantir que o preço seja positivo
-        total: Math.abs(sale.total || 0), // Garantir que o total seja positivo
-        source: sale.source || 'vendas_pdv' // Marcar a origem dos dados se não existir
-      }))
+      ...normalizedSalesData
     ];
+
+    // Log para depuração
+    console.log("Dados de vendas combinados:", combinedData.length);
 
     console.log("Total de vendas antes da filtragem:", combinedData.length);
 
@@ -1672,7 +1688,7 @@ ${item?.client?.cpf || ''}
         date: localDate
       });
 
-      // Adicionar à lista de vendas
+      // Adicionar à lista de vendas - uma única entrada para toda a venda
       setSalesData(prev => [...prev, {
         id: Date.now(),
         date: localDate,
@@ -2748,6 +2764,13 @@ ${item?.client?.cpf || ''}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-2xl font-semibold mb-4">Vendas PDV</h2>
 
+              {/* Barra de busca centralizada */}
+              <SearchBar
+                value={itemSearchQuery}
+                onChange={setItemSearchQuery}
+                placeholder="Buscar por nome do item..."
+              />
+
               {/* Checkbox centralizado para mostrar descrições */}
               <div className="flex justify-center mb-4">
                 <div className="flex items-center gap-2">
@@ -2783,7 +2806,16 @@ ${item?.client?.cpf || ''}
               {items.length > 0 ? (
                 <div className="space-y-4">
                   {items
-                    .filter(item => selectedCategory === 'Todos' || item.category === selectedCategory)
+                    .filter(item => {
+                      // Filtrar por categoria
+                      const categoryMatch = selectedCategory === 'Todos' || item.category === selectedCategory;
+
+                      // Filtrar por termo de busca (nome do item)
+                      const searchMatch = itemSearchQuery.trim() === '' ||
+                        (item.description && item.description.toLowerCase().includes(itemSearchQuery.toLowerCase()));
+
+                      return categoryMatch && searchMatch;
+                    })
                     .map((item, index) => (
                     <div key={index} className="border p-4 rounded-lg">
                       {/* Grid principal para imagem e informações */}
@@ -2997,6 +3029,27 @@ ${item?.client?.cpf || ''}
               {/* Relatório de Vendas button (simple) */}
               <button
                 onClick={() => {
+                  // Definir a data de hoje como padrão para o relatório
+                  const today = new Date();
+                  const todayFormatted = formatDateToBrazilian(today.toISOString().split('T')[0]);
+
+                  // Definir o primeiro e último dia do mês atual
+                  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                  const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+                  // Formatar as datas no padrão brasileiro
+                  const firstDayFormatted = formatDateToBrazilian(firstDayOfMonth.toISOString().split('T')[0]);
+                  const lastDayFormatted = formatDateToBrazilian(lastDayOfMonth.toISOString().split('T')[0]);
+
+                  // Definir as datas do relatório
+                  setReportType('day');
+                  setReportStartDate(todayFormatted);
+                  setReportEndDate(lastDayFormatted);
+
+                  // Limpar a busca
+                  setReportSearchQuery('');
+
+                  // Mostrar o relatório
                   setShowSalesReport(true);
                   setShowDashboard(false);
                 }}
@@ -3487,48 +3540,105 @@ ${item?.client?.cpf || ''}
               {!showDashboard ? (
                 // Relatório de Vendas Simples (sem dashboard)
                 <div className="space-y-6">
-                  {/* Seletor de Período */}
-                  <div className="flex gap-4 items-center">
-                    <select
-                      value={reportType}
-                      onChange={(e) => {
-                        setReportType(e.target.value);
-                      }}
-                      className="px-4 py-2 border rounded-lg"
-                    >
-                      <option value="day">Hoje</option>
-                      <option value="month">Este Mês</option>
-                      <option value="custom">Período Personalizado</option>
-                    </select>
-                    {reportType === 'custom' && (
-                      <div className="flex gap-4">
-                        <div className="flex flex-col">
-                          <label className="text-sm text-gray-600 mb-1">De:</label>
+                  {/* Seletor de Período com Calendário e Campo de Busca */}
+                  <div className="flex flex-col gap-4 bg-gray-50 p-4 rounded-lg">
+                    <div className="flex flex-wrap gap-4 items-center">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Período:</label>
+                        <select
+                          value={reportType}
+                          onChange={(e) => {
+                            setReportType(e.target.value);
+                          }}
+                          className="px-4 py-2 border rounded-lg bg-white"
+                        >
+                          <option value="day">Hoje</option>
+                          <option value="month">Este Mês</option>
+                          <option value="custom">Período Personalizado</option>
+                        </select>
+                      </div>
+
+                      {/* Calendário sempre visível ao lado do dropdown */}
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Data:</label>
+                        <input
+                          type="date"
+                          value={formatDateToISO(reportStartDate)}
+                          onChange={(e) => {
+                            const newDate = formatDateToBrazilian(e.target.value);
+                            setReportStartDate(newDate);
+                            if (reportType === 'day') {
+                              // Se o tipo for 'day', atualiza automaticamente para a data selecionada
+                              setTimeout(() => {
+                                const filteredData = getFilteredSalesData();
+                                console.log("Dados filtrados atualizados após mudança de data:", filteredData.length, "registros");
+                              }, 100);
+                            }
+                          }}
+                          className="px-4 py-2 border rounded-lg bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Campo de busca para clientes, documentos e produtos */}
+                    <div className="mt-2">
+                      <label className="block text-sm font-medium mb-1">Buscar:</label>
+                      <div className="flex gap-2 items-center">
+                        <div className="flex-grow">
                           <input
-                            type="date"
-                            value={formatDateToISO(reportStartDate)}
-                            onChange={(e) => {
-                              const newDate = formatDateToBrazilian(e.target.value);
-                              setReportStartDate(newDate);
-                            }}
-                            className="w-full px-3 py-2 border rounded-md"
+                            type="text"
+                            value={reportSearchQuery}
+                            onChange={(e) => setReportSearchQuery(e.target.value)}
+                            placeholder="Buscar por cliente, documento ou produto..."
+                            className="w-full px-4 py-2 border rounded-lg bg-white"
                           />
                         </div>
-                        <div className="flex flex-col">
-                          <label className="text-sm text-gray-600 mb-1">Até:</label>
-                          <input
-                            type="date"
-                            value={formatDateToISO(reportEndDate)}
-                            onChange={(e) => {
-                              const newDate = formatDateToBrazilian(e.target.value);
-                              setReportEndDate(newDate);
-                            }}
-                            className="w-full px-3 py-2 border rounded-md"
-                          />
+                        <button
+                          onClick={() => {
+                            // Limpar a busca
+                            setReportSearchQuery('');
+                          }}
+                          className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                          title="Limpar busca"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    {reportType === 'custom' && (
+                      <div className="mt-2">
+                        <label className="block text-sm font-medium mb-1">Período Personalizado:</label>
+                        <div className="flex flex-wrap gap-4">
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">De:</label>
+                            <input
+                              type="date"
+                              value={formatDateToISO(reportStartDate)}
+                              onChange={(e) => {
+                                const newDate = formatDateToBrazilian(e.target.value);
+                                setReportStartDate(newDate);
+                              }}
+                              className="px-4 py-2 border rounded-lg bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">Até:</label>
+                            <input
+                              type="date"
+                              value={formatDateToISO(reportEndDate)}
+                              onChange={(e) => {
+                                const newDate = formatDateToBrazilian(e.target.value);
+                                setReportEndDate(newDate);
+                              }}
+                              className="px-4 py-2 border rounded-lg bg-white"
+                            />
+                          </div>
                         </div>
                       </div>
                     )}
-                    {/* Botão "Verificar" removido conforme solicitado */}
                   </div>
 
                   {/* Valor Total das Compras do Item Selecionado */}
