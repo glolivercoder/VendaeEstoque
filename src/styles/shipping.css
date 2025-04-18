@@ -9,14 +9,431 @@
   --azul-cargo: 210 100% 50%;
 }
 
+/* Estilos para o componente principal */
+.shipping-calculator {
+  font-family: 'Arial', sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Estilos para o card principal */
+.shipping-calculator .card {
+  background-color: var(--card-background, #FFFFFF);
+  border-radius: 10px;
+  box-shadow: 0 4px 6px var(--shadow-color, rgba(0, 0, 0, 0.1));
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+
+.shipping-calculator .card-header {
+  background-color: var(--primary-color, #2ECC71);
+  color: white;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color, #E0E0E0);
+}
+
+.shipping-calculator .card-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.shipping-calculator .card-body {
+  padding: 1.5rem;
+}
+
+/* Estilos para as abas */
+.shipping-calculator .shipping-tabs {
+  display: flex;
+  flex-direction: column;
+}
+
+.shipping-calculator .tab-header {
+  display: flex;
+  border-bottom: 2px solid var(--border-color, #E0E0E0);
+  margin-bottom: 1.5rem;
+}
+
+.shipping-calculator .tab-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+  color: var(--text-color, #333333);
+  background-color: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.shipping-calculator .tab-button:hover {
+  background-color: var(--category-background, #E8F5E9);
+}
+
+.shipping-calculator .tab-button.active {
+  color: var(--primary-color, #2ECC71);
+  border-bottom: 3px solid var(--primary-color, #2ECC71);
+}
+
+.shipping-calculator .tab-button .icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.shipping-calculator .tab-content {
+  flex: 1;
+}
+
+.shipping-calculator .tab-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Estilos para seções de formulário */
+.shipping-calculator .form-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color, #E0E0E0);
+}
+
+.shipping-calculator .section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: var(--text-color, #333333);
+}
+
+.shipping-calculator .form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.shipping-calculator .form-group {
+  flex: 1;
+  min-width: 200px;
+  margin-bottom: 1rem;
+}
+
+.shipping-calculator .form-group.flex-grow {
+  flex: 3;
+}
+
+.shipping-calculator label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+.shipping-calculator .form-control {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 2px solid var(--border-color, #E0E0E0);
+  border-radius: 8px;
+  background-color: #FFFFFF;
+  transition: border-color 0.3s ease;
+}
+
+.shipping-calculator .form-control:focus {
+  border-color: var(--primary-color, #2ECC71);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+}
+
+.shipping-calculator .input-group {
+  display: flex;
+  align-items: center;
+}
+
+.shipping-calculator .input-group .form-control {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+
+.shipping-calculator .input-group .btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  height: 100%;
+}
+
+/* Estilos para botões */
+.shipping-calculator .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 700;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.shipping-calculator .btn-primary {
+  background-color: var(--primary-color, #2ECC71);
+  color: white;
+}
+
+.shipping-calculator .btn-primary:hover {
+  background-color: var(--secondary-color, #27AE60);
+}
+
+.shipping-calculator .btn-secondary {
+  background-color: var(--secondary-color, #27AE60);
+  color: white;
+}
+
+.shipping-calculator .btn-secondary:hover {
+  opacity: 0.9;
+}
+
+.shipping-calculator .btn-outline {
+  background-color: transparent;
+  border: 2px solid var(--border-color, #E0E0E0);
+  color: var(--text-color, #333333);
+}
+
+.shipping-calculator .btn-outline:hover {
+  background-color: var(--category-background, #E8F5E9);
+}
+
+.shipping-calculator .btn-lg {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+}
+
+.shipping-calculator .btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.shipping-calculator .btn-block {
+  display: block;
+  width: 100%;
+}
+
+.shipping-calculator .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shipping-calculator .form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* Estilos para opções de frete */
+.shipping-calculator .shipping-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.shipping-calculator .shipping-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 /* Estilos para os cards de opções de frete */
 .shipping-option-card {
+  background-color: white;
+  border-radius: 8px;
+  border: 2px solid var(--border-color, #E0E0E0);
+  padding: 1rem;
   transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  margin-bottom: 1rem;
 }
 
 .shipping-option-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-color, #2ECC71);
+}
+
+.shipping-option-card.selected {
+  border-color: var(--primary-color, #2ECC71);
+  background-color: var(--category-background, #E8F5E9);
+}
+
+.shipping-option-content {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .shipping-option-content {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.shipping-option-info {
+  flex: 1;
+}
+
+.shipping-option-header {
+  margin-bottom: 0.75rem;
+}
+
+.shipping-carrier {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.carrier-icon-container {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.carrier-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: white;
+}
+
+.carrier-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.carrier-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-color, #333333);
+  margin: 0;
+}
+
+.service-name {
+  font-size: 0.875rem;
+  color: var(--text-color, #666666);
+  margin: 0;
+}
+
+.shipping-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.shipping-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.cheapest-badge {
+  background-color: rgba(46, 204, 113, 0.1);
+  color: #27ae60;
+  border: 1px solid rgba(46, 204, 113, 0.2);
+}
+
+.fastest-badge {
+  background-color: rgba(52, 152, 219, 0.1);
+  color: #2980b9;
+  border: 1px solid rgba(52, 152, 219, 0.2);
+}
+
+.express-badge {
+  background-color: rgba(241, 196, 15, 0.1);
+  color: #f39c12;
+  border: 1px solid rgba(241, 196, 15, 0.2);
+}
+
+.badge-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.shipping-option-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-top: 1rem;
+}
+
+@media (min-width: 768px) {
+  .shipping-option-details {
+    margin-top: 0;
+    min-width: 12rem;
+  }
+}
+
+.delivery-time {
+  text-align: right;
+  margin-bottom: 0.75rem;
+}
+
+.delivery-label {
+  font-size: 0.75rem;
+  color: var(--text-color, #666666);
+  margin: 0 0 0.25rem 0;
+}
+
+.delivery-value {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-color, #333333);
+  margin: 0;
+}
+
+.price-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.price-value {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--text-color, #333333);
+  margin: 0 0 0.5rem 0;
+}
+
+.select-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid var(--primary-color, #2ECC71);
+  background-color: transparent;
+  color: var(--primary-color, #2ECC71);
+}
+
+.select-button:hover {
+  background-color: var(--primary-color, #2ECC71);
+  color: white;
+}
+
+.select-button.selected {
+  background-color: var(--primary-color, #2ECC71);
+  color: white;
 }
 
 /* Estilos para os badges */
@@ -80,4 +497,120 @@
   border-top: 1px solid #e5e7eb;
   display: flex;
   justify-content: flex-end;
+}
+
+/* Estilos para configurações */
+.shipping-calculator .carriers-config {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.shipping-calculator .form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shipping-calculator .form-check-input {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--border-color, #E0E0E0);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.shipping-calculator .form-check-label {
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* Estilos para tabelas */
+.shipping-calculator .table-container {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+.shipping-calculator .table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.shipping-calculator .table th,
+.shipping-calculator .table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color, #E0E0E0);
+}
+
+.shipping-calculator .table th {
+  background-color: var(--primary-color, #2ECC71);
+  color: white;
+  font-weight: 600;
+}
+
+.shipping-calculator .table tr:hover {
+  background-color: var(--category-background, #E8F5E9);
+}
+
+/* Estilos para estados vazios */
+.shipping-calculator .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 2px dashed var(--border-color, #E0E0E0);
+}
+
+.shipping-calculator .empty-state .empty-icon {
+  width: 3rem;
+  height: 3rem;
+  color: var(--border-color, #E0E0E0);
+  margin-bottom: 1rem;
+}
+
+.shipping-calculator .empty-state h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--text-color, #333333);
+}
+
+.shipping-calculator .empty-state p {
+  color: var(--text-color, #666666);
+  max-width: 24rem;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .shipping-calculator .form-row {
+    flex-direction: column;
+  }
+
+  .shipping-calculator .form-group {
+    min-width: 100%;
+  }
+
+  .shipping-calculator .tab-button {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .shipping-calculator .tab-button .icon {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .shipping-calculator .tab-button span {
+    display: none;
+  }
+
+  .shipping-calculator .carriers-config {
+    grid-template-columns: 1fr;
+  }
 }

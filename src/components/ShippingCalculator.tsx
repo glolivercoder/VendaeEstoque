@@ -1,25 +1,9 @@
 import { useState, useEffect } from "react";
-import Button from "../components/ui/button";
-import Input from "../components/ui/input";
-import Label from "../components/ui/label";
-import { useToast } from "../components/ui/toast";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "../components/ui/popover";
 import { calculateShipping } from "../lib/shippingApi";
 import ShippingOptionCard from "../components/ShippingOptionCard";
 import ProductScanner from "../components/ProductScanner";
 import { fetchProductBySku } from "../lib/productApi";
+import { useToast } from "../components/ui/toast";
 
 // Ícones
 const PackagePlus = () => (
@@ -69,8 +53,29 @@ const ShippingCalculator = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [isFetchingProduct, setIsFetchingProduct] = useState(false);
   const [selectedOptionId, setSelectedOptionId] = useState<number | null>(null);
-
+  const [activeTab, setActiveTab] = useState(0);
   const [shippingOptions, setShippingOptions] = useState([]);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [shippingHistory, setShippingHistory] = useState([]);
+  const [selectedCarriers, setSelectedCarriers] = useState({
+    correios: true,
+    melhorEnvio: true,
+    jadlog: true,
+    loggi: true,
+    azulCargo: true
+  });
+
+  // Carregar histórico de cálculos de frete do localStorage
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('shippingHistory');
+    if (savedHistory) {
+      try {
+        setShippingHistory(JSON.parse(savedHistory));
+      } catch (error) {
+        console.error('Erro ao carregar histórico de fretes:', error);
+      }
+    }
+  }, []);
 
   const fetchShippingOptions = async () => {
     if (!zipCodeOrigin || !zipCodeDestination || !weight || !length || !width || !height) {
@@ -90,8 +95,44 @@ const ShippingCalculator = () => {
       }
     );
 
-    setShippingOptions(options);
-    return options;
+    // Filtrar transportadoras desativadas
+    const filteredOptions = options.filter(option => {
+      const carrierId = option.carrier.id;
+      if (carrierId === 'correios') return selectedCarriers.correios;
+      if (carrierId === 'melhor-envio') return selectedCarriers.melhorEnvio;
+      if (carrierId === 'jadlog') return selectedCarriers.jadlog;
+      if (carrierId === 'loggi') return selectedCarriers.loggi;
+      if (carrierId === 'azul-cargo') return selectedCarriers.azulCargo;
+      return true;
+    });
+
+    setShippingOptions(filteredOptions);
+
+    // Salvar no histórico
+    if (filteredOptions.length > 0) {
+      const historyEntry = {
+        id: Date.now(),
+        date: new Date().toISOString(),
+        origin: zipCodeOrigin,
+        destination: zipCodeDestination,
+        package: {
+          description: packageDescription,
+          weight: Number(weight),
+          dimensions: {
+            length: Number(length),
+            width: Number(width),
+            height: Number(height)
+          }
+        },
+        options: filteredOptions
+      };
+
+      const updatedHistory = [historyEntry, ...shippingHistory].slice(0, 10); // Manter apenas os 10 mais recentes
+      setShippingHistory(updatedHistory);
+      localStorage.setItem('shippingHistory', JSON.stringify(updatedHistory));
+    }
+
+    return filteredOptions;
   };
 
   const { toast } = useToast();
@@ -109,6 +150,9 @@ const ShippingCalculator = () => {
     setIsCalculating(true);
     await fetchShippingOptions();
     setIsCalculating(false);
+
+    // Mudar para a aba de resultados após o cálculo
+    setActiveTab(1);
   };
 
   const handleSelectOption = (index: number) => {
@@ -168,265 +212,355 @@ const ShippingCalculator = () => {
     }
   };
 
+  const handleClearForm = () => {
+    setSku("");
+    setPackageDescription("");
+    setWeight("");
+    setLength("");
+    setWidth("");
+    setHeight("");
+    setShippingOptions([]);
+    setSelectedOptionId(null);
+  };
+
+  const handleLoadHistoryEntry = (entry) => {
+    setZipCodeOrigin(entry.origin);
+    setZipCodeDestination(entry.destination);
+    setPackageDescription(entry.package.description);
+    setWeight(entry.package.weight.toString());
+    setLength(entry.package.dimensions.length.toString());
+    setWidth(entry.package.dimensions.width.toString());
+    setHeight(entry.package.dimensions.height.toString());
+    setShippingOptions(entry.options);
+    setActiveTab(1); // Mudar para a aba de resultados
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="container mx-auto py-8 px-4">
-        <h1 className="text-3xl font-bold mb-6 text-center">Calculadora de Frete</h1>
+    <div className="shipping-calculator">
+      <div className="card">
+        <div className="card-header">
+          <h2 className="text-xl font-bold">Calculadora de Frete</h2>
+          <p className="text-sm">Calcule o valor do frete para seus produtos</p>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <PackagePlus className="h-5 w-5 text-primary" />
-                  Detalhes do Envio
-                </CardTitle>
-                <CardDescription>
-                  Informe os dados do pacote e os endereços para calcular o frete
-                </CardDescription>
-              </CardHeader>
+        <div className="card-body">
+          {/* Abas de navegação */}
+          <div className="shipping-tabs">
+            <div className="tab-header">
+              <button
+                className={`tab-button ${activeTab === 0 ? 'active' : ''}`}
+                onClick={() => setActiveTab(0)}
+              >
+                <PackagePlus className="icon" />
+                <span>Calcular</span>
+              </button>
+              <button
+                className={`tab-button ${activeTab === 1 ? 'active' : ''}`}
+                onClick={() => setActiveTab(1)}
+              >
+                <PackageSearch className="icon" />
+                <span>Resultados</span>
+              </button>
+              <button
+                className={`tab-button ${activeTab === 2 ? 'active' : ''}`}
+                onClick={() => setActiveTab(2)}
+              >
+                <Settings className="icon" />
+                <span>Configurações</span>
+              </button>
+            </div>
 
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Endereços</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="zipCodeOrigin">CEP de Origem</Label>
-                        <Input
+            <div className="tab-content">
+              {/* Aba de Cálculo */}
+              {activeTab === 0 && (
+                <div className="tab-pane">
+                  <div className="form-section">
+                    <h3 className="section-title">Endereços</h3>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label htmlFor="zipCodeOrigin">CEP de Origem</label>
+                        <input
+                          type="text"
                           id="zipCodeOrigin"
                           placeholder="00000-000"
                           value={zipCodeOrigin}
                           onChange={(e) => setZipCodeOrigin(e.target.value.replace(/\D/g, ""))}
                           maxLength={8}
+                          className="form-control"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="zipCodeDestination">CEP de Destino</Label>
-                        <Input
+                      <div className="form-group">
+                        <label htmlFor="zipCodeDestination">CEP de Destino</label>
+                        <input
+                          type="text"
                           id="zipCodeDestination"
                           placeholder="00000-000"
                           value={zipCodeDestination}
                           onChange={(e) => setZipCodeDestination(e.target.value.replace(/\D/g, ""))}
                           maxLength={8}
+                          className="form-control"
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Produto</h3>
-                    <div className="flex gap-2">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <Label htmlFor="sku">Código SKU / NCM / GTIN</Label>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Settings className="h-4 w-4" />
-                                <span className="sr-only">Configurações de API</span>
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-96">
-                              <div className="space-y-4">
-                                <h4 className="font-medium">Configurações de APIs</h4>
-
-                                <div className="space-y-2 border-b pb-4">
-                                  <h5 className="font-medium text-sm">Portal Único Siscomex</h5>
-                                  <p className="text-sm text-muted-foreground">
-                                    API oficial do governo para informações fiscais e aduaneiras de produtos.
-                                  </p>
-                                  <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                                    <li>Certificado Digital (e-CPF ou e-CNPJ)</li>
-                                    <li>Endpoints:
-                                      <ul className="ml-6 text-xs">
-                                        <li>GET /ext/catp/produto-catalogo/{"{idProduto}"}</li>
-                                        <li>GET /ext/catp/produto-catalogo/ncm/{"{codigoNcm}"}</li>
-                                      </ul>
-                                    </li>
-                                  </ul>
-                                </div>
-
-                                <div className="space-y-2 border-b pb-4">
-                                  <h5 className="font-medium text-sm">GS1 Brasil - Cadastro Nacional de Produtos</h5>
-                                  <p className="text-sm text-muted-foreground">
-                                    Base oficial para GTINs (códigos de barras) e informações técnicas de produtos.
-                                  </p>
-                                  <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
-                                    <li>Necessário cadastro na GS1</li>
-                                    <li>Acesso via API REST</li>
-                                    <li>Suporte a consultas por GTIN/EAN</li>
-                                  </ul>
-                                </div>
-
-                                <div className="space-y-2">
-                                  <p className="text-sm font-medium">Códigos de Teste:</p>
-                                  <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                                    <div>
-                                      <p className="font-medium">SKUs:</p>
-                                      <ul className="list-none">
-                                        <li>123456789 - Smartphone</li>
-                                        <li>987654321 - Notebook</li>
-                                        <li>456789123 - TV 4K</li>
-                                      </ul>
-                                    </div>
-                                    <div>
-                                      <p className="font-medium">NCMs:</p>
-                                      <ul className="list-none">
-                                        <li>85171231 - Smartphones</li>
-                                        <li>84713012 - Notebooks</li>
-                                        <li>85287200 - Smart TVs</li>
-                                      </ul>
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="pt-2">
-                                  <p className="text-xs text-muted-foreground">
-                                    Para configurar as integrações com segurança, conecte seu projeto ao Supabase.
-                                  </p>
-                                </div>
-                              </div>
-                            </PopoverContent>
-                          </Popover>
-                        </div>
-                        <div className="flex gap-2 mt-2">
-                          <Input
+                  <div className="form-section">
+                    <h3 className="section-title">Produto</h3>
+                    <div className="form-row">
+                      <div className="form-group flex-grow">
+                        <label htmlFor="sku">Código SKU / NCM / GTIN</label>
+                        <div className="input-group">
+                          <input
+                            type="text"
                             id="sku"
                             placeholder="Digite o código SKU, NCM ou escaneie o código de barras"
                             value={sku}
                             onChange={(e) => setSku(e.target.value)}
-                            className="flex-1"
+                            className="form-control"
                           />
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            type="button"
+                          <button
+                            className="btn btn-outline"
                             onClick={() => setIsScanning(true)}
                             title="Escanear código"
                           >
-                            <Camera className="h-4 w-4" />
-                          </Button>
+                            <Camera />
+                          </button>
                         </div>
                       </div>
-                      <div className="flex items-end">
-                        <Button
-                          variant="secondary"
+                      <div className="form-group">
+                        <label>&nbsp;</label>
+                        <button
+                          className="btn btn-secondary"
                           onClick={() => lookupProduct(sku)}
                           disabled={!sku || isFetchingProduct}
-                          className="mb-0.5"
                         >
                           {isFetchingProduct ? "Buscando..." : "Buscar"}
-                        </Button>
+                        </button>
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="packageDescription">Descrição da Encomenda</Label>
-                      <Input
+                    <div className="form-group">
+                      <label htmlFor="packageDescription">Descrição da Encomenda</label>
+                      <input
+                        type="text"
                         id="packageDescription"
                         placeholder="Descrição do produto (preenchido automaticamente pelo código)"
                         value={packageDescription}
                         onChange={(e) => setPackageDescription(e.target.value)}
+                        className="form-control"
                       />
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Dimensões e Peso</h3>
-                    <div>
-                      <Label htmlFor="weight">Peso (kg)</Label>
-                      <Input
-                        id="weight"
+                  <div className="form-section">
+                    <h3 className="section-title">Dimensões e Peso</h3>
+                    <div className="form-group">
+                      <label htmlFor="weight">Peso (kg)</label>
+                      <input
                         type="number"
+                        id="weight"
                         placeholder="0.5"
                         value={weight}
                         onChange={(e) => setWeight(e.target.value)}
                         min="0.01"
                         step="0.01"
+                        className="form-control"
                       />
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="length">Comprimento (cm)</Label>
-                        <Input
-                          id="length"
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label htmlFor="length">Comprimento (cm)</label>
+                        <input
                           type="number"
+                          id="length"
                           placeholder="20"
                           value={length}
                           onChange={(e) => setLength(e.target.value)}
                           min="1"
                           step="1"
+                          className="form-control"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="width">Largura (cm)</Label>
-                        <Input
-                          id="width"
+                      <div className="form-group">
+                        <label htmlFor="width">Largura (cm)</label>
+                        <input
                           type="number"
+                          id="width"
                           placeholder="15"
                           value={width}
                           onChange={(e) => setWidth(e.target.value)}
                           min="1"
                           step="1"
+                          className="form-control"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="height">Altura (cm)</Label>
-                        <Input
-                          id="height"
+                      <div className="form-group">
+                        <label htmlFor="height">Altura (cm)</label>
+                        <input
                           type="number"
+                          id="height"
                           placeholder="10"
                           value={height}
                           onChange={(e) => setHeight(e.target.value)}
                           min="1"
                           step="1"
+                          className="form-control"
                         />
                       </div>
                     </div>
                   </div>
+
+                  <div className="form-actions">
+                    <button
+                      className="btn btn-primary btn-lg btn-block"
+                      onClick={handleCalculateShipping}
+                      disabled={isCalculating}
+                    >
+                      <PackageSearch className="icon" />
+                      {isCalculating ? "Calculando..." : "Calcular Frete"}
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={handleClearForm}
+                    >
+                      Limpar
+                    </button>
+                  </div>
                 </div>
-              </CardContent>
+              )}
 
-              <CardFooter>
-                <Button
-                  className="w-full"
-                  onClick={handleCalculateShipping}
-                  disabled={isCalculating}
-                >
-                  <PackageSearch className="mr-2 h-4 w-4" />
-                  {isCalculating ? "Calculando..." : "Calcular Frete"}
-                </Button>
-              </CardFooter>
-            </Card>
-          </div>
+              {/* Aba de Resultados */}
+              {activeTab === 1 && (
+                <div className="tab-pane">
+                  <h3 className="section-title">Opções de Frete</h3>
+                  <div className="shipping-options">
+                    {shippingOptions && shippingOptions.length > 0 ? (
+                      <div className="shipping-options-list">
+                        {shippingOptions.map((option, index) => (
+                          <ShippingOptionCard
+                            key={index}
+                            option={option}
+                            isSelected={selectedOptionId === index}
+                            onSelect={() => handleSelectOption(index)}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="empty-state">
+                        <PackageSearch className="empty-icon" />
+                        <h3>Nenhuma opção de frete</h3>
+                        <p>
+                          Preencha os dados do pacote e os CEPs de origem e destino para calcular as opções disponíveis.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
-          <div>
-            <h2 className="text-xl font-medium mb-4">Opções de Frete</h2>
+              {/* Aba de Configurações */}
+              {activeTab === 2 && (
+                <div className="tab-pane">
+                  <h3 className="section-title">Transportadoras</h3>
+                  <div className="carriers-config">
+                    <div className="form-check">
+                      <input
+                        type="checkbox"
+                        id="correios"
+                        checked={selectedCarriers.correios}
+                        onChange={(e) => setSelectedCarriers({...selectedCarriers, correios: e.target.checked})}
+                        className="form-check-input"
+                      />
+                      <label htmlFor="correios" className="form-check-label">Correios</label>
+                    </div>
+                    <div className="form-check">
+                      <input
+                        type="checkbox"
+                        id="melhorEnvio"
+                        checked={selectedCarriers.melhorEnvio}
+                        onChange={(e) => setSelectedCarriers({...selectedCarriers, melhorEnvio: e.target.checked})}
+                        className="form-check-input"
+                      />
+                      <label htmlFor="melhorEnvio" className="form-check-label">Melhor Envio</label>
+                    </div>
+                    <div className="form-check">
+                      <input
+                        type="checkbox"
+                        id="jadlog"
+                        checked={selectedCarriers.jadlog}
+                        onChange={(e) => setSelectedCarriers({...selectedCarriers, jadlog: e.target.checked})}
+                        className="form-check-input"
+                      />
+                      <label htmlFor="jadlog" className="form-check-label">Jadlog</label>
+                    </div>
+                    <div className="form-check">
+                      <input
+                        type="checkbox"
+                        id="loggi"
+                        checked={selectedCarriers.loggi}
+                        onChange={(e) => setSelectedCarriers({...selectedCarriers, loggi: e.target.checked})}
+                        className="form-check-input"
+                      />
+                      <label htmlFor="loggi" className="form-check-label">Loggi</label>
+                    </div>
+                    <div className="form-check">
+                      <input
+                        type="checkbox"
+                        id="azulCargo"
+                        checked={selectedCarriers.azulCargo}
+                        onChange={(e) => setSelectedCarriers({...selectedCarriers, azulCargo: e.target.checked})}
+                        className="form-check-input"
+                      />
+                      <label htmlFor="azulCargo" className="form-check-label">Azul Cargo</label>
+                    </div>
+                  </div>
 
-            <div className="space-y-4">
-              {shippingOptions && shippingOptions.length > 0 ? (
-                shippingOptions.map((option, index) => (
-                  <ShippingOptionCard
-                    key={index}
-                    option={option}
-                    isSelected={selectedOptionId === index}
-                    onSelect={() => handleSelectOption(index)}
-                  />
-                ))
-              ) : (
-                <Card className="flex flex-col items-center justify-center py-10 text-center">
-                  <PackageSearch className="h-12 w-12 text-muted-foreground opacity-30 mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Nenhuma opção de frete</h3>
-                  <p className="text-muted-foreground max-w-xs">
-                    Preencha os dados do pacote e os CEPs de origem e destino para calcular as opções disponíveis.
-                  </p>
-                </Card>
+                  <h3 className="section-title mt-4">Histórico de Cálculos</h3>
+                  <div className="history-list">
+                    {shippingHistory.length > 0 ? (
+                      <div className="table-container">
+                        <table className="table">
+                          <thead>
+                            <tr>
+                              <th>Data</th>
+                              <th>Origem</th>
+                              <th>Destino</th>
+                              <th>Produto</th>
+                              <th>Ações</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {shippingHistory.map((entry) => (
+                              <tr key={entry.id}>
+                                <td>{new Date(entry.date).toLocaleDateString()}</td>
+                                <td>{entry.origin}</td>
+                                <td>{entry.destination}</td>
+                                <td>{entry.package.description || 'Sem descrição'}</td>
+                                <td>
+                                  <button
+                                    className="btn btn-sm btn-primary"
+                                    onClick={() => handleLoadHistoryEntry(entry)}
+                                  >
+                                    Carregar
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="empty-state">
+                        <p>Nenhum cálculo de frete realizado ainda.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>
         </div>
-      </main>
+      </div>
 
       {isScanning && (
         <ProductScanner

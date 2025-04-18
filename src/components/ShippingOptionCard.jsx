@@ -24,13 +24,14 @@ const TruckIcon = () => (
   </svg>
 );
 
-type ShippingOptionCardProps = {
-  option: ShippingOption;
-  isSelected: boolean;
-  onSelect: (option: ShippingOption) => void;
-};
-
-const ShippingOptionCard = ({ option, isSelected, onSelect }: ShippingOptionCardProps) => {
+/**
+ * Componente para exibir uma opção de frete
+ * @param {Object} props - Propriedades do componente
+ * @param {ShippingOption} props.option - Opção de frete
+ * @param {boolean} props.isSelected - Indica se a opção está selecionada
+ * @param {Function} props.onSelect - Função chamada quando a opção é selecionada
+ */
+const ShippingOptionCard = ({ option, isSelected, onSelect }) => {
   const {
     carrier,
     service,
@@ -40,23 +41,6 @@ const ShippingOptionCard = ({ option, isSelected, onSelect }: ShippingOptionCard
     isFastest,
     isExpedited,
   } = option;
-
-  const getCarrierClass = (carrierId: string) => {
-    switch (carrierId) {
-      case "correios":
-        return "correios-badge";
-      case "melhor-envio":
-        return "melhor-envio-badge";
-      case "jadlog":
-        return "jadlog-badge";
-      case "loggi":
-        return "loggi-badge";
-      case "azul-cargo":
-        return "azul-cargo-badge";
-      default:
-        return "default-badge";
-    }
-  };
 
   return (
     <div
