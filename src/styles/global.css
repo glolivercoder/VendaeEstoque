@@ -82,23 +82,23 @@ p, span, div, li, a, button, input, select, textarea {
   opacity: 0.9;
 }
 
-/* Categorias com maior contraste */
+/* Categorias com estilo igual aos botões principais */
 .category-item {
-  background-color: var(--category-background);
-  color: var(--category-text);
+  background-color: #FFFFFF;
+  color: var(--primary-color);
   font-weight: 700;
   padding: 0.75rem 1rem;
   border-radius: 6px;
   margin-bottom: 0.5rem;
-  border-left: 5px solid var(--accent-color);
+  border: 2px solid var(--primary-color);
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .category-item.selected, .category-item:hover {
-  background-color: var(--accent-color);
+  background-color: var(--primary-color);
   color: white;
-  transform: translateX(5px);
+  transform: translateX(0);
 }
 
 /* Cards e Containers */
@@ -147,10 +147,95 @@ th {
 td {
   padding: 1rem;
   border-bottom: 1px solid var(--border-color);
+  color: #000000;
 }
 
 tr:hover {
   background-color: var(--category-background);
+}
+
+/* Garantir que os labels das abas sejam sempre pretos */
+.tab-label, .tab-content, details summary, details p, label, .description-text {
+  color: #000000 !important;
+  font-weight: 500;
+}
+
+/* Garantir alto contraste para descrições de itens */
+.item-description, p.text-sm, p.text-base, .product-description {
+  color: #000000 !important;
+  font-weight: 500 !important;
+}
+
+/* Garantir que os textos em detalhes e abas sejam sempre visíveis */
+details, summary, .tab-content, .tab-pane {
+  color: #000000 !important;
+  background-color: #FFFFFF;
+}
+
+/* Garantir que todos os labels sejam pretos */
+label, .block.text-sm.font-medium, .block.text-sm.font-medium.mb-1 {
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+/* Garantir que os labels no formulário de adição de item sejam pretos */
+.block.text-sm.font-medium.mb-1, .font-medium {
+  color: #000000 !important;
+}
+
+/* Garantir que os textos de categoria tenham a cor correta */
+.font-medium, .text-gray-600, .text-gray-700 {
+  color: #000000 !important;
+}
+
+/* Garantir que todos os cabeçalhos das abas sejam pretos */
+h1:not(button):not(.btn):not([class*="bg-"]),
+h2:not(button):not(.btn):not([class*="bg-"]),
+h3:not(button):not(.btn):not([class*="bg-"]),
+h4:not(button):not(.btn):not([class*="bg-"]),
+h5:not(button):not(.btn):not([class*="bg-"]),
+h6:not(button):not(.btn):not([class*="bg-"]),
+.text-xl:not(button):not(.btn):not([class*="bg-"]),
+.text-2xl:not(button):not(.btn):not([class*="bg-"]),
+.text-lg:not(button):not(.btn):not([class*="bg-"]),
+.font-semibold:not(button):not(.btn):not([class*="bg-"]),
+.font-bold:not(button):not(.btn):not([class*="bg-"]) {
+  color: #000000 !important;
+}
+
+/* Garantir que os cabeçalhos no console sejam pretos */
+.test-header h2, .test-page-header h1, .console-header h2, .console-title {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+/* Garantir que os cabeçalhos das abas sejam pretos */
+.tab-header, .tab-title, .tab-label, .tab-name, .tab-heading {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+/* Garantir que os cabeçalhos em modais e popups sejam pretos */
+.modal-header h2, .modal-header h3, .popup-header h2, .popup-header h3,
+.modal-title, .popup-title,
+.fixed h3:not(button):not(.btn):not([class*="bg-"]),
+.fixed h2:not(button):not(.btn):not([class*="bg-"]),
+.fixed .text-xl:not(button):not(.btn):not([class*="bg-"]),
+.fixed .font-semibold:not(button):not(.btn):not([class*="bg-"]) {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+/* Garantir que apenas os textos em branco que não estão em botões sejam convertidos para preto */
+.text-white:not(button):not(.btn):not(.btn-primary):not(.btn-secondary):not(.btn-success):not(.btn-danger):not(.run-all-btn):not(.clear-btn):not([class*="bg-"]),
+[class*="text-white"]:not(button):not(.btn):not(.btn-primary):not(.btn-secondary):not(.btn-success):not(.btn-danger):not(.run-all-btn):not(.clear-btn):not([class*="bg-"]) {
+  color: #000000 !important;
+}
+
+/* Garantir que os cabeçalhos das abas no console sejam pretos */
+.console-tab, .console-tab-header, .console-tab-title, .console-tab-label {
+  color: #000000 !important;
+  font-weight: 600;
 }
 
 /* Navegação */

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './styles/ImageStyles.css';
 import './styles/global.css';
+import './styles/shipping.css';
 import ThemeSelector from './components/ThemeSelector';
 import {
   addProduct,
@@ -32,6 +33,8 @@ import MagicCaptureButton from './components/MagicCaptureButton';
 import WordPressSync from './components/WordPressSync';
 import SearchBar from './components/SearchBar';
 import BankQRCodeSelector from './components/QRCode_Bancos/BankQRCodeSelector';
+import ShippingCalculator from './components/ShippingCalculator';
+import { ToastProvider } from './components/ui/toast';
 
 // Registrar componentes do Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -154,6 +157,7 @@ function App() {
   const [showAddItem, setShowAddItem] = useState(false);
   const [showSiteExporter, setShowSiteExporter] = useState(false);
   const [showVendorsTab, setShowVendorsTab] = useState(false);
+  const [showShippingCalculator, setShowShippingCalculator] = useState(false);
   // Estado para configurações do WordPress
   const [wordpressConfig] = useState({
     apiUrl: import.meta.env.VITE_WORDPRESS_API_URL || 'https://achadinhoshopp.com.br/loja/wp-json/pdv-vendas/v1',
@@ -2564,7 +2568,7 @@ ${item?.client?.cpf || ''}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-1">Nome do Item</label>
+                      <label className="block text-sm font-medium mb-1 text-black">Nome do Item</label>
                       <input
                         type="text"
                         value={newItem.description}
@@ -2575,7 +2579,7 @@ ${item?.client?.cpf || ''}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-1">Descrição do Item</label>
+                      <label className="block text-sm font-medium mb-1 text-black">Descrição do Item</label>
                       <textarea
                         value={newItem.itemDescription || ''}
                         onChange={(e) => setNewItem({...newItem, itemDescription: e.target.value})}
@@ -2590,7 +2594,7 @@ ${item?.client?.cpf || ''}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-1">Preço de Venda</label>
+                      <label className="block text-sm font-medium mb-1 text-black">Preço de Venda</label>
                       <input
                         type="number"
                         value={newItem.price}
@@ -2601,7 +2605,7 @@ ${item?.client?.cpf || ''}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-1">Estoque Inicial</label>
+                      <label className="block text-sm font-medium mb-1 text-black">Estoque Inicial</label>
                       <input
                         type="number"
                         value={newItem.quantity}
@@ -2611,7 +2615,7 @@ ${item?.client?.cpf || ''}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-1">Categoria</label>
+                      <label className="block text-sm font-medium mb-1 text-black">Categoria</label>
                       <div className="flex gap-2">
                         {showNewCategoryInput ? (
                           <>
@@ -2676,7 +2680,7 @@ ${item?.client?.cpf || ''}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium mb-1">Data de Validade</label>
+                      <label className="block text-sm font-medium mb-1 text-black">Data de Validade</label>
                       <div className="flex gap-2">
                         <input
                           type="date"
@@ -3115,6 +3119,17 @@ ${item?.client?.cpf || ''}
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
+
+              {/* Cálculo de Frete button */}
+              <button
+                onClick={() => setShowShippingCalculator(true)}
+                className="btn btn-primary w-full px-6 py-3 rounded-lg text-lg font-bold flex items-center justify-center gap-2 mt-4"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+                Cálculo de Frete
+              </button>
             </div>
 
             {/* Clients Section */}
@@ -3282,7 +3297,7 @@ ${item?.client?.cpf || ''}
 
                   {/* Informações Básicas - Expansível */}
                   <details open className="mb-4">
-                    <summary className="font-semibold cursor-pointer p-2 bg-gray-100 rounded">Informações Básicas</summary>
+                    <summary className="font-semibold cursor-pointer p-2 bg-gray-100 rounded text-black">Informações Básicas</summary>
                     <div className="p-2 space-y-3">
                       <input
                         type="text"
@@ -3310,7 +3325,7 @@ ${item?.client?.cpf || ''}
 
                   {/* Informações Complementares - Expansível */}
                   <details className="mb-4">
-                    <summary className="font-semibold cursor-pointer p-2 bg-gray-100 rounded">Informações Complementares</summary>
+                    <summary className="font-semibold cursor-pointer p-2 bg-gray-100 rounded text-black">Informações Complementares</summary>
                     <div className="p-2 space-y-3">
                       <input
                         type="text"
@@ -3356,7 +3371,7 @@ ${item?.client?.cpf || ''}
 
                   {/* Contato - Expansível */}
                   <details className="mb-4">
-                    <summary className="font-semibold cursor-pointer p-2 bg-gray-100 rounded">Contato</summary>
+                    <summary className="font-semibold cursor-pointer p-2 bg-gray-100 rounded text-black">Contato</summary>
                     <div className="p-2 space-y-3">
                       <div className="flex items-center space-x-2">
                         <input
@@ -3403,7 +3418,7 @@ ${item?.client?.cpf || ''}
 
                   {/* Endereço - Expansível */}
                   <details className="mb-4">
-                    <summary className="font-semibold cursor-pointer p-2 bg-gray-100 rounded">Endereço</summary>
+                    <summary className="font-semibold cursor-pointer p-2 bg-gray-100 rounded text-black">Endereço</summary>
                     <div className="p-2 space-y-3">
                       <input
                         type="text"
@@ -3478,6 +3493,29 @@ ${item?.client?.cpf || ''}
             {showSiteExporter && (
               <WordPressSync selectedItems={selectedItems} items={items} />
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Shipping Calculator Popup */}
+      {showShippingCalculator && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-4xl w-full h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Cálculo de Frete</h3>
+              <button
+                onClick={() => setShowShippingCalculator(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <ToastProvider>
+              <ShippingCalculator />
+            </ToastProvider>
           </div>
         </div>
       )}
@@ -3721,7 +3759,7 @@ ${item?.client?.cpf || ''}
                   {/* Report Controls */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">Período</label>
+                      <label className="block text-sm font-medium mb-1 text-black">Período</label>
                       <select
                         value={reportType}
                         onChange={(e) => setReportType(e.target.value)}
@@ -3735,7 +3773,7 @@ ${item?.client?.cpf || ''}
 
                     {reportType === 'day' && (
                       <div>
-                        <label className="block text-sm font-medium mb-1">Data</label>
+                        <label className="block text-sm font-medium mb-1 text-black">Data</label>
                         <input
                           type="date"
                           value={formatDateToISO(reportStartDate)}
@@ -3747,7 +3785,7 @@ ${item?.client?.cpf || ''}
 
                     {reportType === 'month' && (
                       <div>
-                        <label className="block text-sm font-medium mb-1">Mês</label>
+                        <label className="block text-sm font-medium mb-1 text-black">Mês</label>
                         <input
                           type="month"
                           value={formatDateToISO(reportStartDate).substring(0, 7)}
@@ -3771,7 +3809,7 @@ ${item?.client?.cpf || ''}
                     {reportType === 'period' && (
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium mb-1">Data Inicial</label>
+                          <label className="block text-sm font-medium mb-1 text-black">Data Inicial</label>
                           <input
                             type="date"
                             value={formatDateToISO(reportStartDate)}
@@ -3789,7 +3827,7 @@ ${item?.client?.cpf || ''}
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium mb-1">Data Final</label>
+                          <label className="block text-sm font-medium mb-1 text-black">Data Final</label>
                           <input
                             type="date"
                             value={formatDateToISO(reportEndDate)}
@@ -3809,7 +3847,7 @@ ${item?.client?.cpf || ''}
                       </div>
                     )}
                     <div>
-                      <label className="block text-sm font-medium mb-1">Buscar</label>
+                      <label className="block text-sm font-medium mb-1 text-black">Buscar</label>
                       <input
                         type="text"
                         value={reportSearchQuery}

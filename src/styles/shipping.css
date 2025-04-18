@@ -1,0 +1,83 @@
+/* Estilos para o módulo de cálculo de frete */
+
+/* Variáveis de cores para transportadoras */
+:root {
+  --correios: 215 25% 27%;
+  --melhor-envio: 142 76% 36%;
+  --jadlog: 0 100% 50%;
+  --loggi: 48 100% 50%;
+  --azul-cargo: 210 100% 50%;
+}
+
+/* Estilos para os cards de opções de frete */
+.shipping-option-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.shipping-option-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para os badges */
+.shipping-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Estilos para o scanner de produtos */
+.scanner-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scanner-container {
+  position: relative;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 32rem;
+}
+
+.scanner-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scanner-content {
+  padding: 1rem;
+}
+
+.scanner-video-container {
+  aspect-ratio: 16 / 9;
+  background-color: #f3f4f6;
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+
+.scanner-target {
+  width: 66.666667%;
+  height: 33.333333%;
+  border: 2px solid #ef4444;
+  border-radius: 0.5rem;
+}
+
+.scanner-footer {
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: flex-end;
+}
