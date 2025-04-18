@@ -1,5 +1,4 @@
-
-import { toast } from "@/components/ui/use-toast";
+import { useToast } from "../components/ui/toast";
 
 // Package dimensions type
 export type PackageDimensions = {
@@ -81,25 +80,21 @@ export const calculateShipping = async (
   try {
     // In a real application, this would call actual APIs for each carrier
     // For this demo, we'll use mock data that simulates API responses
-    
+
     // Simulate API loading time
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    
+
     // Generate shipping options based on package dimensions and location
     // In a real implementation, this would parse actual API responses
     const shippingOptions: ShippingOption[] = generateMockShippingOptions(
       packageDimensions,
       locationInfo
     );
-    
+
     return shippingOptions;
   } catch (error) {
     console.error("Error calculating shipping", error);
-    toast({
-      title: "Erro ao calcular frete",
-      description: "Não foi possível obter os valores de frete. Tente novamente.",
-      variant: "destructive",
-    });
+    // Erro será tratado no componente que chama esta função
     return [];
   }
 };
@@ -111,23 +106,23 @@ const generateMockShippingOptions = (
 ): ShippingOption[] => {
   // Real implementation would call Correios API, Melhor Envio API, etc.
   // For now, let's simulate different carrier rates
-  
+
   // Calculate volumetric weight (common formula used by carriers)
   const volumetricWeight = (
     (packageDimensions.length * packageDimensions.width * packageDimensions.height) / 6000
   );
-  
+
   // Use the higher of actual weight vs volumetric weight
   const billableWeight = Math.max(packageDimensions.weight, volumetricWeight);
-  
+
   // Base price calculation (simplified for demo)
   const basePrice = billableWeight * 10;
-  
+
   // Generate distance factor based on zip codes (simplified)
   const distanceFactor = Math.abs(
     parseInt(locationInfo.zipCodeOrigin) - parseInt(locationInfo.zipCodeDestination)
   ) / 10000000;
-  
+
   const options: ShippingOption[] = [
     // Correios PAC
     {
@@ -205,15 +200,15 @@ const generateMockShippingOptions = (
       isFastest: false,
     },
   ];
-  
+
   // Sort options by price
   options.sort((a, b) => a.price - b.price);
-  
+
   // Mark cheapest option
   if (options.length > 0) {
     options[0].isCheapest = true;
   }
-  
+
   // Find and mark fastest option
   let fastestOption = options[0];
   options.forEach((option) => {
@@ -222,7 +217,7 @@ const generateMockShippingOptions = (
     }
   });
   fastestOption.isFastest = true;
-  
+
   return options;
 };
 

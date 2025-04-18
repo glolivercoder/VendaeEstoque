@@ -1,4 +1,4 @@
-import { toast } from "@/components/ui/use-toast";
+// Removendo importação não utilizada
 
 export type Product = {
   sku: string;
@@ -61,7 +61,7 @@ export const fetchProductBySku = async (code: string): Promise<Product | null> =
       const product = mockProducts.find(
         p => p.sku === code || p.ncm === code
       );
-      
+
       if (product) {
         resolve(product);
       } else {
