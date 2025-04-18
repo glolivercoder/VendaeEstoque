@@ -28,7 +28,7 @@ import { syncProductsToWordPress, clearWordPressProducts, setupWordPressWebhook 
 import MagicWandButton from './components/MagicWandButton';
 import MagicCaptureButton from './components/MagicCaptureButton';
 import WordPressSync from './components/WordPressSync';
-import WooCommerceMCP from './components/WooCommerceMCP';
+import BankQRCodeSelector from './components/QRCode_Bancos/BankQRCodeSelector';
 
 // Registrar componentes do Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
@@ -159,7 +159,12 @@ function App() {
     password: import.meta.env.VITE_WORDPRESS_PASSWORD || 'OxCq4oUPrd5hqxPEq1zdjEd4'
   });
   const [showPixQRCode, setShowPixQRCode] = useState(false);
-  const [qrCodeImage, setQRCodeImage] = useState('/path/to/qr-code.png');
+  // Carregar o QR code salvo no localStorage ou usar um valor padrão
+  const [qrCodeImage, setQRCodeImage] = useState(() => {
+    const savedQRCode = localStorage.getItem('selectedQRCode');
+    console.log('QR Code carregado do localStorage:', savedQRCode ? 'Encontrado' : 'Não encontrado');
+    return savedQRCode || '/QRCode_Bancos/default_pix.png';
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [exportType, setExportType] = useState('');
   const [exportMethod, setExportMethod] = useState('');
@@ -1586,7 +1591,11 @@ ${item?.client?.cpf || ''}
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setQRCodeImage(e.target.result);
+        const qrCodeUrl = e.target.result;
+        setQRCodeImage(qrCodeUrl);
+        // Salvar o QR code selecionado no localStorage para persistência
+        localStorage.setItem('selectedQRCode', qrCodeUrl);
+        console.log('QR Code salvo no localStorage');
       };
       reader.readAsDataURL(file);
     }
@@ -1780,33 +1789,55 @@ ${item?.client?.cpf || ''}
   // Funções para gerenciar backup
   const createBackup = async () => {
     try {
-      console.log('Iniciando criação de backup...');
+      console.log('Iniciando criação de backup completo...');
 
       // Verificar se há dados para backup
       if (!items || items.length === 0) {
         console.warn('Nenhum produto encontrado para backup');
       }
 
+      // Obter configurações do WordPress/WooCommerce do arquivo .env
+      const wooCommerceConfig = {
+        url: import.meta.env.VITE_WORDPRESS_URL || 'https://achadinhoshopp.com.br/loja',
+        consumerKey: import.meta.env.VITE_WOOCOMMERCE_CONSUMER_KEY || 'ck_40b4a1a674084d504579a2ba2d51530c260d3645',
+        consumerSecret: import.meta.env.VITE_WOOCOMMERCE_CONSUMER_SECRET || 'cs_8fa4b36ab57ddb02415e4fc346451791ab1782f9',
+        username: import.meta.env.VITE_WORDPRESS_USERNAME || 'gloliverx',
+        email: import.meta.env.VITE_WORDPRESS_EMAIL || 'gloliverx@gmail.com',
+        password: import.meta.env.VITE_WORDPRESS_PASSWORD || 'gloliverx',
+        appPassword: import.meta.env.VITE_WORDPRESS_APP_PASSWORD || '0lr4 umHb 8pfx 5Cqf v7KW oq8S'
+      };
+
+      // Criar objeto de backup completo
       const backupData = {
+        // Dados do sistema
         products: items || [],
         clients: clients || [],
         vendors: vendors || [],
         sales: salesData || [],
         minStockAlert: minStockAlert || {},
         ignoreStock: ignoreStock || {},
+
+        // Configurações de integração
         wordpressConfig: wordpressConfig || {
           apiUrl: import.meta.env.VITE_WORDPRESS_API_URL || 'https://achadinhoshopp.com.br/loja/wp-json/pdv-vendas/v1',
           apiKey: import.meta.env.VITE_WORDPRESS_API_KEY || 'OxCq4oUPrd5hqxPEq1zdjEd4',
           username: import.meta.env.VITE_WORDPRESS_USERNAME || 'gloliverx',
           password: import.meta.env.VITE_WORDPRESS_PASSWORD || 'OxCq4oUPrd5hqxPEq1zdjEd4'
         },
-        timestamp: new Date().toISOString()
+
+        // Configurações adicionais
+        wooCommerceConfig,
+
+        // Metadados do backup
+        timestamp: new Date().toISOString(),
+        version: '1.1.0',
+        appName: 'PDV Vendas'
       };
 
       // Salvar no localStorage como backup temporário
       try {
         localStorage.setItem('pdvBackupTemp', JSON.stringify(backupData));
-        console.log('Backup salvo no localStorage');
+        console.log('Backup completo salvo no localStorage');
       } catch (storageError) {
         console.error('Erro ao salvar no localStorage:', storageError);
         // Continuar mesmo com erro no localStorage
@@ -1814,18 +1845,18 @@ ${item?.client?.cpf || ''}
 
       // Se o autoBackup estiver ativado e houver um local definido, salvar no arquivo
       if (autoBackup && backupLocation) {
-        console.log('Exportando backup para arquivo...');
+        console.log('Exportando backup completo para arquivo...');
         await exportBackup();
       } else {
         // Mostrar alerta de sucesso
-        console.log('Backup criado com sucesso');
-        alert('Backup criado com sucesso!');
+        console.log('Backup completo criado com sucesso');
+        alert('Backup completo criado com sucesso!');
       }
 
       return backupData;
     } catch (error) {
-      console.error('Erro ao criar backup:', error);
-      alert('Erro ao criar backup dos dados: ' + (error.message || 'Erro desconhecido'));
+      console.error('Erro ao criar backup completo:', error);
+      alert('Erro ao criar backup completo dos dados: ' + (error.message || 'Erro desconhecido'));
       return null;
     }
   };
@@ -3856,6 +3887,10 @@ ${item?.client?.cpf || ''}
                 alt="QR Code PIX"
                 className="max-w-full max-h-[70vh] object-contain"
               />
+
+              {/* Seletor de QR Code de Bancos */}
+              <BankQRCodeSelector onSelectQRCode={(qrCodePath) => setQRCodeImage(qrCodePath)} />
+
               <div className="flex items-center gap-4">
                 <label className="cursor-pointer bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

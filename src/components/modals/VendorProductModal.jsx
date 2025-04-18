@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../common/Modal';
+import { FaFileImport } from 'react-icons/fa';
 
 const VendorProductModal = ({
   isOpen,
@@ -31,6 +32,7 @@ const VendorProductModal = ({
   const [newCategory, setNewCategory] = useState('');
   const [showLinks, setShowLinks] = useState(false);
   const [newLink, setNewLink] = useState('');
+  const [importingCatalog, setImportingCatalog] = useState(false);
 
   // Inicializar o formulário com o ID do fornecedor
   useEffect(() => {
@@ -120,6 +122,83 @@ const VendorProductModal = ({
       ...prev,
       links: prev.links.filter((_, i) => i !== index)
     }));
+  };
+
+  // Função para importar catálogo de produtos
+  const handleImportCatalog = () => {
+    setImportingCatalog(true);
+
+    // Criar um input de arquivo temporário
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.csv,.json,.xlsx';
+    fileInput.style.display = 'none';
+    document.body.appendChild(fileInput);
+
+    // Quando o usuário selecionar um arquivo
+    fileInput.onchange = (e) => {
+      if (e.target.files && e.target.files[0]) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+
+        reader.onload = (event) => {
+          try {
+            // Processar o arquivo de acordo com o tipo
+            if (file.name.endsWith('.json')) {
+              // Processar JSON
+              const data = JSON.parse(event.target.result);
+              if (Array.isArray(data)) {
+                // Assumir que é um array de produtos
+                alert(`Catálogo importado com sucesso! ${data.length} produtos encontrados.`);
+                // Aqui você pode processar os produtos e adicionar ao fornecedor
+              } else {
+                alert('Formato de catálogo JSON inválido. O arquivo deve conter um array de produtos.');
+              }
+            } else if (file.name.endsWith('.csv')) {
+              // Processar CSV
+              const csvData = event.target.result;
+              const lines = csvData.split('\n');
+              if (lines.length > 1) {
+                alert(`Catálogo CSV importado com sucesso! ${lines.length - 1} produtos encontrados.`);
+                // Aqui você pode processar as linhas do CSV
+              } else {
+                alert('Arquivo CSV vazio ou inválido.');
+              }
+            } else if (file.name.endsWith('.xlsx')) {
+              // Para arquivos Excel, você precisaria de uma biblioteca como xlsx
+              alert('Importação de arquivos Excel será implementada em breve.');
+            }
+          } catch (error) {
+            console.error('Erro ao processar arquivo:', error);
+            alert(`Erro ao processar o arquivo: ${error.message}`);
+          } finally {
+            setImportingCatalog(false);
+            document.body.removeChild(fileInput);
+          }
+        };
+
+        reader.onerror = () => {
+          alert('Erro ao ler o arquivo.');
+          setImportingCatalog(false);
+          document.body.removeChild(fileInput);
+        };
+
+        // Ler o arquivo como texto
+        if (file.name.endsWith('.json') || file.name.endsWith('.csv')) {
+          reader.readAsText(file);
+        } else {
+          alert('Formato de arquivo não suportado. Use JSON ou CSV.');
+          setImportingCatalog(false);
+          document.body.removeChild(fileInput);
+        }
+      } else {
+        setImportingCatalog(false);
+        document.body.removeChild(fileInput);
+      }
+    };
+
+    // Abrir o seletor de arquivos
+    fileInput.click();
   };
 
   const handleSubmit = () => {
@@ -450,21 +529,35 @@ const VendorProductModal = ({
         </div>
 
         {/* Botões de Ação */}
-        <div className="flex justify-end space-x-3 pt-4 border-t">
+        <div className="flex justify-between items-center space-x-3 pt-4 border-t">
+          {/* Botão de importação de catálogos */}
           <button
             type="button"
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors"
+            onClick={handleImportCatalog}
+            disabled={importingCatalog}
+            className="flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cancelar
+            <FaFileImport className="mr-2" />
+            {importingCatalog ? 'Importando...' : 'Importar Catálogo'}
           </button>
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
-          >
-            Adicionar Produto
-          </button>
+
+          {/* Botões de cancelar e adicionar */}
+          <div className="flex space-x-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-dark transition-colors"
+            >
+              Adicionar Produto
+            </button>
+          </div>
         </div>
       </div>
     </Modal>
