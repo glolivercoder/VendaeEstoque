@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './styles/ImageStyles.css';
+import './styles/global.css';
+import ThemeSelector from './components/ThemeSelector';
 import {
   addProduct,
   getProducts,
@@ -2791,11 +2793,11 @@ ${item?.client?.cpf || ''}
                     <button
                       key={index}
                       onClick={() => setSelectedCategory(category)}
-                      className={`px-3 py-1 rounded-full text-sm ${
+                      className={`category-item px-4 py-2 text-base font-bold rounded-lg ${
                         selectedCategory === category
-                          ? 'bg-blue-500'
-                          : 'bg-gray-200'
-                      } text-white rounded hover:bg-gray-300`}
+                          ? 'selected'
+                          : ''
+                      }`}
                     >
                       {category}
                     </button>
@@ -2908,7 +2910,7 @@ ${item?.client?.cpf || ''}
                               <span className="font-medium">Descrição</span>
                             </div>
                             <div className="bg-gray-50 p-3 rounded-lg shadow-sm">
-                              <p className="text-sm text-center" style={{ overflowWrap: 'break-word' }}>
+                              <p className="text-base font-medium text-center" style={{ overflowWrap: 'break-word', color: '#000000' }}>
                                 {item.itemDescription || "Sem descrição"}
                               </p>
                             </div>
@@ -3003,10 +3005,10 @@ ${item?.client?.cpf || ''}
               {/* Finalizar Venda button */}
               <button
                 onClick={() => setShowPaymentPopup(true)}
-                className="w-full bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 flex items-center justify-center gap-2"
+                className="btn btn-primary w-full px-6 py-3 rounded-lg text-lg font-bold flex items-center justify-center gap-2"
                 disabled={selectedItems.length === 0}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Finalizar Venda
@@ -3018,9 +3020,9 @@ ${item?.client?.cpf || ''}
                   setShowSalesReport(true);
                   setShowDashboard(true);
                 }}
-                className="w-full bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 flex items-center justify-center gap-2"
+                className="btn btn-primary w-full px-6 py-3 rounded-lg text-lg font-bold flex items-center justify-center gap-2"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 00-2 2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Relatório Completo
@@ -3053,9 +3055,9 @@ ${item?.client?.cpf || ''}
                   setShowSalesReport(true);
                   setShowDashboard(false);
                 }}
-                className="w-full bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-600 flex items-center justify-center gap-2"
+                className="btn btn-primary w-full px-6 py-3 rounded-lg text-lg font-bold flex items-center justify-center gap-2"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
                 Relatório de Vendas
@@ -3064,16 +3066,16 @@ ${item?.client?.cpf || ''}
               {/* Clientes button */}
               <button
                 onClick={() => setShowClients(!showClients)}
-                className={`w-full ${
-                  showClients ? 'bg-purple-600' : 'bg-purple-500'
-                } text-white px-6 py-3 rounded-lg hover:bg-purple-600 flex items-center justify-center gap-2`}
+                className={`btn btn-primary w-full px-6 py-3 rounded-lg text-lg font-bold flex items-center justify-center gap-2 ${
+                  showClients ? 'active' : ''
+                }`}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
                 </svg>
                 Clientes
                 <svg
-                  className={`w-5 h-5 transform ${showClients ? 'rotate-180' : ''} transition-transform`}
+                  className={`w-6 h-6 transform ${showClients ? 'rotate-180' : ''} transition-transform`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -3085,9 +3087,9 @@ ${item?.client?.cpf || ''}
               {/* Fornecedores button */}
               <button
                 onClick={() => setShowVendorsTab(true)}
-                className="w-full bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 flex items-center justify-center gap-2 mt-4"
+                className="btn btn-primary w-full px-6 py-3 rounded-lg text-lg font-bold flex items-center justify-center gap-2 mt-4"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
                 Fornecedores
@@ -3096,16 +3098,16 @@ ${item?.client?.cpf || ''}
               {/* WordPress Sync button */}
               <button
                 onClick={() => setShowSiteExporter(!showSiteExporter)}
-                className={`w-full ${
-                  showSiteExporter ? 'bg-indigo-600' : 'bg-indigo-500'
-                } text-white px-6 py-3 rounded-lg hover:bg-indigo-600 flex items-center justify-center gap-2`}
+                className={`btn btn-primary w-full px-6 py-3 rounded-lg text-lg font-bold flex items-center justify-center gap-2 ${
+                  showSiteExporter ? 'active' : ''
+                }`}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                 </svg>
                 WordPress Sync
                 <svg
-                  className={`w-5 h-5 transform ${showSiteExporter ? 'rotate-180' : ''}`}
+                  className={`w-6 h-6 transform ${showSiteExporter ? 'rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -4528,7 +4530,63 @@ ${item?.client?.cpf || ''}
               </div>
 
               <div className="mt-4 pt-4 border-t border-gray-200">
-                <h3 className="text-md font-medium mb-2">Manutenção do Sistema</h3>
+                <h3 className="text-md font-medium mb-2">Personalização</h3>
+
+                {/* Seletor de Temas */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium mb-2">Tema do Sistema</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['green', 'blue', 'purple', 'dark-blue', 'dark-green'].map((themeId) => {
+                      const theme = {
+                        green: { name: 'Verde', color: '#2ECC71' },
+                        blue: { name: 'Azul', color: '#4A7AFF' },
+                        purple: { name: 'Roxo', color: '#B15CFF' },
+                        'dark-blue': { name: 'Escuro Azul', color: '#4A7AFF', isDark: true },
+                        'dark-green': { name: 'Escuro Verde', color: '#2ECC71', isDark: true }
+                      }[themeId];
+
+                      const currentTheme = localStorage.getItem('theme') || 'green';
+
+                      return (
+                        <button
+                          key={themeId}
+                          className={`p-3 rounded-lg border-2 ${currentTheme === themeId ? 'border-black dark:border-white' : 'border-transparent'}`}
+                          style={{
+                            backgroundColor: theme.color,
+                            color: theme.isDark ? '#fff' : '#000'
+                          }}
+                          onClick={() => {
+                            // Remover todas as classes de tema anteriores
+                            document.body.classList.remove(
+                              'theme-green',
+                              'theme-blue',
+                              'theme-purple',
+                              'theme-dark-blue',
+                              'theme-dark-green'
+                            );
+
+                            // Adicionar a classe do tema atual
+                            document.body.classList.add(`theme-${themeId}`);
+
+                            // Salvar a preferência no localStorage
+                            localStorage.setItem('theme', themeId);
+
+                            // Adicionar ou remover a classe dark-mode
+                            if (themeId.includes('dark')) {
+                              document.body.classList.add('dark-mode');
+                            } else {
+                              document.body.classList.remove('dark-mode');
+                            }
+                          }}
+                        >
+                          {theme.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <h3 className="text-md font-medium mb-2 mt-4">Manutenção do Sistema</h3>
                 <button
                   onClick={() => {
                     if (window.confirm('Tem certeza que deseja limpar o cache do sistema? Isso pode resolver problemas de instabilidade, mas você precisará recarregar a página. Seus dados não serão perdidos.')) {
@@ -4633,6 +4691,8 @@ ${item?.client?.cpf || ''}
           </svg>
         </button>
       </div>
+
+      {/* Theme Selector moved to Config Popup */}
 
     </div>
   );

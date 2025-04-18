@@ -1,0 +1,246 @@
+/* Estilos globais para o aplicativo */
+
+/* Importar os temas */
+@import '../themes/theme-green.css';
+@import '../themes/theme-blue.css';
+@import '../themes/theme-purple.css';
+@import '../themes/theme-dark-blue.css';
+@import '../themes/theme-dark-green.css';
+
+/* Estilos base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Aplicar tema padrão (verde) */
+body {
+  font-family: 'Arial', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  transition: all 0.3s ease;
+}
+
+/* Aumentar tamanho das fontes e colocar em negrito */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2.2rem; }
+h3 { font-size: 1.9rem; }
+h4 { font-size: 1.6rem; }
+h5 { font-size: 1.4rem; }
+h6 { font-size: 1.2rem; }
+
+p, span, div, li, a, button, input, select, textarea {
+  font-size: 1.1rem;
+}
+
+/* Botões */
+.btn, button {
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.btn-primary, .btn-success {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover, .btn-success:hover {
+  background-color: var(--secondary-color);
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.btn-secondary:hover {
+  opacity: 0.9;
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.btn-danger:hover {
+  opacity: 0.9;
+}
+
+/* Categorias com maior contraste */
+.category-item {
+  background-color: var(--category-background);
+  color: var(--category-text);
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  border-left: 5px solid var(--accent-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.category-item.selected, .category-item:hover {
+  background-color: var(--accent-color);
+  color: white;
+  transform: translateX(5px);
+}
+
+/* Cards e Containers */
+.card, .container {
+  background-color: var(--card-background);
+  border-radius: 10px;
+  box-shadow: 0 4px 6px var(--shadow-color);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Inputs */
+input, select, textarea {
+  font-size: 1.1rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background-color: #FFFFFF;
+  color: #333333;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+  outline: none;
+}
+
+/* Tabelas */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+th {
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: 700;
+  text-align: left;
+  padding: 1rem;
+}
+
+td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+tr:hover {
+  background-color: var(--category-background);
+}
+
+/* Navegação */
+nav {
+  background-color: var(--primary-color);
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+nav a {
+  color: white;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+nav a:hover {
+  background-color: var(--secondary-color);
+}
+
+/* Tema escuro */
+.dark-mode {
+  color: var(--text-color);
+  background-color: var(--background-color);
+}
+
+/* Aplicar temas específicos */
+body.theme-green {
+  --primary-color: #2ECC71;
+  --secondary-color: #27AE60;
+  --accent-color: #1E9E56;
+  --text-color: #333333;
+  --background-color: #F8F9FA;
+  --card-background: #FFFFFF;
+  --border-color: #E0E0E0;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --category-background: #E8F5E9;
+  --category-text: #1E9E56;
+}
+
+body.theme-blue {
+  --primary-color: #4A7AFF;
+  --secondary-color: #3D6AE8;
+  --accent-color: #2C5BD9;
+  --text-color: #333333;
+  --background-color: #F8F9FA;
+  --card-background: #FFFFFF;
+  --border-color: #E0E0E0;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --category-background: #E3F2FD;
+  --category-text: #2C5BD9;
+}
+
+body.theme-purple {
+  --primary-color: #B15CFF;
+  --secondary-color: #9D4EE8;
+  --accent-color: #8A3FD1;
+  --text-color: #333333;
+  --background-color: #F8F9FA;
+  --card-background: #FFFFFF;
+  --border-color: #E0E0E0;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --category-background: #F3E5FF;
+  --category-text: #8A3FD1;
+}
+
+body.theme-dark-blue {
+  --primary-color: #4A7AFF;
+  --secondary-color: #3D6AE8;
+  --accent-color: #2C5BD9;
+  --text-color: #E0E0E0;
+  --background-color: #121212;
+  --card-background: #1E1E1E;
+  --border-color: #333333;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --category-background: #2C3E50;
+  --category-text: #4A7AFF;
+}
+
+body.theme-dark-green {
+  --primary-color: #2ECC71;
+  --secondary-color: #27AE60;
+  --accent-color: #1E9E56;
+  --text-color: #E0E0E0;
+  --background-color: #121212;
+  --card-background: #1E1E1E;
+  --border-color: #333333;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --category-background: #2C3E50;
+  --category-text: #2ECC71;
+}

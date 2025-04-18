@@ -1,0 +1,189 @@
+/* Tema Escuro Azul */
+:root {
+  --primary-color: #4A7AFF;
+  --secondary-color: #3D6AE8;
+  --accent-color: #2C5BD9;
+  --text-color: #E0E0E0;
+  --background-color: #121212;
+  --card-background: #1E1E1E;
+  --border-color: #333333;
+  --success-color: #2ECC71;
+  --warning-color: #F39C12;
+  --danger-color: #E74C3C;
+  --info-color: #3498DB;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --category-background: #2C3E50;
+  --category-text: #4A7AFF;
+}
+
+/* Aumentar tamanho das fontes e colocar em negrito */
+body {
+  font-family: 'Arial', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-color);
+  background-color: var(--background-color);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #FFFFFF;
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2.2rem; }
+h3 { font-size: 1.9rem; }
+h4 { font-size: 1.6rem; }
+h5 { font-size: 1.4rem; }
+h6 { font-size: 1.2rem; }
+
+/* Botões */
+.btn, button {
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary, .btn-success {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover, .btn-success:hover {
+  background-color: var(--secondary-color);
+  border-color: var(--secondary-color);
+}
+
+/* Categorias com maior contraste */
+.category-item {
+  background-color: var(--category-background);
+  color: var(--primary-color);
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  border-left: 5px solid var(--primary-color);
+}
+
+.category-item.selected, .category-item:hover {
+  background-color: var(--primary-color);
+  color: #FFFFFF;
+}
+
+/* Cards e Containers */
+.card, .container {
+  background-color: var(--card-background);
+  border-radius: 10px;
+  box-shadow: 0 4px 6px var(--shadow-color);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border-color);
+}
+
+/* Inputs */
+input, select, textarea {
+  font-size: 1.1rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background-color: #FFFFFF;
+  color: #333333;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(74, 122, 255, 0.25);
+}
+
+/* Tabelas */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+}
+
+th {
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: 700;
+  text-align: left;
+  padding: 1rem;
+}
+
+td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+tr:hover {
+  background-color: #2A2A2A;
+}
+
+/* Navegação */
+nav {
+  background-color: var(--card-background);
+  padding: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+nav a {
+  color: var(--primary-color);
+  font-weight: 700;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+}
+
+nav a:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* Elementos adicionais para o tema escuro */
+.modal-content {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+}
+
+.modal-header, .modal-footer {
+  border-color: var(--border-color);
+}
+
+.dropdown-menu {
+  background-color: var(--card-background);
+  border: 1px solid var(--border-color);
+}
+
+.dropdown-item {
+  color: var(--text-color);
+}
+
+.dropdown-item:hover {
+  background-color: var(--category-background);
+  color: var(--primary-color);
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-color);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-color);
+}

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backup do Sistema</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 20px 0;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .info {
+      background-color: #f8f9fa;
+      border-left: 4px solid #4CAF50;
+      padding: 15px;
+      margin: 20px 0;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <h1>Backup do Sistema</h1>
+  
+  <div class="info">
+    <p>Esta página irá criar um backup completo do sistema, incluindo:</p>
+    <ul>
+      <li>Produtos cadastrados</li>
+      <li>Clientes</li>
+      <li>Fornecedores</li>
+      <li>Histórico de vendas</li>
+      <li>Configurações</li>
+    </ul>
+    <p>O arquivo de backup será salvo como <strong>Backup180425.json</strong> na pasta de downloads do seu navegador.</p>
+  </div>
+  
+  <button id="backupButton">Criar Backup</button>
+  
+  <div id="status"></div>
+  
+  <script>
+    document.getElementById('backupButton').addEventListener('click', async () => {
+      const statusDiv = document.getElementById('status');
+      statusDiv.innerHTML = '<p>Criando backup... Por favor, aguarde.</p>';
+      
+      try {
+        // Carregar o script de backup
+        const script = document.createElement('script');
+        script.src = 'backup-browser.js';
+        document.body.appendChild(script);
+        
+        script.onload = () => {
+          statusDiv.innerHTML = '<p style="color: green;">Backup iniciado! O download começará automaticamente.</p>';
+        };
+        
+        script.onerror = (error) => {
+          statusDiv.innerHTML = `<p style="color: red;">Erro ao carregar o script de backup: ${error}</p>`;
+        };
+      } catch (error) {
+        statusDiv.innerHTML = `<p style="color: red;">Erro: ${error.message}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>
