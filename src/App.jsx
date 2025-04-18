@@ -3471,23 +3471,7 @@ ${item?.client?.cpf || ''}
                 Relatório de Vendas
               </h3>
               <div className="flex items-center gap-4">
-                <button
-                  onClick={() => {
-                    const { salesDataFixed, itemsFixed } = checkDataIntegrity();
-                    if (salesDataFixed || itemsFixed) {
-                      alert("Dados corrigidos com sucesso!");
-                    } else {
-                      alert("Verificação concluída. Nenhum problema encontrado nos dados.");
-                    }
-                  }}
-                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center gap-2"
-                  title="Verificar Integridade dos Dados"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Verificar Dados
-                </button>
+                {/* Botão "Verificar Dados" removido conforme solicitado */}
                 <button
                   onClick={() => setShowSalesReport(false)}
                   className="text-gray-500 hover:text-gray-700"
@@ -3544,30 +3528,7 @@ ${item?.client?.cpf || ''}
                         </div>
                       </div>
                     )}
-                    <button
-                      onClick={() => {
-                        // Verificar a integridade dos dados
-                        const { salesDataFixed, itemsFixed } = checkDataIntegrity();
-
-                        // Atualizar os dados filtrados
-                        const filteredData = getFilteredSalesData();
-                        console.log("Dados filtrados atualizados:", filteredData.length, "registros");
-
-                        // Mostrar mensagem de sucesso
-                        if (salesDataFixed || itemsFixed) {
-                          alert("Dados corrigidos com sucesso!");
-                        } else {
-                          alert("Dados verificados com sucesso!");
-                        }
-                      }}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
-                      title="Verificar Dados"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      Verificar
-                    </button>
+                    {/* Botão "Verificar" removido conforme solicitado */}
                   </div>
 
                   {/* Valor Total das Compras do Item Selecionado */}
@@ -4454,6 +4415,29 @@ ${item?.client?.cpf || ''}
                   </svg>
                   Importar
                 </button>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <h3 className="text-md font-medium mb-2">Manutenção do Sistema</h3>
+                <button
+                  onClick={() => {
+                    if (window.confirm('Tem certeza que deseja limpar o cache do sistema? Isso pode resolver problemas de instabilidade, mas você precisará recarregar a página. Seus dados não serão perdidos.')) {
+                      // Importar e executar a função de limpeza do localStorage
+                      import('./utils/clearLocalStorage.js').then(module => {
+                        module.clearLocalStorage();
+                      });
+                    }
+                  }}
+                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 flex items-center justify-center w-full"
+                >
+                  <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Limpar Cache do Sistema
+                </button>
+                <p className="text-xs text-gray-500 mt-1">
+                  Use esta opção se o sistema estiver apresentando problemas de carregamento ou instabilidade.
+                </p>
               </div>
 
               <div className="flex justify-end mt-6 pt-4 border-t border-gray-200">

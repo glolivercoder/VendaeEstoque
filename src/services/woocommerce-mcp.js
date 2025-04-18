@@ -12,10 +12,7 @@ const config = {
     consumer_secret: 'cs_0d5d0255c002e137d48be4da75d5d87363278bd6',
     version: 'wc/v3'
   },
-  mcp: {
-    url: 'http://localhost:3025',
-    version: 'v1'
-  },
+  // MCP removido conforme solicitado
   webhooks: {
     product_updated: {
       name: 'PDV Vendas - Atualização de Produto',
@@ -38,8 +35,7 @@ const config = {
 // URL base da API do WooCommerce
 const WOO_API_URL = `${config.woocommerce.url}/wp-json/${config.woocommerce.version}`;
 
-// URL base do MCP
-const MCP_API_URL = `${config.mcp.url}/api/${config.mcp.version}`;
+// URL base do MCP removida conforme solicitado
 
 /**
  * Criar instância do axios para o WooCommerce

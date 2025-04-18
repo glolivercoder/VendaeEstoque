@@ -1,17 +1,19 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useAppContext } from '../../context/AppContext';
 
 const Sidebar = ({ activePage, setActivePage, isMobileOpen, closeMobileSidebar }) => {
   const { items, salesData } = useAppContext();
-  
-  // Número de produtos com estoque baixo
-  const lowStockCount = items.filter(item => item.quantity <= 5).length;
-  
+
+  // Número de produtos com estoque baixo - usando useMemo para melhorar performance
+  const lowStockCount = useMemo(() => {
+    return items.filter(item => item.quantity <= 5).length;
+  }, [items]);
+
   // Classe para links do menu
   const menuItemClass = (page) => `
     flex items-center px-4 py-3 hover:bg-primary-dark dark:hover:bg-primary-dark hover:text-white dark:hover:text-white
-    ${activePage === page 
-      ? 'bg-primary text-white dark:bg-primary dark:text-white' 
+    ${activePage === page
+      ? 'bg-primary text-white dark:bg-primary dark:text-white'
       : 'text-light-text-primary dark:text-dark-text-primary'}
   `;
 
@@ -19,14 +21,14 @@ const Sidebar = ({ activePage, setActivePage, isMobileOpen, closeMobileSidebar }
     <>
       {/* Sobreposição para fechar o sidebar no mobile */}
       {isMobileOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
           onClick={closeMobileSidebar}
         ></div>
       )}
-      
+
       {/* Sidebar */}
-      <aside 
+      <aside
         className={`
           fixed top-0 left-0 h-full w-64 bg-white dark:bg-dark-surface shadow-md dark:shadow-dark-md z-50
           transform transition-transform duration-300 ease-in-out md:translate-x-0 md:relative md:z-0
@@ -36,26 +38,26 @@ const Sidebar = ({ activePage, setActivePage, isMobileOpen, closeMobileSidebar }
         {/* Logo */}
         <div className="h-16 flex items-center justify-center border-b border-light-border dark:border-dark-border">
           <div className="flex items-center space-x-2">
-            <svg 
-              className="h-8 w-8 text-primary" 
-              fill="currentColor" 
+            <svg
+              className="h-8 w-8 text-primary"
+              fill="currentColor"
               viewBox="0 0 20 20"
             >
-              <path 
-                fillRule="evenodd" 
-                clipRule="evenodd" 
-                d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm4.293 6.707a1 1 0 011.414 0L12 11.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" 
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm4.293 6.707a1 1 0 011.414 0L12 11.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
               />
             </svg>
             <h1 className="text-xl font-bold text-primary">VendaEstoque</h1>
           </div>
         </div>
-        
+
         {/* Menu de navegação */}
         <nav className="mt-4">
           <ul>
             <li>
-              <button 
+              <button
                 className={menuItemClass('dashboard')}
                 onClick={() => setActivePage('dashboard')}
               >
@@ -65,9 +67,9 @@ const Sidebar = ({ activePage, setActivePage, isMobileOpen, closeMobileSidebar }
                 Dashboard
               </button>
             </li>
-            
+
             <li>
-              <button 
+              <button
                 className={menuItemClass('inventory')}
                 onClick={() => setActivePage('inventory')}
               >
@@ -82,9 +84,9 @@ const Sidebar = ({ activePage, setActivePage, isMobileOpen, closeMobileSidebar }
                 )}
               </button>
             </li>
-            
+
             <li>
-              <button 
+              <button
                 className={menuItemClass('sales')}
                 onClick={() => setActivePage('sales')}
               >
@@ -92,26 +94,30 @@ const Sidebar = ({ activePage, setActivePage, isMobileOpen, closeMobileSidebar }
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
                 Vendas
-                {salesData.filter(sale => {
+                {useMemo(() => {
                   const today = new Date();
-                  const [day, month, year] = sale.date.split('/').map(part => parseInt(part, 10));
-                  const saleDate = new Date(year, month - 1, day);
-                  return saleDate.toDateString() === today.toDateString();
-                }).length > 0 && (
-                  <span className="ml-auto inline-flex items-center justify-center h-5 w-5 text-xs font-bold text-dark-text-primary bg-success rounded-full">
-                    {salesData.filter(sale => {
-                      const today = new Date();
+                  const todaySales = salesData.filter(sale => {
+                    if (!sale.date || !sale.date.includes('/')) return false;
+                    try {
                       const [day, month, year] = sale.date.split('/').map(part => parseInt(part, 10));
+                      if (isNaN(day) || isNaN(month) || isNaN(year)) return false;
                       const saleDate = new Date(year, month - 1, day);
                       return saleDate.toDateString() === today.toDateString();
-                    }).length}
-                  </span>
-                )}
+                    } catch (e) {
+                      return false;
+                    }
+                  });
+                  return todaySales.length > 0 ? (
+                    <span className="ml-auto inline-flex items-center justify-center h-5 w-5 text-xs font-bold text-dark-text-primary bg-success rounded-full">
+                      {todaySales.length}
+                    </span>
+                  ) : null;
+                }, [salesData])}
               </button>
             </li>
-            
+
             <li>
-              <button 
+              <button
                 className={menuItemClass('clients')}
                 onClick={() => setActivePage('clients')}
               >
@@ -121,9 +127,9 @@ const Sidebar = ({ activePage, setActivePage, isMobileOpen, closeMobileSidebar }
                 Clientes
               </button>
             </li>
-            
+
             <li>
-              <button 
+              <button
                 className={menuItemClass('vendors')}
                 onClick={() => setActivePage('vendors')}
               >
@@ -133,9 +139,9 @@ const Sidebar = ({ activePage, setActivePage, isMobileOpen, closeMobileSidebar }
                 Fornecedores
               </button>
             </li>
-            
+
             <li>
-              <button 
+              <button
                 className={menuItemClass('settings')}
                 onClick={() => setActivePage('settings')}
               >
@@ -148,7 +154,7 @@ const Sidebar = ({ activePage, setActivePage, isMobileOpen, closeMobileSidebar }
             </li>
           </ul>
         </nav>
-        
+
         {/* Versão do app */}
         <div className="absolute bottom-0 left-0 right-0 p-4 text-center border-t border-light-border dark:border-dark-border">
           <p className="text-xs text-light-text-secondary dark:text-dark-text-secondary">
