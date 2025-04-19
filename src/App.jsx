@@ -3694,6 +3694,70 @@ ${item?.client?.cpf || ''}
                           R$ {getItemTotalPurchases(items[selectedItems[0]]?.id).toFixed(2)}
                         </div>
                       </div>
+
+                      {/* Campo de busca de clientes centralizado */}
+                      <div className="mt-4 flex justify-center">
+                        <div className="w-full max-w-md">
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="Buscar cliente por nome ou documento..."
+                              onChange={(e) => handleClientSearch(e.target.value)}
+                              className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                              </svg>
+                            </div>
+                          </div>
+
+                          {/* Lista de resultados da busca */}
+                          {filteredClients.length > 0 && (
+                            <div className="absolute z-10 w-full max-w-md mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                              {filteredClients.map((client) => (
+                                <div
+                                  key={client.id}
+                                  className="p-2 hover:bg-gray-100 cursor-pointer border-b border-gray-200 flex justify-between items-center"
+                                  onClick={() => {
+                                    setSelectedClient(client);
+                                    // Atualizar o item selecionado com o cliente
+                                    const updatedItems = [...items];
+                                    updatedItems[selectedItems[0]] = {
+                                      ...updatedItems[selectedItems[0]],
+                                      client: {
+                                        name: client.name,
+                                        rg: client.rg,
+                                        cpf: client.cpf,
+                                        document: client.document
+                                      }
+                                    };
+                                    setItems(updatedItems);
+                                    // Limpar a lista de resultados
+                                    setFilteredClients([]);
+                                  }}
+                                >
+                                  <div>
+                                    <div className="font-medium">{client.name}</div>
+                                    <div className="text-sm text-gray-600">{client.document || client.cpf}</div>
+                                  </div>
+                                  <button className="text-blue-500 hover:text-blue-700">
+                                    Selecionar
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Cliente selecionado */}
+                      {selectedClient && (
+                        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                          <h5 className="font-medium text-blue-800">Cliente Selecionado</h5>
+                          <p className="text-blue-700">{selectedClient.name} - {selectedClient.document || selectedClient.cpf}</p>
+                        </div>
+                      )}
                     </div>
                   )}
 
