@@ -525,14 +525,41 @@ const ShippingCalculator = () => {
                             <Camera />
                           </button>
                           <MagicWandScanButton
-                            onProductCodeDetected={(code, type) => {
-                              setSku(code);
+                            onProductDataDetected={(productData) => {
+                              setSku(productData.code);
+
+                              // Preencher a descrição do produto se disponível
+                              if (productData.name) {
+                                setPackageDescription(productData.name);
+                              }
+
+                              // Preencher as dimensões se disponíveis
+                              if (productData.dimensions) {
+                                if (productData.dimensions.length) {
+                                  setLength(productData.dimensions.length.toString());
+                                }
+                                if (productData.dimensions.width) {
+                                  setWidth(productData.dimensions.width.toString());
+                                }
+                                if (productData.dimensions.height) {
+                                  setHeight(productData.dimensions.height.toString());
+                                }
+                              }
+
+                              // Preencher o peso se disponível
+                              if (productData.weight && productData.weight.value) {
+                                // Converter para kg se estiver em gramas
+                                const weightValue = productData.weight.unit === 'g'
+                                  ? productData.weight.value / 1000
+                                  : productData.weight.value;
+                                setWeight(weightValue.toString());
+                              }
+
                               toast({
-                                title: `${type} Detectado`,
-                                description: `Código ${type}: ${code} identificado com sucesso.`,
+                                title: `${productData.type} Detectado`,
+                                description: `Informações do produto identificadas com sucesso.`,
                                 variant: "success",
                               });
-                              lookupProduct(code);
                             }}
                           />
                         </div>

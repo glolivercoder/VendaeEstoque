@@ -6,6 +6,7 @@
 const productDatabase = [
   {
     sku: '123456789',
+    gtin: '7891234567890',
     name: 'Smartphone Galaxy S21',
     weight: 0.5,
     dimensions: {
@@ -17,6 +18,7 @@ const productDatabase = [
   },
   {
     sku: '987654321',
+    gtin: '7891234567891',
     name: 'Notebook Dell Inspiron',
     weight: 2.5,
     dimensions: {
@@ -125,5 +127,59 @@ export const searchProducts = async (query) => {
   } catch (error) {
     console.error('Erro ao buscar produtos:', error);
     throw error;
+  }
+};
+
+/**
+ * Busca detalhes do produto por código (GTIN, NCM ou SKU)
+ * @param {string} code - Código do produto (GTIN, NCM ou SKU)
+ * @returns {Promise<Object|null>} - Detalhes do produto ou null se não encontrado
+ */
+export const fetchProductDetails = async (code) => {
+  try {
+    // Simular uma chamada de API
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    // Buscar o produto no banco de dados simulado por GTIN, NCM ou SKU
+    let product = productDatabase.find(p =>
+      p.gtin === code || p.ncm === code || p.sku === code
+    );
+
+    if (!product) {
+      // Simular uma busca em API externa (Google Merchant, etc)
+      console.log(`Buscando informações do produto com código ${code} em APIs externas...`);
+
+      // Verificar se parece com um GTIN (código de barras)
+      if (/^\d{8,14}$/.test(code)) {
+        // Simular resposta de API externa para GTIN
+        product = {
+          name: `Produto GTIN ${code.substring(0, 4)}...`,
+          weight: Math.random() * 2 + 0.1, // Peso entre 0.1 e 2.1 kg
+          dimensions: {
+            length: Math.floor(Math.random() * 30) + 5, // Entre 5 e 35 cm
+            width: Math.floor(Math.random() * 20) + 5, // Entre 5 e 25 cm
+            height: Math.floor(Math.random() * 10) + 1 // Entre 1 e 11 cm
+          }
+        };
+      }
+      // Verificar se parece com um NCM (8 dígitos, pode ter pontos)
+      else if (/^\d{2}(\.\d{2}){3}$/.test(code) || /^\d{8}$/.test(code)) {
+        // Simular resposta de API externa para NCM
+        product = {
+          name: `Produto NCM ${code.replace(/\./g, '')}`,
+          weight: Math.random() * 3 + 0.5, // Peso entre 0.5 e 3.5 kg
+          dimensions: {
+            length: Math.floor(Math.random() * 40) + 10, // Entre 10 e 50 cm
+            width: Math.floor(Math.random() * 30) + 5, // Entre 5 e 35 cm
+            height: Math.floor(Math.random() * 15) + 2 // Entre 2 e 17 cm
+          }
+        };
+      }
+    }
+
+    return product || null;
+  } catch (error) {
+    console.error('Erro ao buscar detalhes do produto:', error);
+    return null; // Retornar null em vez de lançar erro para não interromper o fluxo
   }
 };
