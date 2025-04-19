@@ -448,9 +448,9 @@ const ShippingCalculator = () => {
               <button
                 className={`tab-button ${activeTab === 1 ? 'active' : ''}`}
                 onClick={() => setActiveTab(1)}
+                title="Configurações"
               >
                 <Settings className="icon" />
-                <span>Configurações</span>
               </button>
               <button
                 className={`tab-button ${activeTab === 2 ? 'active' : ''}`}
