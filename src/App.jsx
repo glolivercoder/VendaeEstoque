@@ -33,7 +33,7 @@ import MagicCaptureButton from './components/MagicCaptureButton';
 import WordPressSync from './components/WordPressSync';
 import SearchBar from './components/SearchBar';
 import BankQRCodeSelector from './components/QRCode_Bancos/BankQRCodeSelector';
-import ShippingCalculator from './components/ShippingCalculator';
+import ShippingCalculator from './components/ShippingCalculator.jsx';
 import { ToastProvider } from './components/ui/toast';
 
 // Registrar componentes do Chart.js
