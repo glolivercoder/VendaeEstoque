@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { trackPackage, saveTrackingHistory, loadTrackingHistory, removeTrackingHistoryItem } from '../lib/trackingApi';
 import { useToast } from '../components/ui/toast';
+import { searchClients, getClients } from '../services/database';
 
 // Ícones
 const SearchIcon = () => (
@@ -35,18 +36,115 @@ const RefreshIcon = () => (
   </svg>
 );
 
+const LocationIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+    <circle cx="12" cy="10" r="3"></circle>
+  </svg>
+);
+
+const MessageIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+  </svg>
+);
+
+const EmailIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+    <polyline points="22,6 12,13 2,6"></polyline>
+  </svg>
+);
+
+const LinkIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+  </svg>
+);
+
+const PlusIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19"></line>
+    <line x1="5" y1="12" x2="19" y2="12"></line>
+  </svg>
+);
+
 const TrackingPanel = () => {
   const [trackingCode, setTrackingCode] = useState('');
   const [isTracking, setIsTracking] = useState(false);
   const [trackingResult, setTrackingResult] = useState(null);
   const [trackingHistory, setTrackingHistory] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [clients, setClients] = useState([]);
+  const [filteredClients, setFilteredClients] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('clients'); // 'clients' ou 'tracking'
   const { toast } = useToast();
 
-  // Carregar histórico de rastreamento
+  // Carregar histórico de rastreamento e clientes
   useEffect(() => {
-    const history = loadTrackingHistory();
-    setTrackingHistory(history);
-  }, []);
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        // Carregar histórico de rastreamento
+        const history = loadTrackingHistory();
+        setTrackingHistory(history);
+
+        // Carregar clientes
+        const clientsData = await getClients();
+        setClients(clientsData);
+        setFilteredClients(clientsData);
+      } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        toast({
+          title: 'Erro ao carregar dados',
+          description: 'Não foi possível carregar os dados. Tente novamente.',
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [toast]);
+
+  // Função para buscar clientes e códigos de rastreamento
+  const handleSearch = async (query) => {
+    setSearchQuery(query);
+
+    if (query.trim() === '') {
+      setFilteredClients(clients);
+      return;
+    }
+
+    try {
+      // Buscar clientes pelo nome ou documento
+      const searchResults = await searchClients(query);
+
+      // Filtrar histórico de rastreamento pelo código
+      const filteredHistory = trackingHistory.filter(item =>
+        item.code.toLowerCase().includes(query.toLowerCase())
+      );
+
+      // Se estiver na aba de clientes, mostrar resultados de clientes
+      if (activeTab === 'clients') {
+        setFilteredClients(searchResults);
+      }
+      // Se estiver na aba de rastreamento e encontrou códigos, mostrar resultados
+      else if (filteredHistory.length > 0) {
+        setTrackingHistory(filteredHistory);
+      }
+    } catch (error) {
+      console.error('Erro na busca:', error);
+      toast({
+        title: 'Erro na busca',
+        description: 'Não foi possível realizar a busca. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   // Função para rastrear encomenda
   const handleTrackPackage = async () => {
@@ -65,13 +163,13 @@ const TrackingPanel = () => {
     try {
       const result = await trackPackage(trackingCode);
       setTrackingResult(result);
-      
+
       // Salvar no histórico
       saveTrackingHistory(result);
-      
+
       // Atualizar histórico local
       setTrackingHistory(loadTrackingHistory());
-      
+
       toast({
         title: 'Rastreamento realizado com sucesso',
         description: `Encomenda ${result.code} rastreada com sucesso.`,
@@ -98,7 +196,7 @@ const TrackingPanel = () => {
   const handleRemoveFromHistory = (code) => {
     removeTrackingHistoryItem(code);
     setTrackingHistory(loadTrackingHistory());
-    
+
     toast({
       title: 'Item removido',
       description: `Código ${code} removido do histórico.`,
@@ -118,116 +216,271 @@ const TrackingPanel = () => {
     });
   };
 
+  // Função para abrir WhatsApp
+  const openWhatsApp = (phone) => {
+    if (!phone) return;
+    const formattedPhone = phone.replace(/\D/g, '');
+    window.open(`https://wa.me/${formattedPhone}`, '_blank');
+  };
+
+  // Função para enviar email
+  const sendEmail = (email) => {
+    if (!email) return;
+    window.open(`mailto:${email}`, '_blank');
+  };
+
+  // Função para abrir link
+  const openLink = (url) => {
+    if (!url) return;
+    const formattedUrl = url.startsWith('http') ? url : `https://${url}`;
+    window.open(formattedUrl, '_blank');
+  };
+
+  // Função para ver detalhes do cliente
+  const viewClientDetails = (clientId) => {
+    // Implementar visualização de detalhes do cliente
+    toast({
+      title: 'Ver detalhes',
+      description: `Visualizando detalhes do cliente ID: ${clientId}`,
+    });
+  };
+
+  // Função para adicionar novo cliente
+  const handleAddNewClient = () => {
+    // Implementar adição de novo cliente
+    toast({
+      title: 'Novo cliente',
+      description: 'Funcionalidade de adicionar novo cliente será implementada.',
+    });
+  };
+
   return (
     <div className="tracking-panel">
       <div className="card">
         <div className="card-header">
-          <h2 className="text-xl font-bold">Rastreamento de Encomendas</h2>
-          <p className="text-sm">Acompanhe suas encomendas em tempo real</p>
+          <h2 className="text-xl font-bold">Monitoramento de Clientes e Encomendas</h2>
+          <p className="text-sm">Acompanhe seus clientes e rastreie encomendas em tempo real</p>
         </div>
 
         <div className="card-body">
-          <div className="tracking-form">
-            <div className="form-group">
-              <label htmlFor="trackingCode">Código de Rastreamento</label>
-              <div className="input-group">
-                <input
-                  type="text"
-                  id="trackingCode"
-                  placeholder="Digite o código de rastreamento"
-                  value={trackingCode}
-                  onChange={(e) => setTrackingCode(e.target.value.toUpperCase())}
-                  className="form-control"
-                />
-                <button
-                  className="btn btn-primary"
-                  onClick={handleTrackPackage}
-                  disabled={isTracking || !trackingCode}
-                >
-                  {isTracking ? 'Rastreando...' : 'Rastrear'}
-                  <SearchIcon />
-                </button>
+          {/* Barra de busca */}
+          <div className="search-container">
+            <div className="search-input-wrapper">
+              <input
+                type="text"
+                placeholder="Buscar clientes..."
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="search-input"
+              />
+              <div className="search-icon">
+                <SearchIcon />
               </div>
             </div>
+            <button
+              className="btn btn-primary add-client-btn"
+              onClick={handleAddNewClient}
+            >
+              <PlusIcon />
+              <span>Novo Cliente</span>
+            </button>
           </div>
 
-          {trackingResult && (
-            <div className="tracking-result">
-              <div className="tracking-header">
-                <div className="tracking-info">
-                  <h3 className="tracking-code">{trackingResult.code}</h3>
-                  <p className="tracking-carrier">{trackingResult.carrier} - {trackingResult.service}</p>
+          {/* Tabela de clientes */}
+          <div className="clients-table-container">
+            <table className="clients-table">
+              <thead>
+                <tr>
+                  <th>Cliente</th>
+                  <th>Documento</th>
+                  <th>Cidade/UF</th>
+                  <th>Contato</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan="5" className="loading-cell">
+                      <div className="loading-indicator">Carregando...</div>
+                    </td>
+                  </tr>
+                ) : filteredClients.length > 0 ? (
+                  filteredClients.map((client) => (
+                    <tr key={client.id}>
+                      <td className="client-name-cell">{client.name}</td>
+                      <td>{client.document || client.cpf}</td>
+                      <td>
+                        {client.cidade && client.estado ? (
+                          <div className="location-info">
+                            <LocationIcon className="location-icon" />
+                            <span>{client.cidade}/{client.estado}</span>
+                          </div>
+                        ) : (
+                          <span className="no-data">Não informado</span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="contact-actions">
+                          {client.whatsapp && (
+                            <button
+                              className="contact-btn whatsapp-btn"
+                              onClick={() => openWhatsApp(client.whatsapp)}
+                              title="Enviar WhatsApp"
+                            >
+                              <MessageIcon />
+                            </button>
+                          )}
+                          {client.email && (
+                            <button
+                              className="contact-btn email-btn"
+                              onClick={() => sendEmail(client.email)}
+                              title="Enviar Email"
+                            >
+                              <EmailIcon />
+                            </button>
+                          )}
+                          {client.website && (
+                            <button
+                              className="contact-btn link-btn"
+                              onClick={() => openLink(client.website)}
+                              title="Abrir Website"
+                            >
+                              <LinkIcon />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      <td>
+                        <button
+                          className="btn btn-secondary btn-sm view-details-btn"
+                          onClick={() => viewClientDetails(client.id)}
+                        >
+                          Ver Detalhes
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="empty-cell">
+                      <div className="empty-state">
+                        <h3>Nenhum cliente encontrado</h3>
+                        <p>Tente uma nova busca ou adicione um novo cliente.</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Rastreamento de Encomendas (oculto por padrão) */}
+          {activeTab === 'tracking' && (
+            <div className="tracking-container">
+              <div className="tracking-form">
+                <div className="form-group">
+                  <label htmlFor="trackingCode">Código de Rastreamento</label>
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      id="trackingCode"
+                      placeholder="Digite o código de rastreamento"
+                      value={trackingCode}
+                      onChange={(e) => setTrackingCode(e.target.value.toUpperCase())}
+                      className="form-control"
+                    />
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleTrackPackage}
+                      disabled={isTracking || !trackingCode}
+                    >
+                      {isTracking ? 'Rastreando...' : 'Rastrear'}
+                      <SearchIcon />
+                    </button>
+                  </div>
                 </div>
-                <button
-                  className="btn btn-outline btn-sm"
-                  onClick={() => handleTrackPackage()}
-                  title="Atualizar rastreamento"
-                >
-                  <RefreshIcon />
-                </button>
               </div>
 
-              <div className="tracking-timeline">
-                {trackingResult.events.map((event, index) => (
-                  <div key={index} className={`timeline-item ${index === 0 ? 'current' : ''}`}>
-                    <div className="timeline-marker"></div>
-                    <div className="timeline-content">
-                      <div className="event-header">
-                        <h4 className="event-status">{event.status}</h4>
-                        <span className="event-date">{formatDate(event.date)}</span>
-                      </div>
-                      <p className="event-location">{event.location}</p>
-                      <p className="event-description">{event.description}</p>
+              {trackingResult && (
+                <div className="tracking-result">
+                  <div className="tracking-header">
+                    <div className="tracking-info">
+                      <h3 className="tracking-code">{trackingResult.code}</h3>
+                      <p className="tracking-carrier">{trackingResult.carrier} - {trackingResult.service}</p>
                     </div>
+                    <button
+                      className="btn btn-outline btn-sm"
+                      onClick={() => handleTrackPackage()}
+                      title="Atualizar rastreamento"
+                    >
+                      <RefreshIcon />
+                    </button>
                   </div>
-                ))}
+
+                  <div className="tracking-timeline">
+                    {trackingResult.events.map((event, index) => (
+                      <div key={index} className={`timeline-item ${index === 0 ? 'current' : ''}`}>
+                        <div className="timeline-marker"></div>
+                        <div className="timeline-content">
+                          <div className="event-header">
+                            <h4 className="event-status">{event.status}</h4>
+                            <span className="event-date">{formatDate(event.date)}</span>
+                          </div>
+                          <p className="event-location">{event.location}</p>
+                          <p className="event-description">{event.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="tracking-history">
+                <h3 className="section-title">Histórico de Rastreamento</h3>
+
+                {trackingHistory.length > 0 ? (
+                  <div className="history-list">
+                    {trackingHistory.map((item, index) => (
+                      <div key={index} className="history-item">
+                        <div className="history-info">
+                          <PackageIcon className="history-icon" />
+                          <div className="history-details">
+                            <h4 className="history-code">{item.code}</h4>
+                            <p className="history-carrier">{item.carrier} - {item.service}</p>
+                            <p className="history-date">Última atualização: {formatDate(item.lastUpdated)}</p>
+                          </div>
+                        </div>
+                        <div className="history-actions">
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() => handleLoadTracking(item.code)}
+                          >
+                            Rastrear
+                          </button>
+                          <button
+                            className="btn btn-outline btn-sm"
+                            onClick={() => handleRemoveFromHistory(item.code)}
+                            title="Remover do histórico"
+                          >
+                            <TrashIcon />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-state">
+                    <PackageIcon className="empty-icon" />
+                    <h3>Nenhum rastreamento realizado</h3>
+                    <p>
+                      Digite um código de rastreamento para acompanhar sua encomenda.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
-
-          <div className="tracking-history">
-            <h3 className="section-title">Histórico de Rastreamento</h3>
-            
-            {trackingHistory.length > 0 ? (
-              <div className="history-list">
-                {trackingHistory.map((item, index) => (
-                  <div key={index} className="history-item">
-                    <div className="history-info">
-                      <PackageIcon className="history-icon" />
-                      <div className="history-details">
-                        <h4 className="history-code">{item.code}</h4>
-                        <p className="history-carrier">{item.carrier} - {item.service}</p>
-                        <p className="history-date">Última atualização: {formatDate(item.lastUpdated)}</p>
-                      </div>
-                    </div>
-                    <div className="history-actions">
-                      <button
-                        className="btn btn-primary btn-sm"
-                        onClick={() => handleLoadTracking(item.code)}
-                      >
-                        Rastrear
-                      </button>
-                      <button
-                        className="btn btn-outline btn-sm"
-                        onClick={() => handleRemoveFromHistory(item.code)}
-                        title="Remover do histórico"
-                      >
-                        <TrashIcon />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="empty-state">
-                <PackageIcon className="empty-icon" />
-                <h3>Nenhum rastreamento realizado</h3>
-                <p>
-                  Digite um código de rastreamento para acompanhar sua encomenda.
-                </p>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>

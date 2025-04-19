@@ -1152,3 +1152,174 @@
     width: calc(100% + 2rem);
   }
 }
+
+/* Estilos para a barra de busca de clientes e rastreamento */
+.search-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+  max-width: 500px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1px solid var(--border-color, #E0E0E0);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  background-color: white;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-color, #2ECC71);
+  box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.2);
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-color, #666666);
+  width: 1rem;
+  height: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-client-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  white-space: nowrap;
+}
+
+/* Estilos para a tabela de clientes */
+.clients-table-container {
+  overflow-x: auto;
+  margin-bottom: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.clients-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.clients-table th {
+  background-color: var(--primary-color, #2ECC71);
+  color: white;
+  font-weight: 600;
+  text-align: left;
+  padding: 1rem;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.clients-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color, #E0E0E0);
+  font-size: 0.875rem;
+  color: var(--text-color, #333333);
+}
+
+.clients-table tr:last-child td {
+  border-bottom: none;
+}
+
+.clients-table tr:hover td {
+  background-color: var(--category-background, #E8F5E9);
+}
+
+.client-name-cell {
+  font-weight: 600;
+}
+
+.location-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.location-icon {
+  color: var(--primary-color, #2ECC71);
+  width: 1rem;
+  height: 1rem;
+}
+
+.no-data {
+  color: var(--text-color, #999999);
+  font-style: italic;
+}
+
+.contact-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.contact-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.contact-btn svg {
+  width: 1rem;
+  height: 1rem;
+  color: white;
+}
+
+.whatsapp-btn {
+  background-color: #25D366;
+}
+
+.email-btn {
+  background-color: #4285F4;
+}
+
+.link-btn {
+  background-color: #FF5722;
+}
+
+.contact-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.view-details-btn {
+  white-space: nowrap;
+}
+
+.loading-cell, .empty-cell {
+  text-align: center;
+  padding: 3rem !important;
+}
+
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-color, #666666);
+  font-style: italic;
+}
