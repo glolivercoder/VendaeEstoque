@@ -57,6 +57,124 @@
   padding: 1.5rem;
 }
 
+/* Estilos para o pop-up de resultados */
+.results-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.results-popup {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 800px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: popup-fade-in 0.3s ease-out;
+}
+
+@keyframes popup-fade-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.results-popup-header {
+  background-color: var(--primary-color, #2ECC71);
+  color: white;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.results-popup-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.results-popup-content {
+  padding: 1.5rem;
+  overflow-y: auto;
+  max-height: 60vh;
+}
+
+.results-popup-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color, #E0E0E0);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background-color: #f8f9fa;
+}
+
+.shipping-info {
+  flex: 1;
+  min-width: 200px;
+}
+
+.shipping-info p {
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+  color: var(--text-color, #333333);
+}
+
+.export-buttons {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.selected-client-info {
+  background-color: rgba(46, 204, 113, 0.1);
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  margin-right: 0.5rem;
+}
+
+.selected-client-info p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--primary-color, #2ECC71);
+  font-weight: 500;
+}
+
 /* Estilos para a busca de clientes */
 .shipping-calculator .client-search-container {
   flex: 1;

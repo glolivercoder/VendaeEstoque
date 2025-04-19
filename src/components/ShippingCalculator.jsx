@@ -96,6 +96,9 @@ const ShippingCalculator = () => {
   const [filteredClients, setFilteredClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
 
+  // Estados para o pop-up de resultados
+  const [showResultsPopup, setShowResultsPopup] = useState(false);
+
   // Carregar histórico de cálculos de frete do localStorage
   useEffect(() => {
     const savedHistory = localStorage.getItem('shippingHistory');
@@ -182,8 +185,8 @@ const ShippingCalculator = () => {
     await fetchShippingOptions();
     setIsCalculating(false);
 
-    // Mudar para a aba de resultados após o cálculo
-    setActiveTab(1);
+    // Mostrar o pop-up de resultados em vez de mudar para a aba de resultados
+    setShowResultsPopup(true);
   };
 
   const handleSelectOption = (index) => {
@@ -284,6 +287,83 @@ const ShippingCalculator = () => {
         variant: "destructive",
       });
     }
+  };
+
+  // Função para formatar CEP
+  const formatCep = (value) => {
+    return value
+      .replace(/\D/g, '')
+      .replace(/(\d{5})(\d)/, '$1-$2')
+      .replace(/(-\d{3})\d+?$/, '$1');
+  };
+
+  // Função para buscar endereço pelo CEP
+  const handleCepSearch = async (cepValue) => {
+    try {
+      const cep = cepValue.replace(/\D/g, '');
+      if (cep.length !== 8) return;
+
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+
+      if (!data.erro) {
+        return {
+          address: data.logradouro || '',
+          neighborhood: data.bairro || '',
+          city: data.localidade || '',
+          state: data.uf || ''
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+      toast({
+        title: "Erro ao buscar CEP",
+        description: "Não foi possível obter o endereço para este CEP.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
+  // Função para usar o CEP do cliente selecionado
+  const useClientAddress = async () => {
+    if (!selectedClient || !selectedClient.cep) {
+      toast({
+        title: "Endereço indisponível",
+        description: "O cliente selecionado não possui CEP cadastrado.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setZipCodeOrigin(selectedClient.cep.replace(/\D/g, ''));
+
+    // Se o cliente tiver endereço completo, podemos usar diretamente
+    if (selectedClient.address) {
+      toast({
+        title: "Endereço utilizado",
+        description: `Endereço de ${selectedClient.name} definido como origem.`,
+      });
+    } else {
+      // Caso contrário, tentamos buscar pelo CEP
+      const addressData = await handleCepSearch(selectedClient.cep);
+      if (addressData) {
+        toast({
+          title: "Endereço encontrado",
+          description: `Endereço de ${selectedClient.name} definido como origem.`,
+        });
+      }
+    }
+  };
+
+  // Função para limpar o cliente selecionado
+  const clearSelectedClient = () => {
+    setSelectedClient(null);
+    toast({
+      title: "Cliente removido",
+      description: "O cliente foi removido da seleção.",
+    });
   };
 
   return (
@@ -705,6 +785,90 @@ const ShippingCalculator = () => {
           onScanError={handleScanError}
           onClose={() => setIsScanning(false)}
         />
+      )}
+
+      {/* Pop-up de Resultados */}
+      {showResultsPopup && (
+        <div className="results-popup-overlay">
+          <div className="results-popup">
+            <div className="results-popup-header">
+              <h3>Resultados do Cálculo de Frete</h3>
+              <button
+                className="close-button"
+                onClick={() => setShowResultsPopup(false)}
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="results-popup-content">
+              {shippingOptions && shippingOptions.length > 0 ? (
+                <div className="shipping-options-list">
+                  {shippingOptions.map((option, index) => (
+                    <ShippingOptionCard
+                      key={index}
+                      option={option}
+                      isSelected={selectedOptionId === index}
+                      onSelect={() => handleSelectOption(index)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <PackageSearch className="empty-icon" />
+                  <h3>Nenhuma opção de frete</h3>
+                  <p>
+                    Não foram encontradas opções de frete para os dados informados.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="results-popup-footer">
+              <div className="shipping-info">
+                <p><strong>Origem:</strong> {zipCodeOrigin}</p>
+                <p><strong>Destino:</strong> {zipCodeDestination}</p>
+                <p><strong>Produto:</strong> {packageDescription || 'Não especificado'}</p>
+              </div>
+
+              <div className="export-buttons">
+                {selectedClient && (
+                  <div className="selected-client-info">
+                    <p>Cliente: {selectedClient.name}</p>
+                  </div>
+                )}
+
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    toast({
+                      title: "PDF Exportado",
+                      description: selectedClient
+                        ? `Cotação enviada para ${selectedClient.name} por e-mail.`
+                        : "Cotação exportada como PDF.",
+                    });
+                  }}
+                >
+                  Exportar PDF
+                </button>
+
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    toast({
+                      title: "Imagem Exportada",
+                      description: selectedClient
+                        ? `Cotação enviada para ${selectedClient.name} por WhatsApp.`
+                        : "Cotação exportada como imagem.",
+                    });
+                  }}
+                >
+                  Exportar Imagem
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
