@@ -20,10 +20,11 @@
 /* Estilos para o card principal */
 .shipping-calculator .card {
   background-color: var(--card-background, #FFFFFF);
-  border-radius: 10px;
-  box-shadow: 0 4px 6px var(--shadow-color, rgba(0, 0, 0, 0.1));
+  border-radius: 12px;
+  box-shadow: 0 6px 12px var(--shadow-color, rgba(0, 0, 0, 0.15));
   overflow: hidden;
   margin-bottom: 2rem;
+  border: 1px solid var(--border-color, #E0E0E0);
 }
 
 .shipping-calculator .card-header {
@@ -31,6 +32,19 @@
   color: white;
   padding: 1.5rem;
   border-bottom: 1px solid var(--border-color, #E0E0E0);
+}
+
+.shipping-calculator .header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.shipping-calculator .header-title {
+  flex: 1;
+  min-width: 200px;
 }
 
 .shipping-calculator .card-header h2 {
@@ -41,6 +55,110 @@
 
 .shipping-calculator .card-body {
   padding: 1.5rem;
+}
+
+/* Estilos para a busca de clientes */
+.shipping-calculator .client-search-container {
+  flex: 1;
+  max-width: 400px;
+}
+
+.shipping-calculator .client-search-input {
+  width: 100%;
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  font-size: 0.875rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.shipping-calculator .client-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.shipping-calculator .client-search-input:focus {
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+.shipping-calculator .search-icon {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.shipping-calculator .client-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  margin-top: 0.5rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color, #E0E0E0);
+}
+
+.shipping-calculator .client-search-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border-color, #E0E0E0);
+  transition: background-color 0.2s ease;
+}
+
+.shipping-calculator .client-search-item:last-child {
+  border-bottom: none;
+}
+
+.shipping-calculator .client-search-item:hover {
+  background-color: var(--category-background, #E8F5E9);
+}
+
+.shipping-calculator .client-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.shipping-calculator .client-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-color, #333333);
+}
+
+.shipping-calculator .client-document {
+  font-size: 0.75rem;
+  color: var(--text-color, #666666);
+  margin-top: 0.25rem;
+}
+
+.shipping-calculator .selected-client {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shipping-calculator .client-label {
+  font-weight: 600;
+}
+
+.shipping-calculator .client-value {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Estilos para as abas */
@@ -888,5 +1006,31 @@
   .history-actions {
     width: 100%;
     justify-content: flex-end;
+  }
+
+  /* Responsividade para o cabeçalho e busca de clientes */
+  .shipping-calculator .header-content {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .shipping-calculator .header-title,
+  .shipping-calculator .client-search-container {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .shipping-calculator .header-title {
+    margin-bottom: 1rem;
+  }
+
+  .shipping-calculator .client-search-results {
+    max-height: 200px;
+  }
+
+  .shipping-calculator .card {
+    border-radius: 0;
+    margin: -1rem;
+    width: calc(100% + 2rem);
   }
 }

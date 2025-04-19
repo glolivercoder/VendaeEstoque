@@ -6,6 +6,7 @@ import { fetchProductBySku } from "../lib/productApi";
 import { useToast } from "./ui/toast";
 import TrackingPanel from "./TrackingPanel";
 import ShippingLabelGenerator from "./ShippingLabelGenerator";
+import { searchClients } from "../services/database";
 
 // Ícones
 const PackagePlus = () => (
@@ -89,6 +90,11 @@ const ShippingCalculator = () => {
     loggi: true,
     azulCargo: true
   });
+
+  // Estados para a busca de clientes
+  const [clientSearchQuery, setClientSearchQuery] = useState("");
+  const [filteredClients, setFilteredClients] = useState([]);
+  const [selectedClient, setSelectedClient] = useState(null);
 
   // Carregar histórico de cálculos de frete do localStorage
   useEffect(() => {
@@ -260,12 +266,90 @@ const ShippingCalculator = () => {
     setActiveTab(1); // Mudar para a aba de resultados
   };
 
+  // Função para buscar clientes
+  const handleClientSearch = async (query) => {
+    if (query.trim() === '') {
+      setFilteredClients([]);
+      return;
+    }
+
+    try {
+      const searchResults = await searchClients(query);
+      setFilteredClients(searchResults);
+    } catch (error) {
+      console.error('Erro ao buscar clientes:', error);
+      toast({
+        title: "Erro na busca",
+        description: "Não foi possível buscar os clientes.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="shipping-calculator">
       <div className="card">
         <div className="card-header">
-          <h2 className="text-xl font-bold">Calculadora de Frete</h2>
-          <p className="text-sm">Calcule o valor do frete para seus produtos</p>
+          <div className="header-content">
+            <div className="header-title">
+              <h2 className="text-xl font-bold">Calculadora de Frete</h2>
+              <p className="text-sm">Calcule o valor do frete para seus produtos</p>
+            </div>
+
+            <div className="client-search-container">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Buscar cliente por nome ou documento..."
+                  value={clientSearchQuery}
+                  onChange={(e) => {
+                    setClientSearchQuery(e.target.value);
+                    handleClientSearch(e.target.value);
+                  }}
+                  className="client-search-input"
+                />
+                <div className="search-icon">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                </div>
+
+                {/* Lista de resultados da busca */}
+                {filteredClients.length > 0 && (
+                  <div className="client-search-results">
+                    {filteredClients.map((client) => (
+                      <div
+                        key={client.id}
+                        className="client-search-item"
+                        onClick={() => {
+                          setSelectedClient(client);
+                          setClientSearchQuery("");
+                          setFilteredClients([]);
+                          toast({
+                            title: "Cliente selecionado",
+                            description: `${client.name} foi selecionado com sucesso.`,
+                          });
+                        }}
+                      >
+                        <div className="client-info">
+                          <div className="client-name">{client.name}</div>
+                          <div className="client-document">{client.document || client.cpf}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Cliente selecionado */}
+              {selectedClient && (
+                <div className="selected-client">
+                  <span className="client-label">Cliente:</span>
+                  <span className="client-value">{selectedClient.name}</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="card-body">
