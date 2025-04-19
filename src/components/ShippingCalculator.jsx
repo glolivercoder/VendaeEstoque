@@ -6,6 +6,7 @@ import { fetchProductBySku } from "../lib/productApi";
 import { useToast } from "./ui/toast";
 import TrackingPanel from "./TrackingPanel";
 import ShippingLabelGenerator from "./ShippingLabelGenerator";
+import CarrierConfigPanel from "./CarrierConfigPanel";
 import { searchClients } from "../services/database";
 
 // Ícones
@@ -631,59 +632,7 @@ const ShippingCalculator = () => {
               {/* Aba de Configurações */}
               {activeTab === 1 && (
                 <div className="tab-pane">
-                  <h3 className="section-title">Transportadoras</h3>
-                  <div className="carriers-config">
-                    <div className="form-check">
-                      <input
-                        type="checkbox"
-                        id="correios"
-                        checked={selectedCarriers.correios}
-                        onChange={(e) => setSelectedCarriers({...selectedCarriers, correios: e.target.checked})}
-                        className="form-check-input"
-                      />
-                      <label htmlFor="correios" className="form-check-label">Correios</label>
-                    </div>
-                    <div className="form-check">
-                      <input
-                        type="checkbox"
-                        id="melhorEnvio"
-                        checked={selectedCarriers.melhorEnvio}
-                        onChange={(e) => setSelectedCarriers({...selectedCarriers, melhorEnvio: e.target.checked})}
-                        className="form-check-input"
-                      />
-                      <label htmlFor="melhorEnvio" className="form-check-label">Melhor Envio</label>
-                    </div>
-                    <div className="form-check">
-                      <input
-                        type="checkbox"
-                        id="jadlog"
-                        checked={selectedCarriers.jadlog}
-                        onChange={(e) => setSelectedCarriers({...selectedCarriers, jadlog: e.target.checked})}
-                        className="form-check-input"
-                      />
-                      <label htmlFor="jadlog" className="form-check-label">Jadlog</label>
-                    </div>
-                    <div className="form-check">
-                      <input
-                        type="checkbox"
-                        id="loggi"
-                        checked={selectedCarriers.loggi}
-                        onChange={(e) => setSelectedCarriers({...selectedCarriers, loggi: e.target.checked})}
-                        className="form-check-input"
-                      />
-                      <label htmlFor="loggi" className="form-check-label">Loggi</label>
-                    </div>
-                    <div className="form-check">
-                      <input
-                        type="checkbox"
-                        id="azulCargo"
-                        checked={selectedCarriers.azulCargo}
-                        onChange={(e) => setSelectedCarriers({...selectedCarriers, azulCargo: e.target.checked})}
-                        className="form-check-input"
-                      />
-                      <label htmlFor="azulCargo" className="form-check-label">Azul Cargo</label>
-                    </div>
-                  </div>
+                  <CarrierConfigPanel />
 
                   <h3 className="section-title mt-4">Histórico de Cálculos</h3>
                   <div className="history-list">
