@@ -348,6 +348,27 @@ export const getClients = async () => {
   });
 };
 
+export const getClientById = async (clientId) => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['clients'], 'readonly');
+    const store = transaction.objectStore('clients');
+    const request = store.get(clientId);
+
+    request.onsuccess = () => {
+      if (request.result) {
+        resolve(request.result);
+      } else {
+        reject(new Error('Cliente não encontrado'));
+      }
+    };
+
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
+};
+
 export const searchClients = async (query) => {
   const db = await ensureDB();
   return new Promise((resolve, reject) => {

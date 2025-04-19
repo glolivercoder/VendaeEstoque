@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { trackPackage, saveTrackingHistory, loadTrackingHistory, removeTrackingHistoryItem } from '../lib/trackingApi';
 import { useToast } from '../components/ui/toast';
-import { searchClients, getClients } from '../services/database';
+import { searchClients, getClients, getClientById } from '../services/database';
 
 // Ícones
 const SearchIcon = () => (
@@ -80,6 +80,9 @@ const TrackingPanel = () => {
   const [filteredClients, setFilteredClients] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('clients'); // 'clients' ou 'tracking'
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [showClientDetails, setShowClientDetails] = useState(false);
+  const [clientDetailsLoading, setClientDetailsLoading] = useState(false);
   const { toast } = useToast();
 
   // Carregar histórico de rastreamento e clientes
@@ -237,12 +240,28 @@ const TrackingPanel = () => {
   };
 
   // Função para ver detalhes do cliente
-  const viewClientDetails = (clientId) => {
-    // Implementar visualização de detalhes do cliente
-    toast({
-      title: 'Ver detalhes',
-      description: `Visualizando detalhes do cliente ID: ${clientId}`,
-    });
+  const viewClientDetails = async (clientId) => {
+    try {
+      setClientDetailsLoading(true);
+      const client = await getClientById(clientId);
+      setSelectedClient(client);
+      setShowClientDetails(true);
+    } catch (error) {
+      console.error('Erro ao buscar detalhes do cliente:', error);
+      toast({
+        title: 'Erro ao buscar detalhes',
+        description: 'Não foi possível carregar os detalhes do cliente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setClientDetailsLoading(false);
+    }
+  };
+
+  // Função para fechar o pop-up de detalhes
+  const closeClientDetails = () => {
+    setShowClientDetails(false);
+    setSelectedClient(null);
   };
 
   // Função para adicionar novo cliente
@@ -483,6 +502,138 @@ const TrackingPanel = () => {
           )}
         </div>
       </div>
+
+      {/* Pop-up de Detalhes do Cliente */}
+      {showClientDetails && selectedClient && (
+        <div className="client-details-overlay">
+          <div className="client-details-popup">
+            <div className="client-details-header">
+              <h3>Detalhes do Cliente</h3>
+              <button
+                className="close-button"
+                onClick={closeClientDetails}
+              >
+                &times;
+              </button>
+            </div>
+
+            {clientDetailsLoading ? (
+              <div className="client-details-loading">
+                <p>Carregando detalhes do cliente...</p>
+              </div>
+            ) : (
+              <div className="client-details-content">
+                <div className="client-details-section">
+                  <h4 className="section-title">Informações Pessoais</h4>
+                  <div className="client-info-grid">
+                    <div className="info-item">
+                      <span className="info-label">Nome:</span>
+                      <span className="info-value">{selectedClient.name}</span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Documento:</span>
+                      <span className="info-value">{selectedClient.document || selectedClient.cpf || 'Não informado'}</span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">E-mail:</span>
+                      <span className="info-value">
+                        {selectedClient.email ? (
+                          <a href={`mailto:${selectedClient.email}`} className="client-link">
+                            {selectedClient.email}
+                          </a>
+                        ) : (
+                          'Não informado'
+                        )}
+                      </span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">WhatsApp:</span>
+                      <span className="info-value">
+                        {selectedClient.whatsapp ? (
+                          <a href={`https://wa.me/${selectedClient.whatsapp.replace(/\D/g, '')}`} className="client-link">
+                            {selectedClient.whatsapp}
+                          </a>
+                        ) : (
+                          'Não informado'
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="client-details-section">
+                  <h4 className="section-title">Endereço</h4>
+                  <div className="client-info-grid">
+                    <div className="info-item">
+                      <span className="info-label">CEP:</span>
+                      <span className="info-value">{selectedClient.cep || 'Não informado'}</span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Endereço:</span>
+                      <span className="info-value">{selectedClient.endereco || 'Não informado'}</span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Número:</span>
+                      <span className="info-value">{selectedClient.numero || 'Não informado'}</span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Bairro:</span>
+                      <span className="info-value">{selectedClient.bairro || 'Não informado'}</span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Cidade:</span>
+                      <span className="info-value">{selectedClient.cidade || 'Não informado'}</span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Estado:</span>
+                      <span className="info-value">{selectedClient.estado || 'Não informado'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="client-details-section">
+                  <h4 className="section-title">Histórico de Pedidos</h4>
+                  <div className="orders-list">
+                    {/* Aqui seria exibido o histórico de pedidos do cliente */}
+                    <p className="no-orders">Nenhum pedido encontrado para este cliente.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="client-details-footer">
+              <div className="client-actions">
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    closeClientDetails();
+                    // Implementar edição de cliente
+                    toast({
+                      title: "Editar Cliente",
+                      description: "Função de edição de cliente será implementada.",
+                    });
+                  }}
+                >
+                  Editar Cliente
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => {
+                    closeClientDetails();
+                    // Implementar novo pedido
+                    toast({
+                      title: "Novo Pedido",
+                      description: "Função de novo pedido será implementada.",
+                    });
+                  }}
+                >
+                  Novo Pedido
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
