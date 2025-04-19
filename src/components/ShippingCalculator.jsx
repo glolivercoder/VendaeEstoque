@@ -266,7 +266,8 @@ const ShippingCalculator = () => {
     setWidth(entry.package.dimensions.width.toString());
     setHeight(entry.package.dimensions.height.toString());
     setShippingOptions(entry.options);
-    setActiveTab(1); // Mudar para a aba de resultados
+    // Mostrar o pop-up de resultados em vez de mudar para a aba de resultados
+    setShowResultsPopup(true);
   };
 
   // Função para buscar clientes
@@ -447,26 +448,19 @@ const ShippingCalculator = () => {
                 className={`tab-button ${activeTab === 1 ? 'active' : ''}`}
                 onClick={() => setActiveTab(1)}
               >
-                <PackageSearch className="icon" />
-                <span>Resultados</span>
+                <Settings className="icon" />
+                <span>Configurações</span>
               </button>
               <button
                 className={`tab-button ${activeTab === 2 ? 'active' : ''}`}
                 onClick={() => setActiveTab(2)}
               >
-                <Settings className="icon" />
-                <span>Configurações</span>
-              </button>
-              <button
-                className={`tab-button ${activeTab === 3 ? 'active' : ''}`}
-                onClick={() => setActiveTab(3)}
-              >
                 <Search className="icon" />
                 <span>Rastreamento</span>
               </button>
               <button
-                className={`tab-button ${activeTab === 4 ? 'active' : ''}`}
-                onClick={() => setActiveTab(4)}
+                className={`tab-button ${activeTab === 3 ? 'active' : ''}`}
+                onClick={() => setActiveTab(3)}
               >
                 <Tag className="icon" />
                 <span>Etiquetas</span>
@@ -632,37 +626,10 @@ const ShippingCalculator = () => {
                 </div>
               )}
 
-              {/* Aba de Resultados */}
-              {activeTab === 1 && (
-                <div className="tab-pane">
-                  <h3 className="section-title">Opções de Frete</h3>
-                  <div className="shipping-options">
-                    {shippingOptions && shippingOptions.length > 0 ? (
-                      <div className="shipping-options-list">
-                        {shippingOptions.map((option, index) => (
-                          <ShippingOptionCard
-                            key={index}
-                            option={option}
-                            isSelected={selectedOptionId === index}
-                            onSelect={() => handleSelectOption(index)}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="empty-state">
-                        <PackageSearch className="empty-icon" />
-                        <h3>Nenhuma opção de frete</h3>
-                        <p>
-                          Preencha os dados do pacote e os CEPs de origem e destino para calcular as opções disponíveis.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+
 
               {/* Aba de Configurações */}
-              {activeTab === 2 && (
+              {activeTab === 1 && (
                 <div className="tab-pane">
                   <h3 className="section-title">Transportadoras</h3>
                   <div className="carriers-config">
@@ -762,14 +729,14 @@ const ShippingCalculator = () => {
               )}
 
               {/* Aba de Rastreamento */}
-              {activeTab === 3 && (
+              {activeTab === 2 && (
                 <div className="tab-pane">
                   <TrackingPanel />
                 </div>
               )}
 
               {/* Aba de Etiquetas */}
-              {activeTab === 4 && (
+              {activeTab === 3 && (
                 <div className="tab-pane">
                   <ShippingLabelGenerator />
                 </div>
