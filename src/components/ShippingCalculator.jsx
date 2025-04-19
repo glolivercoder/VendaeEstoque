@@ -7,6 +7,7 @@ import { useToast } from "./ui/toast";
 import TrackingPanel from "./TrackingPanel";
 import ShippingLabelGenerator from "./ShippingLabelGenerator";
 import CarrierConfigPanel from "./CarrierConfigPanel";
+import MagicWandScanButton from "./MagicWandScanButton";
 import { searchClients } from "../services/database";
 
 // Ícones
@@ -523,6 +524,17 @@ const ShippingCalculator = () => {
                           >
                             <Camera />
                           </button>
+                          <MagicWandScanButton
+                            onProductCodeDetected={(code, type) => {
+                              setSku(code);
+                              toast({
+                                title: `${type} Detectado`,
+                                description: `Código ${type}: ${code} identificado com sucesso.`,
+                                variant: "success",
+                              });
+                              lookupProduct(code);
+                            }}
+                          />
                         </div>
                       </div>
                       <div className="form-group">

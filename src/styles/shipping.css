@@ -406,6 +406,21 @@
   height: 100%;
 }
 
+.shipping-calculator .input-group .btn:not(:last-child) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+}
+
+.shipping-calculator .magic-wand-button {
+  background-color: #9c27b0;
+  color: white;
+}
+
+.shipping-calculator .magic-wand-button:hover {
+  background-color: #7b1fa2;
+}
+
 /* Estilos para botões */
 .shipping-calculator .btn {
   display: inline-flex;
