@@ -1,12 +1,12 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { Pie, Bar } from 'react-chartjs-2';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { formatDateToISO, formatDateToBrazilian } from '../utils/dateUtils';
 
-const SalesReport = ({ 
-  salesData, 
-  showSalesReport, 
+const SalesReport = ({
+  salesData,
+  showSalesReport,
   setShowSalesReport,
   reportType,
   setReportType,
@@ -42,6 +42,7 @@ const SalesReport = ({
     }
   };
 
+  // Função para filtrar vendas por data e termo de busca
   const filterSalesByDate = () => {
     const startDateISO = formatDateToISO(reportStartDate);
     const endDateISO = formatDateToISO(reportEndDate);
@@ -51,15 +52,41 @@ const SalesReport = ({
       if (!saleDate) return false;
 
       const matchesDate = saleDate >= startDateISO && saleDate <= endDateISO;
-      const matchesSearch = !reportSearchQuery || 
-        (sale.client && sale.client.name && sale.client.name.toLowerCase().includes(reportSearchQuery.toLowerCase())) ||
-        sale.items.some(item => item.description.toLowerCase().includes(reportSearchQuery.toLowerCase()));
+      const matchesSearch = !reportSearchQuery ||
+        (sale.client && typeof sale.client === 'object' && sale.client.name &&
+          sale.client.name.toLowerCase().includes(reportSearchQuery.toLowerCase())) ||
+        (sale.client && typeof sale.client === 'string' &&
+          sale.client.toLowerCase().includes(reportSearchQuery.toLowerCase())) ||
+        (sale.items && Array.isArray(sale.items) &&
+          sale.items.some(item => item.description && item.description.toLowerCase().includes(reportSearchQuery.toLowerCase()))) ||
+        (sale.product && typeof sale.product === 'string' &&
+          sale.product.toLowerCase().includes(reportSearchQuery.toLowerCase()));
 
       return matchesDate && matchesSearch;
     });
   };
 
-  const filteredSales = filterSalesByDate();
+  // Agrupar vendas por cliente ou ID de venda
+  const groupSalesByClientOrId = (sales) => {
+    const groupedSales = {};
+
+    sales.forEach(sale => {
+      const clientKey = sale.client && typeof sale.client === 'object' ? sale.client.name :
+                      sale.client && typeof sale.client === 'string' ? sale.client :
+                      `Venda #${sale.id}`;
+
+      if (!groupedSales[clientKey]) {
+        groupedSales[clientKey] = [];
+      }
+
+      groupedSales[clientKey].push(sale);
+    });
+
+    return groupedSales;
+  };
+
+  const filteredSales = useMemo(() => filterSalesByDate(), [salesData, reportStartDate, reportEndDate, reportSearchQuery]);
+  const groupedSales = useMemo(() => groupSalesByClientOrId(filteredSales), [filteredSales]);
 
   const calculateTotalsByPaymentMethod = () => {
     const totals = {
@@ -235,38 +262,57 @@ const SalesReport = ({
           {filteredSales.length === 0 ? (
             <p className="no-sales">Nenhuma venda encontrada no peru00edodo selecionado.</p>
           ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Cliente</th>
-                  <th>Itens</th>
-                  <th>Mu00e9todo</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSales.map((sale) => (
-                  <tr key={sale.id}>
-                    <td>{sale.formattedDate || formatDateToBrazilian(sale.date.split('T')[0])}</td>
-                    <td>{sale.client ? sale.client.name : 'N/A'}</td>
-                    <td>
-                      {sale.items.map((item, index) => (
-                        <div key={index} className="sale-item">
-                          {item.description} (x{item.quantity})
-                        </div>
+            <div className="grouped-sales">
+              {Object.entries(groupedSales).map(([clientName, sales]) => (
+                <div key={clientName} className="client-sales-group">
+                  <h4 className="client-name">{clientName}</h4>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Data</th>
+                        <th>Horu00e1rio</th>
+                        <th>Itens</th>
+                        <th>Mu00e9todo</th>
+                        <th>Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sales.map((sale) => (
+                        <tr key={sale.id}>
+                          <td>{sale.formattedDate || formatDateToBrazilian(sale.date.split('T')[0])}</td>
+                          <td>{sale.time || 'N/A'}</td>
+                          <td>
+                            {sale.items && Array.isArray(sale.items) ? (
+                              sale.items.map((item, index) => (
+                                <div key={index} className="sale-item">
+                                  {item.description} (x{item.quantity})
+                                </div>
+                              ))
+                            ) : sale.product ? (
+                              <div className="sale-item">
+                                {sale.product} (x{sale.quantity || 1})
+                              </div>
+                            ) : (
+                              'N/A'
+                            )}
+                          </td>
+                          <td>
+                            {sale.paymentMethod === 'dinheiro' && 'Dinheiro'}
+                            {sale.paymentMethod === 'cartu00e3o' && 'Cartu00e3o'}
+                            {sale.paymentMethod === 'pix' && 'PIX'}
+                          </td>
+                          <td>R$ {sale.total.toFixed(2)}</td>
+                        </tr>
                       ))}
-                    </td>
-                    <td>
-                      {sale.paymentMethod === 'dinheiro' && 'Dinheiro'}
-                      {sale.paymentMethod === 'cartu00e3o' && 'Cartu00e3o'}
-                      {sale.paymentMethod === 'pix' && 'PIX'}
-                    </td>
-                    <td>R$ {sale.total.toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <tr className="client-total-row">
+                        <td colSpan="4" className="client-total-label">Total do Cliente:</td>
+                        <td className="client-total-value">R$ {sales.reduce((sum, sale) => sum + sale.total, 0).toFixed(2)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>

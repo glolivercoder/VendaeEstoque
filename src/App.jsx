@@ -490,9 +490,12 @@ function App() {
     }
 
     try {
-      // Processar vendas com data local
-      const saleDate = new Date().toISOString();
-      const localDate = formatDateToBrazilian(new Date().toISOString().split('T')[0]);
+      // Processar vendas com data local e horário
+      const now = new Date();
+      const saleDate = now.toISOString();
+      const localDate = formatDateToBrazilian(now.toISOString().split('T')[0]);
+      const localTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      console.log("Registrando venda com data e hora:", localDate, localTime);
 
       for (const index of selectedItems) {
         const item = updatedItems[index];
@@ -522,10 +525,11 @@ function App() {
         totalPix: paymentMethod === 'pix' ? prev.totalPix + Math.abs(totalAmount) : prev.totalPix
       }));
 
-      // Adicionar à lista de vendas com data local - uma única entrada para toda a venda
+      // Adicionar à lista de vendas com data local e horário - uma única entrada para toda a venda
       setSalesData(prev => [...prev, {
         id: Date.now(),
         date: localDate,
+        time: localTime,
         client: selectedClient?.name || 'Cliente não especificado',
         clientDoc: selectedClient?.rg || '',
         clientCpf: selectedClient?.cpf || '',
