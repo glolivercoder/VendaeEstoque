@@ -279,7 +279,7 @@ const SalesReport = ({
                     <tbody>
                       {sales.map((sale) => (
                         <tr key={sale.id}>
-                          <td>{sale.formattedDate || formatDateToBrazilian(sale.date.split('T')[0])}</td>
+                          <td>{sale.formattedDate || (sale.date ? formatDateToBrazilian(sale.date.split('T')[0]) : 'Data desconhecida')}</td>
                           <td>{sale.time || 'N/A'}</td>
                           <td>
                             {sale.items && Array.isArray(sale.items) ? (

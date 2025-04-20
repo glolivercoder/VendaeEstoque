@@ -539,7 +539,9 @@ function App() {
         quantity: selectedItems.reduce((total, index) => total + Math.abs(updatedItems[index].soldQuantity || 1), 0),
         price: Math.abs(totalAmount) / selectedItems.reduce((total, index) => total + Math.abs(updatedItems[index].soldQuantity || 1), 0),
         total: Math.abs(totalAmount),
-        paymentMethod
+        paymentMethod,
+        // Adicionar timestamp completo para facilitar ordenação
+        timestamp: now.getTime()
       }]);
 
       setShowPaymentPopup(false);
@@ -800,6 +802,12 @@ ${item?.client?.cpf || ''}
         const localDate = item.saleDate ? new Date(item.saleDate) : new Date();
         const formattedDate = formatDateToBrazilian(localDate.toISOString().split('T')[0]);
 
+        // Extrair o horário da venda ou usar horário atual
+        const hours = localDate.getHours().toString().padStart(2, '0');
+        const minutes = localDate.getMinutes().toString().padStart(2, '0');
+        const seconds = localDate.getSeconds().toString().padStart(2, '0');
+        const localTime = `${hours}:${minutes}:${seconds}`;
+
         realSalesData.push({
           id: item.id,
           date: formattedDate,
@@ -814,7 +822,9 @@ ${item?.client?.cpf || ''}
           total: Math.abs(item.price * item.sold), // Garantir que o total seja positivo
           paymentMethod: item.paymentMethod || 'Não especificado',
           source: 'estoque', // Marcar a origem dos dados
-          category: item.category // Adicionar a categoria do produto
+          category: item.category, // Adicionar a categoria do produto
+          time: localTime, // Adicionar o horário da venda
+          timestamp: localDate.getTime() // Adicionar timestamp para ordenação
         });
       }
     });
@@ -830,11 +840,20 @@ ${item?.client?.cpf || ''}
       paymentMethod: sale.paymentMethod === 'fotos' ? 'pix' : sale.paymentMethod
     }));
 
-    // Combinar os dados sem agrupamento
-    const combinedData = [
-      ...realSalesData,
-      ...normalizedSalesData
-    ];
+    // Verificar se estamos duplicando vendas
+    // Vamos usar apenas os dados de salesData (normalizedSalesData) e não combinar com realSalesData
+    // Isso evita a duplicação de vendas que estão sendo contadas duas vezes
+    const combinedData = [...normalizedSalesData];
+
+    // Adicionar apenas as vendas de realSalesData que não estão em normalizedSalesData
+    // Isso é feito verificando o ID da venda
+    const existingIds = new Set(normalizedSalesData.map(sale => sale.id));
+
+    realSalesData.forEach(sale => {
+      if (!existingIds.has(sale.id)) {
+        combinedData.push(sale);
+      }
+    });
 
     // Log para depuração
     console.log("Dados de vendas combinados:", combinedData.length);
