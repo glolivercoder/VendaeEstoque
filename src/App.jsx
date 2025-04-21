@@ -3139,21 +3139,7 @@ ${item?.client?.cpf || ''}
                 Finalizar Venda
               </button>
 
-              {/* Relatório Completo button */}
-              <button
-                onClick={() => {
-                  setShowSalesReport(true);
-                  setShowDashboard(true);
-                }}
-                className="btn btn-primary w-full px-6 py-3 rounded-lg text-lg font-bold flex items-center justify-center gap-2"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 00-2 2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Relatório Completo
-              </button>
-
-              {/* Relatório de Vendas button (simple) */}
+              {/* Relatório de Vendas button */}
               <button
                 onClick={() => {
                   // Definir a data de hoje como padrão para o relatório
@@ -4131,9 +4117,7 @@ ${item?.client?.cpf || ''}
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                             </div>
                           ) : (
-                            <div className="flex h-full items-center justify-center text-gray-500">
-                              {reportStartDate && reportEndDate ? 'Dados sendo processados...' : 'Selecione um período para visualizar os dados'}
-                            </div>
+                            <Pie data={getPieChartData()} options={{ maintainAspectRatio: false }} />
                           )}
                         </div>
                       </div>
@@ -4145,9 +4129,7 @@ ${item?.client?.cpf || ''}
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                             </div>
                           ) : (
-                            <div className="flex h-full items-center justify-center text-gray-500">
-                              {reportStartDate && reportEndDate ? 'Dados sendo processados...' : 'Selecione um período para visualizar os dados'}
-                            </div>
+                            <Bar data={getBarChartData()} options={{ maintainAspectRatio: false }} />
                           )}
                         </div>
                       </div>
