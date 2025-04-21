@@ -1482,7 +1482,7 @@ input:checked + .toggle-slider:before {
 }
 
 .no-data {
-  color: var(--text-color, #999999);
+  color: var(--text-color, #000000);
   font-style: italic;
 }
 
@@ -1632,13 +1632,13 @@ input:checked + .toggle-slider:before {
 .info-label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--text-color, #666666);
+  color: var(--text-color, #000000);
   text-transform: uppercase;
 }
 
 .info-value {
   font-size: 0.875rem;
-  color: var(--text-color, #333333);
+  color: var(--text-color, #000000);
 }
 
 .client-link {
