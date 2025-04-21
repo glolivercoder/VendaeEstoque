@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import './styles/ImageStyles.css';
 import './styles/global.css';
 import './styles/shipping.css';
@@ -175,13 +175,14 @@ function App() {
     return savedQRCode || '/QRCode_Bancos/default_pix.png';
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
   const [exportType, setExportType] = useState('');
   const [exportMethod, setExportMethod] = useState('');
   const [contactInfo, setContactInfo] = useState({ whatsapp: '', email: '' });
   const [showContactForm, setShowContactForm] = useState(false);
   const [editingContact, setEditingContact] = useState(false);
   const [showHostingerConfig, setShowHostingerConfig] = useState(false);
-  const [showDashboard, setShowDashboard] = useState(false);
+  const [showDashboard, setShowDashboard] = useState(false); // Dashboard inicia fechado por padrão
   const [showEditPopup, setShowEditPopup] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [minStockAlert, setMinStockAlert] = useState({});
@@ -1291,204 +1292,296 @@ ${item?.client?.cpf || ''}
       .replace(/(-\d{2})\d+?$/, '$1'); // Impede que sejam digitados mais de 11 dígitos
   };
 
-  // Modificar a função getPieChartData para usar o mesmo sistema de datas do relatório
+  // Função getPieChartData otimizada para evitar erros de renderização
   const getPieChartData = () => {
-    console.log("Gerando dados do gráfico de pizza para data:", reportStartDate);
+    try {
+      // Se o dashboard não está visível, retornar dados vazios
+      if (!showDashboard) {
+        return {
+          labels: ['Nenhum dado disponível'],
+          datasets: [
+            {
+              label: 'Sem dados',
+              data: [1],
+              backgroundColor: ['#e5e7eb'],
+              borderWidth: 1,
+            },
+          ],
+        };
+      }
 
-    // Obter os dados filtrados do relatório - exatamente os mesmos dados mostrados na tabela
-    const filteredSales = getFilteredSalesData();
-    console.log("Vendas filtradas para o gráfico:", filteredSales.length, "registros");
+      console.log("Gerando dados do gráfico de pizza para data:", reportStartDate);
 
-    if (filteredSales.length === 0) {
-      console.log("Nenhuma venda encontrada para o período selecionado");
-      // Retornar dados vazios para evitar erro no gráfico
+      // Obter os dados filtrados do relatório
+      const filteredSales = getFilteredSalesData() || [];
+      console.log("Vendas filtradas para o gráfico:", filteredSales.length, "registros");
+
+      // Verificar se há dados disponíveis
+      if (!filteredSales || filteredSales.length === 0) {
+        console.log("Nenhuma venda encontrada para o período selecionado");
+        // Retornar dados vazios em um formato válido para o gráfico
+        return {
+          labels: ['Nenhum dado disponível'],
+          datasets: [
+            {
+              label: 'Sem dados',
+              data: [1],
+              backgroundColor: ['#e5e7eb'],
+              borderWidth: 1,
+            },
+          ],
+        };
+      }
+
+      // Agrupar por produto
+      const productSales = {};
+
+      // Processar cada venda com validação de dados
+      filteredSales.forEach(sale => {
+        if (!sale || !sale.product) {
+          console.log("Venda sem produto ou inválida:", sale);
+          return;
+        }
+
+        const product = sale.product;
+        const quantity = sale.quantity || 0;
+
+        if (!productSales[product]) {
+          productSales[product] = 0;
+        }
+
+        // Adicionar a quantidade total da venda (garantindo que seja um número)
+        productSales[product] += Number(quantity);
+      });
+
+      console.log("Produtos agrupados:", productSales);
+
+      // Converter para o formato do gráfico
+      const labels = Object.keys(productSales);
+      const data = Object.values(productSales);
+
+      // Verificar novamente se há dados após o processamento
+      if (!labels || labels.length === 0) {
+        console.log("Nenhum produto encontrado após agrupamento");
+        return {
+          labels: ['Nenhum dado disponível'],
+          datasets: [
+            {
+              label: 'Sem dados',
+              data: [1],
+              backgroundColor: ['#e5e7eb'],
+              borderWidth: 1,
+            },
+          ],
+        };
+      }
+
+      // Gerar cores para cada produto
+      const backgroundColors = labels.map((label, index) => {
+        // Usar o índice como seed para gerar cores consistentes
+        const r = (173 + index * 50) % 255;
+        const g = (100 + index * 70) % 255;
+        const b = (200 + index * 30) % 255;
+        return `rgba(${r}, ${g}, ${b}, 0.6)`;
+      });
+
+      // Retornar os dados formatados para o gráfico
       return {
-        labels: ['Nenhum dado disponível'],
+        labels,
         datasets: [
           {
+            label: 'Quantidade vendida',
+            data,
+            backgroundColor: backgroundColors,
+            borderWidth: 1,
+          },
+        ],
+      };
+    } catch (error) {
+      console.error("Erro ao gerar dados do gráfico de pizza:", error);
+      // Em caso de erro, retornar um objeto válido para evitar quebrar a renderização
+      return {
+        labels: ['Erro ao carregar dados'],
+        datasets: [
+          {
+            label: 'Erro',
             data: [1],
-            backgroundColor: ['#e5e7eb'],
+            backgroundColor: ['#f87171'],
             borderWidth: 1,
           },
         ],
       };
     }
-
-    // Agrupar por produto - usar exatamente o mesmo formato que aparece na tabela
-    const productSales = {};
-    filteredSales.forEach(sale => {
-      // Verificar se o produto existe
-      if (!sale.product) {
-        console.log("Venda sem produto:", sale);
-        return;
-      }
-
-      // Usar o produto como está, sem dividir por vírgulas
-      const product = sale.product;
-
-      if (!productSales[product]) {
-        productSales[product] = 0;
-      }
-
-      // Adicionar a quantidade total da venda
-      productSales[product] += sale.quantity;
-    });
-
-    console.log("Produtos agrupados:", productSales);
-
-    // Converter para o formato do gráfico
-    const labels = Object.keys(productSales);
-    const data = Object.values(productSales);
-
-    if (labels.length === 0) {
-      console.log("Nenhum produto encontrado após agrupamento");
-      return {
-        labels: ['Nenhum dado disponível'],
-        datasets: [
-          {
-            data: [1],
-            backgroundColor: ['#e5e7eb'],
-            borderWidth: 1,
-          },
-        ],
-      };
-    }
-
-    // Gerar cores aleatórias para cada produto, mas usar seed fixo para manter consistência
-    const backgroundColors = labels.map((label, index) => {
-      // Usar o índice como seed para gerar cores consistentes
-      const r = (173 + index * 50) % 255;
-      const g = (100 + index * 70) % 255;
-      const b = (200 + index * 30) % 255;
-      return `rgba(${r}, ${g}, ${b}, 0.6)`;
-    });
-
-    return {
-      labels,
-      datasets: [
-        {
-          data,
-          backgroundColor: backgroundColors,
-          borderWidth: 1,
-        },
-      ],
-    };
   };
 
-  // Modificar a função getBarChartData para usar o mesmo sistema de datas do relatório
+  // Função getBarChartData otimizada para evitar erros de renderização
   const getBarChartData = () => {
-    console.log("Gerando dados do gráfico de barras para data:", reportStartDate);
+    try {
+      // Se o dashboard não está visível, retornar dados vazios
+      if (!showDashboard) {
+        return {
+          labels: ['Nenhum dado disponível'],
+          datasets: [
+            {
+              label: 'Sem dados',
+              data: [1],
+              backgroundColor: '#e5e7eb',
+              borderWidth: 1,
+            }
+          ],
+        };
+      }
 
-    // Obter os dados filtrados do relatório - exatamente os mesmos dados mostrados na tabela
-    const filteredSales = getFilteredSalesData();
-    console.log("Vendas filtradas para o gráfico de barras:", filteredSales.length, "registros");
+      console.log("Gerando dados do gráfico de barras para data:", reportStartDate);
 
-    if (filteredSales.length === 0) {
-      console.log("Nenhuma venda encontrada para o período selecionado");
-      // Retornar dados vazios para evitar erro no gráfico
+      // Obter os dados filtrados do relatório
+      const filteredSales = getFilteredSalesData() || [];
+      console.log("Vendas filtradas para o gráfico de barras:", filteredSales.length, "registros");
+
+      // Verificar se há dados disponíveis
+      if (!filteredSales || filteredSales.length === 0) {
+        console.log("Nenhuma venda encontrada para o período selecionado");
+        // Retornar dados vazios em um formato válido para o gráfico
+        return {
+          labels: ['Nenhum dado disponível'],
+          datasets: [
+            {
+              label: 'Sem dados',
+              data: [1],
+              backgroundColor: '#e5e7eb',
+              borderWidth: 1,
+            }
+          ],
+        };
+      }
+
+      // Agrupar por data e produto com validação de dados
+      const salesByDateAndProduct = {};
+
+      // Processar cada venda com validação de dados
+      filteredSales.forEach(sale => {
+        if (!sale || !sale.date || !sale.product) {
+          console.log("Venda com data ou produto ausente:", sale);
+          return;
+        }
+
+        // Usar a data da venda como chave
+        const dateKey = sale.date;
+        const quantity = sale.quantity || 0;
+
+        if (!salesByDateAndProduct[dateKey]) {
+          salesByDateAndProduct[dateKey] = {};
+        }
+
+        // Usar o produto como está, sem dividir por vírgulas
+        const product = sale.product;
+
+        if (!salesByDateAndProduct[dateKey][product]) {
+          salesByDateAndProduct[dateKey][product] = 0;
+        }
+
+        // Adicionar a quantidade total da venda (garantindo que seja um número)
+        salesByDateAndProduct[dateKey][product] += Number(quantity);
+      });
+
+      console.log("Vendas agrupadas por data e produto:", salesByDateAndProduct);
+
+      // Obter todas as datas e produtos únicos
+      const dates = Object.keys(salesByDateAndProduct).sort((a, b) => {
+        try {
+          // Ordenar datas no formato DD/MM/YYYY com validação
+          const partsA = a.split('/');
+          const partsB = b.split('/');
+
+          if (partsA.length !== 3 || partsB.length !== 3) {
+            return 0; // Manter a ordem original se o formato for inválido
+          }
+
+          const [dayA, monthA, yearA] = partsA.map(Number);
+          const [dayB, monthB, yearB] = partsB.map(Number);
+
+          if (yearA !== yearB) return yearA - yearB;
+          if (monthA !== monthB) return monthA - monthB;
+          return dayA - dayB;
+        } catch (error) {
+          console.error("Erro ao ordenar datas:", error);
+          return 0; // Manter a ordem original em caso de erro
+        }
+      });
+
+      // Coletar produtos únicos
+      const allProducts = new Set();
+      Object.values(salesByDateAndProduct).forEach(productMap => {
+        Object.keys(productMap).forEach(product => allProducts.add(product));
+      });
+      const uniqueProducts = Array.from(allProducts);
+
+      // Verificar novamente se há dados após o processamento
+      if (!dates || dates.length === 0 || !uniqueProducts || uniqueProducts.length === 0) {
+        console.log("Nenhuma data ou produto encontrado após agrupamento");
+        return {
+          labels: ['Nenhum dado disponível'],
+          datasets: [
+            {
+              label: 'Sem dados',
+              data: [1],
+              backgroundColor: '#e5e7eb',
+              borderWidth: 1,
+            }
+          ],
+        };
+      }
+
+      // Gerar cores consistentes para cada produto
+      const productColors = {};
+      uniqueProducts.forEach((product, index) => {
+        // Usar o índice como seed para gerar cores consistentes
+        const r = (173 + index * 50) % 255;
+        const g = (100 + index * 70) % 255;
+        const b = (200 + index * 30) % 255;
+        productColors[product] = `rgba(${r}, ${g}, ${b}, 0.6)`;
+      });
+
+      // Criar datasets para o gráfico com validação
+      const datasets = uniqueProducts.map(product => ({
+        label: product,
+        data: dates.map(date => {
+          if (salesByDateAndProduct[date] && typeof salesByDateAndProduct[date][product] === 'number') {
+            return salesByDateAndProduct[date][product];
+          }
+          return 0;
+        }),
+        backgroundColor: productColors[product] || '#e5e7eb',
+        borderWidth: 1,
+      }));
+
+      // Retornar os dados formatados para o gráfico
       return {
-        labels: ['Nenhum dado disponível'],
+        labels: dates,
+        datasets,
+      };
+    } catch (error) {
+      console.error("Erro ao gerar dados do gráfico de barras:", error);
+      // Em caso de erro, retornar um objeto válido para evitar quebrar a renderização
+      return {
+        labels: ['Erro ao carregar dados'],
         datasets: [
           {
-            label: 'Sem dados',
-            data: [0],
-            backgroundColor: '#e5e7eb',
+            label: 'Erro',
+            data: [1],
+            backgroundColor: ['#f87171'],
             borderWidth: 1,
-          }
+          },
         ],
       };
     }
-
-    // Agrupar por data e produto
-    const salesByDateAndProduct = {};
-
-    filteredSales.forEach(sale => {
-      // Verificar se a data e o produto existem
-      if (!sale.date || !sale.product) {
-        console.log("Venda com data ou produto ausente:", sale);
-        return;
-      }
-
-      // Usar a data da venda como chave
-      const dateKey = sale.date;
-
-      if (!salesByDateAndProduct[dateKey]) {
-        salesByDateAndProduct[dateKey] = {};
-      }
-
-      // Usar o produto como está, sem dividir por vírgulas
-      const product = sale.product;
-
-      if (!salesByDateAndProduct[dateKey][product]) {
-        salesByDateAndProduct[dateKey][product] = 0;
-      }
-
-      // Adicionar a quantidade total da venda
-      salesByDateAndProduct[dateKey][product] += sale.quantity;
-    });
-
-    console.log("Vendas agrupadas por data e produto:", salesByDateAndProduct);
-
-    // Obter todas as datas e produtos únicos
-    const dates = Object.keys(salesByDateAndProduct).sort((a, b) => {
-      // Ordenar datas no formato DD/MM/YYYY
-      const [dayA, monthA, yearA] = a.split('/').map(Number);
-      const [dayB, monthB, yearB] = b.split('/').map(Number);
-
-      if (yearA !== yearB) return yearA - yearB;
-      if (monthA !== monthB) return monthA - monthB;
-      return dayA - dayB;
-    });
-
-    const allProducts = new Set();
-
-    Object.values(salesByDateAndProduct).forEach(productMap => {
-      Object.keys(productMap).forEach(product => allProducts.add(product));
-    });
-
-    const uniqueProducts = Array.from(allProducts);
-
-    if (dates.length === 0 || uniqueProducts.length === 0) {
-      console.log("Nenhuma data ou produto encontrado após agrupamento");
-      return {
-        labels: ['Nenhum dado disponível'],
-        datasets: [
-          {
-            label: 'Sem dados',
-            data: [0],
-            backgroundColor: '#e5e7eb',
-            borderWidth: 1,
-          }
-        ],
-      };
-    }
-
-    // Gerar cores consistentes para cada produto
-    const productColors = {};
-    uniqueProducts.forEach((product, index) => {
-      // Usar o índice como seed para gerar cores consistentes
-      const r = (173 + index * 50) % 255;
-      const g = (100 + index * 70) % 255;
-      const b = (200 + index * 30) % 255;
-      productColors[product] = `rgba(${r}, ${g}, ${b}, 0.6)`;
-    });
-
-    // Criar datasets para o gráfico
-    const datasets = uniqueProducts.map(product => ({
-      label: product,
-      data: dates.map(date => salesByDateAndProduct[date][product] || 0),
-      backgroundColor: productColors[product],
-      borderWidth: 1,
-    }));
-
-    return {
-      labels: dates,
-      datasets,
-    };
   };
 
   // Atualizar os gráficos e totais quando a data do relatório mudar
   useEffect(() => {
+    // Só calcular totais se o dashboard estiver visível
+    if (!showDashboard) return;
+
     // Calcular totais por método de pagamento
     const filteredData = getFilteredSalesData();
     console.log("Dados filtrados para cálculo de totais:", filteredData);
@@ -1521,13 +1614,6 @@ ${item?.client?.cpf || ''}
 
     // Atualizar o resumo de vendas
     setSalesSummary(totals);
-
-    // Forçar atualização dos gráficos
-    if (showDashboard) {
-      // Temporariamente esconder e mostrar novamente para forçar a atualização
-      setShowDashboard(false);
-      setTimeout(() => setShowDashboard(true), 100);
-    }
   }, [reportStartDate, reportEndDate, reportType, getFilteredSalesData, showDashboard]);
 
   // Garantir que as datas estejam no formato correto quando o tipo de relatório mudar
@@ -1553,6 +1639,9 @@ ${item?.client?.cpf || ''}
 
   // Atualizar os dashboards quando os dados de vendas mudarem
   useEffect(() => {
+    // Só calcular totais se o dashboard estiver visível
+    if (!showDashboard) return;
+
     // Calcular totais por método de pagamento
     const filteredData = getFilteredSalesData();
     console.log("Dados filtrados para cálculo de totais (dados mudaram):", filteredData);
@@ -1585,12 +1674,6 @@ ${item?.client?.cpf || ''}
 
     // Atualizar o resumo de vendas
     setSalesSummary(totals);
-
-    if (showDashboard) {
-      // Forçar atualização dos gráficos
-      setShowDashboard(false);
-      setTimeout(() => setShowDashboard(true), 100);
-    }
   }, [salesData, items, getFilteredSalesData, showDashboard]);
 
   const handleEditClient = async (client) => {
@@ -3613,7 +3696,37 @@ ${item?.client?.cpf || ''}
                 Relatório de Vendas
               </h3>
               <div className="flex items-center gap-4">
-                {/* Botão "Verificar Dados" removido conforme solicitado */}
+                {/* Botão de Dashboard */}
+                <button
+                  onClick={() => {
+                    if (!showDashboard) {
+                      // Primeiro mostrar o indicador de carregamento
+                      setIsLoadingDashboard(true);
+
+                      // Depois ativar o dashboard com um pequeno atraso para permitir a renderização do indicador
+                      setTimeout(() => {
+                        setShowDashboard(true);
+
+                        // Dar tempo para os dados serem processados antes de esconder o indicador
+                        setTimeout(() => {
+                          setIsLoadingDashboard(false);
+                        }, 800);
+                      }, 200);
+                    } else {
+                      // Simplesmente esconder o dashboard
+                      setShowDashboard(false);
+                      // Resetar o indicador de carregamento
+                      setIsLoadingDashboard(false);
+                    }
+                  }}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                  </svg>
+                  {showDashboard ? 'Ocultar Dashboard' : 'Mostrar Dashboard'}
+                </button>
                 <button
                   onClick={() => setShowSalesReport(false)}
                   className="text-gray-500 hover:text-gray-700"
@@ -3626,6 +3739,14 @@ ${item?.client?.cpf || ''}
             </div>
 
             <div className="space-y-4" ref={reportRef}>
+              {/* Indicador de carregamento do dashboard */}
+              {showDashboard && isLoadingDashboard && (
+                <div className="flex justify-center items-center py-10">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+                  <p className="ml-3 text-gray-600">Carregando dashboard...</p>
+                </div>
+              )}
+
               {!showDashboard ? (
                 // Relatório de Vendas Simples (sem dashboard)
                 <div className="space-y-6">
@@ -3999,21 +4120,39 @@ ${item?.client?.cpf || ''}
                     </div>
                   </div>
 
-                  {/* Charts */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white p-4 rounded-lg shadow">
-                      <h4 className="font-medium mb-4">Produtos Mais Vendidos</h4>
-                      <div className="h-64">
-                        <Pie data={getPieChartData()} options={{ maintainAspectRatio: false }} />
+                  {/* Charts - Renderizados apenas quando o Dashboard está visível */}
+                  {showDashboard && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-white p-4 rounded-lg shadow">
+                        <h4 className="font-medium mb-4">Produtos Mais Vendidos</h4>
+                        <div className="h-64">
+                          {isLoadingDashboard ? (
+                            <div className="flex h-full items-center justify-center">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                            </div>
+                          ) : (
+                            <div className="flex h-full items-center justify-center text-gray-500">
+                              {reportStartDate && reportEndDate ? 'Dados sendo processados...' : 'Selecione um período para visualizar os dados'}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="bg-white p-4 rounded-lg shadow">
+                        <h4 className="font-medium mb-4">Vendas por Mês</h4>
+                        <div className="h-64">
+                          {isLoadingDashboard ? (
+                            <div className="flex h-full items-center justify-center">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                            </div>
+                          ) : (
+                            <div className="flex h-full items-center justify-center text-gray-500">
+                              {reportStartDate && reportEndDate ? 'Dados sendo processados...' : 'Selecione um período para visualizar os dados'}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div className="bg-white p-4 rounded-lg shadow">
-                      <h4 className="font-medium mb-4">Vendas por Mês</h4>
-                      <div className="h-64">
-                        <Bar data={getBarChartData()} options={{ maintainAspectRatio: false }} />
-                      </div>
-                    </div>
-                  </div>
+                  )}
 
                   {/* Sales Table */}
                   <div className="bg-white rounded-lg shadow overflow-x-auto">
