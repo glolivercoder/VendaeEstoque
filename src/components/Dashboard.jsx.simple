@@ -1,0 +1,124 @@
+import { useState, useEffect } from 'react';
+import '../styles/Dashboard.css';
+
+const Dashboard = ({
+  showDashboard,
+  setShowDashboard,
+  items,
+  salesData
+}) => {
+  const [lowStockItems, setLowStockItems] = useState([]);
+  const [topSellingItems, setTopSellingItems] = useState([]);
+  const [salesByCategory, setSalesByCategory] = useState({});
+  const [recentSales, setRecentSales] = useState([]);
+
+  useEffect(() => {
+    if (showDashboard) {
+      try {
+        // Find items with low stock (less than 5)
+        let lowStock = [];
+        if (items && Array.isArray(items)) {
+          lowStock = items.filter(item => item && typeof item.quantity === 'number' && item.quantity < 5);
+        }
+        setLowStockItems(lowStock);
+
+        // Get recent sales (last 5)
+        let recent = [];
+        if (salesData && Array.isArray(salesData)) {
+          recent = [...salesData]
+            .filter(sale => sale && sale.date) // Ensure sale has a date
+            .slice(0, 5);
+        }
+        setRecentSales(recent);
+      } catch (error) {
+        console.error("Erro ao processar dados do dashboard:", error);
+      }
+    }
+  }, [showDashboard, items, salesData]);
+
+  if (!showDashboard) return null;
+
+  return (
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <h2>Dashboard</h2>
+        <button className="btn-close" onClick={() => setShowDashboard(false)}>
+          Fechar
+        </button>
+      </div>
+
+      <div className="dashboard-content">
+        <div className="dashboard-summary">
+          <div className="summary-card">
+            <h3>Total de Produtos</h3>
+            <p>{items && Array.isArray(items) ? items.length : 0}</p>
+          </div>
+          <div className="summary-card">
+            <h3>Total de Vendas</h3>
+            <p>{salesData && Array.isArray(salesData) ? salesData.length : 0}</p>
+          </div>
+          <div className="summary-card">
+            <h3>Produtos com Baixo Estoque</h3>
+            <p>{lowStockItems.length}</p>
+          </div>
+        </div>
+
+        <div className="dashboard-tables">
+          <div className="table-container">
+            <h3>Produtos com Baixo Estoque</h3>
+            {lowStockItems.length === 0 ? (
+              <p className="no-data">Nenhum produto com baixo estoque</p>
+            ) : (
+              <table className="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>Produto</th>
+                    <th>Estoque</th>
+                    <th>Preço</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lowStockItems.map((item) => (
+                    <tr key={item.id} className={item.quantity <= 0 ? 'out-of-stock' : ''}>
+                      <td>{item.description}</td>
+                      <td>{item.quantity}</td>
+                      <td>R$ {parseFloat(item.price || 0).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          <div className="table-container">
+            <h3>Vendas Recentes</h3>
+            {recentSales.length === 0 ? (
+              <p className="no-data">Nenhuma venda registrada</p>
+            ) : (
+              <table className="dashboard-table">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Cliente</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentSales.map((sale) => (
+                    <tr key={sale.id || Math.random().toString()}>
+                      <td>{sale.date || 'N/A'}</td>
+                      <td>{typeof sale.client === 'object' ? sale.client.name : (sale.client || 'N/A')}</td>
+                      <td>R$ {typeof sale.total === 'number' ? sale.total.toFixed(2) : '0.00'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;

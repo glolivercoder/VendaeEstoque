@@ -1,0 +1,217 @@
+/* Estilos para o Histórico de Vendas */
+
+.sales-history-container {
+  width: 100%;
+  max-width: 1200px;
+  max-height: 90vh;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.sales-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.sales-history-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.sales-history-filters {
+  padding: 15px 20px;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.search-filter {
+  margin-bottom: 15px;
+}
+
+.search-filter input {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.group-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.group-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.group-btn.active {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.group-btn:not(.active) {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.group-btn:hover:not(.active) {
+  background-color: #d0d0d0;
+}
+
+.sales-history-content {
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sales-group {
+  margin-bottom: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.sales-group-header {
+  padding: 12px 15px;
+  background-color: #f0f0f0;
+  font-weight: 600;
+  font-size: 16px;
+  color: #333;
+}
+
+.sales-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sales-table th {
+  background-color: #f5f5f5;
+  padding: 10px;
+  text-align: left;
+  font-weight: 600;
+  color: #555;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.sales-table td {
+  padding: 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.sales-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.action-btn:hover {
+  background-color: #f0f0f0;
+}
+
+.receipt-btn {
+  color: #2196F3;
+}
+
+.export-btn {
+  color: #4CAF50;
+}
+
+.no-sales {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+}
+
+.no-sales svg {
+  margin-bottom: 15px;
+  color: #ccc;
+}
+
+.no-sales h3 {
+  margin: 0 0 5px 0;
+  font-size: 18px;
+  color: #333;
+}
+
+.no-sales p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.sales-history-footer {
+  padding: 15px 20px;
+  background-color: #f5f5f5;
+  border-top: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.close-history-btn {
+  padding: 8px 16px;
+  background-color: #e0e0e0;
+  color: #333;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.close-history-btn:hover {
+  background-color: #d0d0d0;
+}

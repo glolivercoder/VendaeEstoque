@@ -34,6 +34,8 @@ import WordPressSync from './components/WordPressSync';
 import SearchBar from './components/SearchBar';
 import BankQRCodeSelector from './components/QRCode_Bancos/BankQRCodeSelector';
 import ShippingCalculator from './components/ShippingCalculator.jsx';
+import SaleConfirmationPopup from './components/SaleConfirmationPopup';
+import SalesHistory from './components/SalesHistory';
 import { ToastProvider } from './components/ui/toast';
 
 // Registrar componentes do Chart.js
@@ -190,6 +192,9 @@ function App() {
   const [showDescription, setShowDescription] = useState(true);
   const [itemSearchQuery, setItemSearchQuery] = useState('');
   const [showTestPage, setShowTestPage] = useState(false);
+  const [showSaleConfirmation, setShowSaleConfirmation] = useState(false);
+  const [lastCompletedSale, setLastCompletedSale] = useState(null);
+  const [showSalesHistory, setShowSalesHistory] = useState(false);
 
   // Adicionar estado para categorias e nova categoria
   const [categories, setCategories] = useState(['Ferramentas', 'Instrumentos Musicais', 'Informática', 'Gadgets', 'Todos', 'Diversos']);
@@ -525,8 +530,8 @@ function App() {
         totalPix: paymentMethod === 'pix' ? prev.totalPix + Math.abs(totalAmount) : prev.totalPix
       }));
 
-      // Adicionar à lista de vendas com data local e horário - uma única entrada para toda a venda
-      setSalesData(prev => [...prev, {
+      // Criar objeto de venda para adicionar à lista e mostrar no pop-up
+      const newSale = {
         id: Date.now(),
         date: localDate,
         time: localTime,
@@ -542,9 +547,19 @@ function App() {
         paymentMethod,
         // Adicionar timestamp completo para facilitar ordenação
         timestamp: now.getTime()
-      }]);
+      };
 
+      setSalesData(prev => [...prev, newSale]);
+
+      // Salvar a venda atual para mostrar no pop-up de confirmação
+      console.log('Salvando venda para pop-up de confirmação:', newSale);
+      setLastCompletedSale(newSale);
+
+      // Fechar o pop-up de pagamento e mostrar o pop-up de confirmação
       setShowPaymentPopup(false);
+      console.log('Exibindo pop-up de confirmação, setShowSaleConfirmation(true)');
+      setShowSaleConfirmation(true);
+      console.log('Estado após atualização:', { showSaleConfirmation: true, lastCompletedSale: newSale });
 
       // Criar backup automático após a venda
       if (autoBackup) {
@@ -3090,6 +3105,17 @@ ${item?.client?.cpf || ''}
                 Relatório de Vendas
               </button>
 
+              {/* Histórico de Vendas button */}
+              <button
+                onClick={() => setShowSalesHistory(true)}
+                className="btn btn-primary w-full px-6 py-3 rounded-lg text-lg font-bold flex items-center justify-center gap-2"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Histórico de Vendas
+              </button>
+
               {/* Clientes button */}
               <button
                 onClick={() => setShowClients(!showClients)}
@@ -4804,6 +4830,14 @@ ${item?.client?.cpf || ''}
       {/* Test Page */}
       <TestPage showTestPage={showTestPage} setShowTestPage={setShowTestPage} />
 
+      {/* Histórico de Vendas */}
+      {showSalesHistory && (
+        <SalesHistory
+          salesData={salesData}
+          onClose={() => setShowSalesHistory(false)}
+        />
+      )}
+
       {/* Floating Test Button */}
       <div className="fixed bottom-4 right-4 z-50">
         <button
@@ -4818,6 +4852,15 @@ ${item?.client?.cpf || ''}
       </div>
 
       {/* Theme Selector moved to Config Popup */}
+
+      {/* Sale Confirmation Popup */}
+      {showSaleConfirmation && lastCompletedSale && (
+        <SaleConfirmationPopup
+          sale={lastCompletedSale}
+          onClose={() => setShowSaleConfirmation(false)}
+          generateReceipt={generateReceipt}
+        />
+      )}
 
     </div>
   );
