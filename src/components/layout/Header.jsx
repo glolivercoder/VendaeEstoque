@@ -1,41 +1,47 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAppContext } from '../../context/AppContext';
+import LoginButton from './LoginButton';
 
 const Header = ({ openSidebar, title }) => {
   const { theme, toggleTheme } = useTheme();
   const { notifications } = useAppContext();
   const [showNotifications, setShowNotifications] = useState(false);
-  
+
   // Filtrar apenas notificações não lidas
-  const unreadNotifications = notifications.filter(n => !n.read);
+  const unreadNotifications = notifications ? notifications.filter(n => !n.read) : [];
 
   return (
     <header className="bg-white dark:bg-dark-surface border-b border-light-border dark:border-dark-border shadow-sm dark:shadow-dark-sm">
       <div className="flex items-center justify-between h-16 px-4">
-        {/* Botão do menu (visível apenas em dispositivos móveis) */}
-        <button 
-          onClick={openSidebar}
-          className="p-2 rounded-md text-light-text-secondary dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 md:hidden"
-          aria-label="Menu"
-        >
-          <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-        
+        {/* Botão do menu (visível apenas em dispositivos móveis) e botão de login */}
+        <div className="flex items-center">
+          <button
+            onClick={openSidebar}
+            className="p-2 rounded-md text-light-text-secondary dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 md:hidden mr-2"
+            aria-label="Menu"
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          {/* Botão de login */}
+          <LoginButton />
+        </div>
+
         {/* Título da página */}
         <div className="flex items-center">
           <h1 className="text-xl font-semibold text-light-text-primary dark:text-dark-text-primary truncate">
             {title}
           </h1>
         </div>
-        
+
         {/* Botões de ação */}
         <div className="flex items-center space-x-3">
           {/* Botão de notificações */}
           <div className="relative">
-            <button 
+            <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="p-2 rounded-md text-light-text-secondary dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
               aria-label="Notificações"
@@ -43,17 +49,17 @@ const Header = ({ openSidebar, title }) => {
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
-              
+
               {/* Badge de notificações não lidas */}
-              {unreadNotifications.length > 0 && (
+              {unreadNotifications && unreadNotifications.length > 0 && (
                 <span className="absolute top-1 right-1 inline-flex items-center justify-center h-5 w-5 text-xs font-bold text-white bg-danger rounded-full">
                   {unreadNotifications.length > 9 ? '9+' : unreadNotifications.length}
                 </span>
               )}
             </button>
-            
+
             {/* Dropdown de notificações */}
-            {showNotifications && (
+            {showNotifications && notifications && (
               <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-dark-surface rounded-md shadow-lg dark:shadow-dark-lg overflow-hidden z-50 border border-light-border dark:border-dark-border">
                 <div className="p-3 border-b border-light-border dark:border-dark-border flex justify-between items-center">
                   <h3 className="font-medium text-light-text-primary dark:text-dark-text-primary">Notificações</h3>
@@ -64,7 +70,7 @@ const Header = ({ openSidebar, title }) => {
                 <div className="max-h-96 overflow-y-auto">
                   {notifications.length > 0 ? (
                     notifications.slice(0, 5).map((notification) => (
-                      <div 
+                      <div
                         key={notification.id}
                         className={`p-3 border-b border-light-border dark:border-dark-border hover:bg-light-background dark:hover:bg-dark-border ${!notification.read ? 'bg-light-background dark:bg-dark-border' : ''}`}
                       >
@@ -96,11 +102,11 @@ const Header = ({ openSidebar, title }) => {
                               {notification.message}
                             </p>
                             <p className="text-xs text-light-text-disabled dark:text-dark-text-disabled mt-1">
-                              {new Date(notification.timestamp).toLocaleString('pt-BR', { 
-                                day: '2-digit', 
-                                month: '2-digit', 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
+                              {new Date(notification.timestamp).toLocaleString('pt-BR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit'
                               })}
                             </p>
                           </div>
@@ -123,9 +129,9 @@ const Header = ({ openSidebar, title }) => {
               </div>
             )}
           </div>
-          
+
           {/* Botão de tema */}
-          <button 
+          <button
             onClick={toggleTheme}
             className="p-2 rounded-md text-light-text-secondary dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
             aria-label={theme === 'dark' ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
@@ -140,9 +146,9 @@ const Header = ({ openSidebar, title }) => {
               </svg>
             )}
           </button>
-          
+
           {/* Botão do perfil/configurações */}
-          <button 
+          <button
             className="p-2 rounded-md text-light-text-secondary dark:text-dark-text-secondary hover:bg-gray-100 dark:hover:bg-dark-border focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50"
             aria-label="Perfil"
           >

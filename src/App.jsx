@@ -3,6 +3,11 @@ import './styles/ImageStyles.css';
 import './styles/global.css';
 import './styles/shipping.css';
 import ThemeSelector from './components/ThemeSelector';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { AppContextProvider } from './context/AppContext';
+import EmployeeManager from './components/settings/EmployeeManager';
+import LoginModal from './components/modals/LoginModal';
 import {
   addProduct,
   getProducts,
@@ -41,7 +46,8 @@ import { ToastProvider } from './components/ui/toast';
 // Registrar componentes do Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title);
 
-function App() {
+function AppContent() {
+  const [activePage, setActivePage] = useState('dashboard');
   // Função para obter a data atual no formato ISO (YYYY-MM-DD)
   const getCurrentDateISO = () => {
     const today = new Date();
@@ -188,6 +194,9 @@ function App() {
   const [minStockAlert, setMinStockAlert] = useState({});
   const [ignoreStock, setIgnoreStock] = useState({});
   const [showConfigPopup, setShowConfigPopup] = useState(false);
+
+  // Usar o contexto de autenticação
+  const { currentUser, hasPermission, showLoginModal, setShowLoginModal } = useAuth();
   const [backupLocation, setBackupLocation] = useState(localStorage.getItem('backupLocation') || '');
   const [autoBackup, setAutoBackup] = useState(localStorage.getItem('autoBackup') === 'true');
   const [showDescription, setShowDescription] = useState(true);
@@ -213,6 +222,13 @@ function App() {
         setIsLoading(true);
         console.log('Inicializando banco de dados...');
 
+        // Verificar se o usuário está logado
+        if (!currentUser) {
+          setShowLoginModal(true);
+          setIsLoading(false);
+          return;
+        }
+
         // Primeiro inicializa o banco de dados
         const database = await ensureDB();
         if (!database) {
@@ -223,6 +239,94 @@ function App() {
         await initializeDefaultVendor();
 
         console.log('Banco de dados inicializado com sucesso!');
+
+        // Load data after database is initialized
+        const loadData = async () => {
+          try {
+            console.log('Carregando dados...');
+            const [vendorsList, clientsList, productsList] = await Promise.all([
+              getVendors(),
+              getClients(),
+              getProducts()
+            ]);
+
+            setVendors(vendorsList || []);
+            setFilteredClients((clientsList || []).map(client => ({ ...client, showDetails: false })));
+            setClients((clientsList || []).map(client => ({ ...client, showDetails: false })));
+            setItems(productsList || []);
+
+            // Verificar se o usuário tem permissão para a página atual
+            if (activePage && !hasPermission(activePage)) {
+              // Redirecionar para uma página que o usuário tem permissão
+              if (hasPermission('dashboard')) {
+                setActivePage('dashboard');
+              } else if (hasPermission('inventory')) {
+                setActivePage('inventory');
+              } else if (hasPermission('sales')) {
+                setActivePage('sales');
+              } else if (hasPermission('clients')) {
+                setActivePage('clients');
+              }
+            }
+
+            // Carregar dados de vendas do localStorage
+            const savedSalesData = localStorage.getItem('salesData');
+            if (savedSalesData) {
+              try {
+                const parsedSalesData = JSON.parse(savedSalesData);
+                console.log("Dados de vendas carregados do localStorage:", parsedSalesData.length, "registros");
+                setSalesData(parsedSalesData);
+              } catch (error) {
+                console.error("Erro ao carregar dados de vendas do localStorage:", error);
+              }
+            }
+
+            // Carregar configurações de alerta de estoque mínimo
+            const savedMinStockAlert = localStorage.getItem('minStockAlert');
+            if (savedMinStockAlert) {
+              try {
+                setMinStockAlert(JSON.parse(savedMinStockAlert));
+              } catch (error) {
+                console.error("Erro ao carregar configurações de alerta de estoque mínimo:", error);
+              }
+            }
+
+            // Carregar configurações de ignorar estoque
+            const savedIgnoreStock = localStorage.getItem('ignoreStock');
+            if (savedIgnoreStock) {
+              try {
+                setIgnoreStock(JSON.parse(savedIgnoreStock));
+              } catch (error) {
+                console.error("Erro ao carregar configurações de ignorar estoque:", error);
+              }
+            }
+
+            // Configurações do WordPress já carregadas do .env
+
+            // Set default vendor with null safety
+            const defaultVendor = vendorsList?.find(v => v?.document === '0727887807') || {
+              name: 'Gleidison S. Oliveira',
+              document: '0727887807'
+            };
+
+            if (defaultVendor) {
+              setSelectedVendor(defaultVendor);
+              setNewItem(prev => ({
+                ...prev,
+                vendor: {
+                  name: defaultVendor.name || '',
+                  doc: defaultVendor.document || ''
+                }
+              }));
+            }
+          } catch (error) {
+            console.error('Error loading initial data:', error);
+            alert('Erro ao carregar dados. Por favor, recarregue a página.');
+          } finally {
+            setIsLoading(false);
+          }
+        };
+
         loadData();
       } catch (error) {
         console.error('Erro ao inicializar banco de dados:', error);
@@ -232,80 +336,7 @@ function App() {
     };
 
     initializeDB();
-  }, []);
-
-  // Load data after database is initialized
-  const loadData = async () => {
-    try {
-      console.log('Carregando dados...');
-      const [vendorsList, clientsList, productsList] = await Promise.all([
-        getVendors(),
-        getClients(),
-        getProducts()
-      ]);
-
-      setVendors(vendorsList || []);
-      setFilteredClients((clientsList || []).map(client => ({ ...client, showDetails: false })));
-      setClients((clientsList || []).map(client => ({ ...client, showDetails: false })));
-      setItems(productsList || []);
-
-      // Carregar dados de vendas do localStorage
-      const savedSalesData = localStorage.getItem('salesData');
-      if (savedSalesData) {
-        try {
-          const parsedSalesData = JSON.parse(savedSalesData);
-          console.log("Dados de vendas carregados do localStorage:", parsedSalesData.length, "registros");
-          setSalesData(parsedSalesData);
-        } catch (error) {
-          console.error("Erro ao carregar dados de vendas do localStorage:", error);
-        }
-      }
-
-      // Carregar configurações de alerta de estoque mínimo
-      const savedMinStockAlert = localStorage.getItem('minStockAlert');
-      if (savedMinStockAlert) {
-        try {
-          setMinStockAlert(JSON.parse(savedMinStockAlert));
-        } catch (error) {
-          console.error("Erro ao carregar configurações de alerta de estoque mínimo:", error);
-        }
-      }
-
-      // Carregar configurações de ignorar estoque
-      const savedIgnoreStock = localStorage.getItem('ignoreStock');
-      if (savedIgnoreStock) {
-        try {
-          setIgnoreStock(JSON.parse(savedIgnoreStock));
-        } catch (error) {
-          console.error("Erro ao carregar configurações de ignorar estoque:", error);
-        }
-      }
-
-      // Configurações do WordPress já carregadas do .env
-
-      // Set default vendor with null safety
-      const defaultVendor = vendorsList?.find(v => v?.document === '0727887807') || {
-        name: 'Gleidison S. Oliveira',
-        document: '0727887807'
-      };
-
-      if (defaultVendor) {
-        setSelectedVendor(defaultVendor);
-        setNewItem(prev => ({
-          ...prev,
-          vendor: {
-            name: defaultVendor.name || '',
-            doc: defaultVendor.document || ''
-          }
-        }));
-      }
-    } catch (error) {
-      console.error('Error loading initial data:', error);
-      alert('Erro ao carregar dados. Por favor, recarregue a página.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [currentUser, setShowLoginModal, activePage, hasPermission, setActivePage]);
 
   // Salvar dados de vendas no localStorage quando houver alterações
   useEffect(() => {
@@ -4801,6 +4832,12 @@ ${item?.client?.cpf || ''}
                 </button>
               </div>
 
+              {/* Gerenciamento de Funcionários */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <h3 className="text-md font-medium mb-2">Funcionários</h3>
+                <EmployeeManager />
+              </div>
+
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <h3 className="text-md font-medium mb-2">Personalização</h3>
 
@@ -4984,6 +5021,21 @@ ${item?.client?.cpf || ''}
       )}
 
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <ThemeProvider>
+        <AppContextProvider>
+          <ToastProvider>
+            <AppContent />
+            <LoginModal />
+          </ToastProvider>
+        </AppContextProvider>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 
