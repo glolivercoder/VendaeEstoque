@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { useAppContext } from '../../context/AppContext';
-import LoginButton from './LoginButton';
+import { useAuth } from '../../context/AuthContext';
 
 const Header = ({ openSidebar, title }) => {
   const { theme, toggleTheme } = useTheme();
   const { notifications } = useAppContext();
+  const { setShowLoginModal } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
 
   // Filtrar apenas notificações não lidas
@@ -14,7 +15,7 @@ const Header = ({ openSidebar, title }) => {
   return (
     <header className="bg-white dark:bg-dark-surface border-b border-light-border dark:border-dark-border shadow-sm dark:shadow-dark-sm">
       <div className="flex items-center justify-between h-16 px-4">
-        {/* Botão do menu (visível apenas em dispositivos móveis) e botão de login */}
+        {/* Lado esquerdo: Botão do menu (visível apenas em dispositivos móveis) e botão de login */}
         <div className="flex items-center">
           <button
             onClick={openSidebar}
@@ -26,8 +27,18 @@ const Header = ({ openSidebar, title }) => {
             </svg>
           </button>
 
-          {/* Botão de login */}
-          <LoginButton />
+          {/* Botão de login - posicionado à esquerda */}
+          <div className="ml-2">
+            <button
+              onClick={() => setShowLoginModal(true)}
+              className="flex items-center text-sm font-medium text-gray-700 dark:text-dark-text-primary hover:text-primary dark:hover:text-primary-light bg-gray-100 dark:bg-dark-border px-3 py-1.5 rounded-md transition-colors"
+            >
+              <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+              </svg>
+              Entrar
+            </button>
+          </div>
         </div>
 
         {/* Título da página */}
