@@ -346,7 +346,7 @@ export const syncProductsToWordPress = async (products) => {
         regular_price: String(product.price),
         description: product.itemDescription || product.description || product.name,
         short_description: product.description || product.name,
-        sku: `PDV-${product.id}`,
+        sku: product.sku ? product.sku : `PDV-${product.id}`,
         manage_stock: true,
         stock_quantity: parseInt(product.quantity) || 0,
         status: 'publish',
@@ -361,7 +361,13 @@ export const syncProductsToWordPress = async (products) => {
           }
           // Caso contrário, usamos o nome (WooCommerce criará uma nova categoria)
           return [{ name: categoryName }];
-        })()
+        })(),
+        meta_data: [
+          // Adicionar campos personalizados para GTIN e NCM
+          { key: '_pdv_vendas_id', value: String(product.id) },
+          { key: '_gtin', value: product.gtin || '' },
+          { key: '_ncm', value: product.ncm || '' }
+        ]
       };
 
       console.log('Enviando produto para o WooCommerce:', {

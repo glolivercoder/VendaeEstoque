@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog>
+  <vendor>
+    <name>TechSupplier Brasil</name>
+    <description>Fornecedor de produtos eletrônicos e tecnologia</description>
+    <cnpj>12.345.678/0001-90</cnpj>
+    <url>https://techsupplier.com.br</url>
+    <email>contato@techsupplier.com.br</email>
+    <whatsapp>11987654321</whatsapp>
+  </vendor>
+  <products>
+    <product>
+      <name>Smartphone Samsung Galaxy A54 5G</name>
+      <description>Smartphone Samsung Galaxy A54 5G, 128GB, 8GB RAM, Tela 6.4", Câmera Tripla Traseira + Selfie 32MP, Dual Chip, Android 13</description>
+      <price>1899.90</price>
+      <quantity>25</quantity>
+      <category>Smartphones</category>
+      <sku>SM-A546E-128</sku>
+      <gtin>7892509122344</gtin>
+      <ncm>85171231</ncm>
+      <image>https://images.samsung.com/is/image/samsung/p6pim/br/sm-a546ezkeztm/gallery/br-galaxy-a54-5g-sm-a546-sm-a546ezkeztm-535868868</image>
+    </product>
+    <product>
+      <name>Notebook Dell Inspiron 15</name>
+      <description>Notebook Dell Inspiron 15 3000, Intel Core i5-1135G7, 8GB RAM, SSD 256GB, Tela 15.6" Full HD, Windows 11</description>
+      <price>3499.90</price>
+      <quantity>15</quantity>
+      <category>Notebooks</category>
+      <sku>DL-I15-3511-I5</sku>
+      <gtin>7899864532156</gtin>
+      <ncm>84713012</ncm>
+      <image>https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/inspiron-notebooks/15-3511/media-gallery/in3511-cnb-00055lf110-bk.psd</image>
+    </product>
+    <product>
+      <name>Smart TV LG 50" 4K UHD</name>
+      <description>Smart TV LG 50" 4K UHD, 50UQ8050, 60Hz, WiFi, Bluetooth, HDR, 3 HDMI, 2 USB, Inteligência Artificial ThinQ AI</description>
+      <price>2599.90</price>
+      <quantity>10</quantity>
+      <category>TVs</category>
+      <sku>LG-50UQ8050</sku>
+      <gtin>7893299876543</gtin>
+      <ncm>85287200</ncm>
+      <image>https://www.lg.com/br/images/tv/md07529606/gallery/medium01.jpg</image>
+    </product>
+    <product>
+      <name>Fone de Ouvido JBL Tune 510BT</name>
+      <description>Fone de Ouvido Bluetooth JBL Tune 510BT, On Ear, com Microfone, Preto, Conexão Multipoint</description>
+      <price>249.90</price>
+      <quantity>50</quantity>
+      <category>Áudio</category>
+      <sku>JBLT510BT-BLK</sku>
+      <gtin>7892265098765</gtin>
+      <ncm>85183000</ncm>
+      <image>https://www.jbl.com.br/dw/image/v2/AAUJ_PRD/on/demandware.static/-/Sites-masterCatalog_Harman/default/dw9f9b4b93/JBL_Tune_510BT_Product%20Image_Hero_Black.png</image>
+    </product>
+    <product>
+      <name>Câmera Digital Canon EOS Rebel T7+</name>
+      <description>Câmera Digital Canon EOS Rebel T7+ com Lente 18-55mm, 24.1MP, Gravação Full HD, Wi-Fi, NFC</description>
+      <price>3299.90</price>
+      <quantity>8</quantity>
+      <category>Câmeras</category>
+      <sku>CAN-EOST7-KIT</sku>
+      <gtin>8714574656458</gtin>
+      <ncm>90066100</ncm>
+      <image>https://www.canon.com.br/media/catalog/product/cache/6/image/9df78eab33525d08d6e5fb8d27136e95/c/a/camera-dslr-canon-eos-rebel-t7-com-lente-18-55mm-f-3.5-5.6-is-ii_1.jpg</image>
+    </product>
+    <product>
+      <name>Impressora Multifuncional HP DeskJet 2774</name>
+      <description>Impressora Multifuncional HP DeskJet 2774, Jato de Tinta, Colorida, Wi-Fi, USB, Bivolt</description>
+      <price>399.90</price>
+      <quantity>20</quantity>
+      <category>Impressoras</category>
+      <sku>HP-DJ2774</sku>
+      <gtin>1957364829105</gtin>
+      <ncm>84433111</ncm>
+      <image>https://images.kabum.com.br/produtos/fotos/sync_mirakl/164449/Impressora-Multifuncional-HP-DeskJet-Ink-Advantage-2774-Jato-De-Tinta-Colorida-Wi-Fi-USB-Bivolt-7FR22A_1628879572_gg.jpg</image>
+    </product>
+    <product>
+      <name>Console PlayStation 5 Sony</name>
+      <description>Console PlayStation 5 Sony, 825GB SSD, Controle DualSense, Branco</description>
+      <price>4499.90</price>
+      <quantity>5</quantity>
+      <category>Games</category>
+      <sku>SONY-PS5-825</sku>
+      <gtin>7111940284756</gtin>
+      <ncm>95045000</ncm>
+      <image>https://gmedia.playstation.com/is/image/SIEPDC/ps5-product-thumbnail-01-en-14sep21</image>
+    </product>
+    <product>
+      <name>Ar Condicionado Split Inverter Electrolux 12000 BTUs</name>
+      <description>Ar Condicionado Split Inverter Electrolux 12000 BTUs, Frio, Função Siga-me, Função Turbo, 220V</description>
+      <price>1899.90</price>
+      <quantity>12</quantity>
+      <category>Eletrodomésticos</category>
+      <sku>ELUX-QI12F</sku>
+      <gtin>7896584764321</gtin>
+      <ncm>84151011</ncm>
+      <image>https://electrolux.vtexassets.com/arquivos/ids/219283/Ar-Condicionado-Split-Inverter-Electrolux-12.000-BTUs-Frio-QI12F.jpg</image>
+    </product>
+    <product>
+      <name>Tablet Samsung Galaxy Tab S8</name>
+      <description>Tablet Samsung Galaxy Tab S8, 11", 128GB, 8GB RAM, Wi-Fi, Android 12, Câmera Traseira 13MP + 6MP, Frontal 12MP</description>
+      <price>3999.90</price>
+      <quantity>10</quantity>
+      <category>Tablets</category>
+      <sku>SM-X700-128</sku>
+      <gtin>7892509112345</gtin>
+      <ncm>84713019</ncm>
+      <image>https://images.samsung.com/is/image/samsung/p6pim/br/sm-x700nzaazto/gallery/br-galaxy-tab-s8-x700-sm-x700nzaazto-530765123</image>
+    </product>
+    <product>
+      <name>Smartwatch Amazfit GTR 3 Pro</name>
+      <description>Smartwatch Amazfit GTR 3 Pro, Tela AMOLED 1.45", GPS, Bluetooth, 150+ Modos Esportivos, Monitor Cardíaco</description>
+      <price>1299.90</price>
+      <quantity>15</quantity>
+      <category>Wearables</category>
+      <sku>AMZ-GTR3PRO</sku>
+      <gtin>6972596102090</gtin>
+      <ncm>85171300</ncm>
+      <image>https://d2r9epyceweg5n.cloudfront.net/stores/002/043/112/products/amazfit-gtr-3-pro-marrom1-c3a3a0b3a3a9a5a9a016349096232871-1024-1024.jpg</image>
+    </product>
+  </products>
+</catalog>

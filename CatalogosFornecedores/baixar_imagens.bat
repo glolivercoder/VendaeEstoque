@@ -1,0 +1,6 @@
+@echo off
+echo Baixando imagens de produtos para teste...
+node download_images.js
+echo.
+echo Pressione qualquer tecla para sair...
+pause > nul

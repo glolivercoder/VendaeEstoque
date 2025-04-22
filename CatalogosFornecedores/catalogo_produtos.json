@@ -1,0 +1,122 @@
+{
+  "vendor": {
+    "name": "TechSupplier Brasil",
+    "description": "Fornecedor de produtos eletrônicos e tecnologia",
+    "cnpj": "12.345.678/0001-90",
+    "url": "https://techsupplier.com.br",
+    "email": "contato@techsupplier.com.br",
+    "whatsapp": "11987654321"
+  },
+  "products": [
+    {
+      "name": "Smartphone Samsung Galaxy A54 5G",
+      "description": "Smartphone Samsung Galaxy A54 5G, 128GB, 8GB RAM, Tela 6.4\", Câmera Tripla Traseira + Selfie 32MP, Dual Chip, Android 13",
+      "price": 1899.90,
+      "quantity": 25,
+      "category": "Smartphones",
+      "sku": "SM-A546E-128",
+      "gtin": "7892509122344",
+      "ncm": "85171231",
+      "image": "https://images.samsung.com/is/image/samsung/p6pim/br/sm-a546ezkeztm/gallery/br-galaxy-a54-5g-sm-a546-sm-a546ezkeztm-535868868"
+    },
+    {
+      "name": "Notebook Dell Inspiron 15",
+      "description": "Notebook Dell Inspiron 15 3000, Intel Core i5-1135G7, 8GB RAM, SSD 256GB, Tela 15.6\" Full HD, Windows 11",
+      "price": 3499.90,
+      "quantity": 15,
+      "category": "Notebooks",
+      "sku": "DL-I15-3511-I5",
+      "gtin": "7899864532156",
+      "ncm": "84713012",
+      "image": "https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/inspiron-notebooks/15-3511/media-gallery/in3511-cnb-00055lf110-bk.psd"
+    },
+    {
+      "name": "Smart TV LG 50\" 4K UHD",
+      "description": "Smart TV LG 50\" 4K UHD, 50UQ8050, 60Hz, WiFi, Bluetooth, HDR, 3 HDMI, 2 USB, Inteligência Artificial ThinQ AI",
+      "price": 2599.90,
+      "quantity": 10,
+      "category": "TVs",
+      "sku": "LG-50UQ8050",
+      "gtin": "7893299876543",
+      "ncm": "85287200",
+      "image": "https://www.lg.com/br/images/tv/md07529606/gallery/medium01.jpg"
+    },
+    {
+      "name": "Fone de Ouvido JBL Tune 510BT",
+      "description": "Fone de Ouvido Bluetooth JBL Tune 510BT, On Ear, com Microfone, Preto, Conexão Multipoint",
+      "price": 249.90,
+      "quantity": 50,
+      "category": "Áudio",
+      "sku": "JBLT510BT-BLK",
+      "gtin": "7892265098765",
+      "ncm": "85183000",
+      "image": "https://www.jbl.com.br/dw/image/v2/AAUJ_PRD/on/demandware.static/-/Sites-masterCatalog_Harman/default/dw9f9b4b93/JBL_Tune_510BT_Product%20Image_Hero_Black.png"
+    },
+    {
+      "name": "Câmera Digital Canon EOS Rebel T7+",
+      "description": "Câmera Digital Canon EOS Rebel T7+ com Lente 18-55mm, 24.1MP, Gravação Full HD, Wi-Fi, NFC",
+      "price": 3299.90,
+      "quantity": 8,
+      "category": "Câmeras",
+      "sku": "CAN-EOST7-KIT",
+      "gtin": "8714574656458",
+      "ncm": "90066100",
+      "image": "https://www.canon.com.br/media/catalog/product/cache/6/image/9df78eab33525d08d6e5fb8d27136e95/c/a/camera-dslr-canon-eos-rebel-t7-com-lente-18-55mm-f-3.5-5.6-is-ii_1.jpg"
+    },
+    {
+      "name": "Impressora Multifuncional HP DeskJet 2774",
+      "description": "Impressora Multifuncional HP DeskJet 2774, Jato de Tinta, Colorida, Wi-Fi, USB, Bivolt",
+      "price": 399.90,
+      "quantity": 20,
+      "category": "Impressoras",
+      "sku": "HP-DJ2774",
+      "gtin": "1957364829105",
+      "ncm": "84433111",
+      "image": "https://images.kabum.com.br/produtos/fotos/sync_mirakl/164449/Impressora-Multifuncional-HP-DeskJet-Ink-Advantage-2774-Jato-De-Tinta-Colorida-Wi-Fi-USB-Bivolt-7FR22A_1628879572_gg.jpg"
+    },
+    {
+      "name": "Console PlayStation 5 Sony",
+      "description": "Console PlayStation 5 Sony, 825GB SSD, Controle DualSense, Branco",
+      "price": 4499.90,
+      "quantity": 5,
+      "category": "Games",
+      "sku": "SONY-PS5-825",
+      "gtin": "7111940284756",
+      "ncm": "95045000",
+      "image": "https://gmedia.playstation.com/is/image/SIEPDC/ps5-product-thumbnail-01-en-14sep21"
+    },
+    {
+      "name": "Ar Condicionado Split Inverter Electrolux 12000 BTUs",
+      "description": "Ar Condicionado Split Inverter Electrolux 12000 BTUs, Frio, Função Siga-me, Função Turbo, 220V",
+      "price": 1899.90,
+      "quantity": 12,
+      "category": "Eletrodomésticos",
+      "sku": "ELUX-QI12F",
+      "gtin": "7896584764321",
+      "ncm": "84151011",
+      "image": "https://electrolux.vtexassets.com/arquivos/ids/219283/Ar-Condicionado-Split-Inverter-Electrolux-12.000-BTUs-Frio-QI12F.jpg"
+    },
+    {
+      "name": "Tablet Samsung Galaxy Tab S8",
+      "description": "Tablet Samsung Galaxy Tab S8, 11\", 128GB, 8GB RAM, Wi-Fi, Android 12, Câmera Traseira 13MP + 6MP, Frontal 12MP",
+      "price": 3999.90,
+      "quantity": 10,
+      "category": "Tablets",
+      "sku": "SM-X700-128",
+      "gtin": "7892509112345",
+      "ncm": "84713019",
+      "image": "https://images.samsung.com/is/image/samsung/p6pim/br/sm-x700nzaazto/gallery/br-galaxy-tab-s8-x700-sm-x700nzaazto-530765123"
+    },
+    {
+      "name": "Smartwatch Amazfit GTR 3 Pro",
+      "description": "Smartwatch Amazfit GTR 3 Pro, Tela AMOLED 1.45\", GPS, Bluetooth, 150+ Modos Esportivos, Monitor Cardíaco",
+      "price": 1299.90,
+      "quantity": 15,
+      "category": "Wearables",
+      "sku": "AMZ-GTR3PRO",
+      "gtin": "6972596102090",
+      "ncm": "85171300",
+      "image": "https://d2r9epyceweg5n.cloudfront.net/stores/002/043/112/products/amazfit-gtr-3-pro-marrom1-c3a3a0b3a3a9a5a9a016349096232871-1024-1024.jpg"
+    }
+  ]
+}

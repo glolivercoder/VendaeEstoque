@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo de Produtos - TechSupplier Brasil</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background-color: #0066cc;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .vendor-info {
+            background-color: #e9f0f7;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .products {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .product {
+            background-color: white;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .product:hover {
+            transform: translateY(-5px);
+        }
+        .product-image {
+            height: 200px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f9f9f9;
+        }
+        .product-image img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        .product-info {
+            padding: 15px;
+        }
+        .product-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .product-description {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .product-price {
+            font-size: 20px;
+            font-weight: bold;
+            color: #0066cc;
+            margin-bottom: 10px;
+        }
+        .product-meta {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            font-size: 12px;
+            color: #777;
+        }
+        .product-meta span {
+            display: block;
+        }
+        .product-meta strong {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Catálogo de Produtos</h1>
+        <h2>TechSupplier Brasil</h2>
+    </div>
+
+    <div class="vendor-info">
+        <h3>Informações do Fornecedor</h3>
+        <p><strong>Nome:</strong> TechSupplier Brasil</p>
+        <p><strong>Descrição:</strong> Fornecedor de produtos eletrônicos e tecnologia</p>
+        <p><strong>CNPJ:</strong> 12.345.678/0001-90</p>
+        <p><strong>URL:</strong> <a href="https://techsupplier.com.br">https://techsupplier.com.br</a></p>
+        <p><strong>Email:</strong> contato@techsupplier.com.br</p>
+        <p><strong>WhatsApp:</strong> (11) 98765-4321</p>
+    </div>
+
+    <div class="products">
+        <!-- Produto 1 -->
+        <div class="product">
+            <div class="product-image">
+                <img src="https://images.samsung.com/is/image/samsung/p6pim/br/sm-a546ezkeztm/gallery/br-galaxy-a54-5g-sm-a546-sm-a546ezkeztm-535868868" alt="Smartphone Samsung Galaxy A54 5G">
+            </div>
+            <div class="product-info">
+                <div class="product-name">Smartphone Samsung Galaxy A54 5G</div>
+                <div class="product-description">Smartphone Samsung Galaxy A54 5G, 128GB, 8GB RAM, Tela 6.4", Câmera Tripla Traseira + Selfie 32MP, Dual Chip, Android 13</div>
+                <div class="product-price">R$ 1.899,90</div>
+                <div class="product-meta">
+                    <span><strong>SKU:</strong> SM-A546E-128</span>
+                    <span><strong>Estoque:</strong> 25 unidades</span>
+                    <span><strong>GTIN:</strong> 7892509122344</span>
+                    <span><strong>NCM:</strong> 85171231</span>
+                    <span><strong>Categoria:</strong> Smartphones</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Produto 2 -->
+        <div class="product">
+            <div class="product-image">
+                <img src="https://i.dell.com/is/image/DellContent/content/dam/ss2/product-images/dell-client-products/notebooks/inspiron-notebooks/15-3511/media-gallery/in3511-cnb-00055lf110-bk.psd" alt="Notebook Dell Inspiron 15">
+            </div>
+            <div class="product-info">
+                <div class="product-name">Notebook Dell Inspiron 15</div>
+                <div class="product-description">Notebook Dell Inspiron 15 3000, Intel Core i5-1135G7, 8GB RAM, SSD 256GB, Tela 15.6" Full HD, Windows 11</div>
+                <div class="product-price">R$ 3.499,90</div>
+                <div class="product-meta">
+                    <span><strong>SKU:</strong> DL-I15-3511-I5</span>
+                    <span><strong>Estoque:</strong> 15 unidades</span>
+                    <span><strong>GTIN:</strong> 7899864532156</span>
+                    <span><strong>NCM:</strong> 84713012</span>
+                    <span><strong>Categoria:</strong> Notebooks</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Produto 3 -->
+        <div class="product">
+            <div class="product-image">
+                <img src="https://www.lg.com/br/images/tv/md07529606/gallery/medium01.jpg" alt="Smart TV LG 50 4K UHD">
+            </div>
+            <div class="product-info">
+                <div class="product-name">Smart TV LG 50" 4K UHD</div>
+                <div class="product-description">Smart TV LG 50" 4K UHD, 50UQ8050, 60Hz, WiFi, Bluetooth, HDR, 3 HDMI, 2 USB, Inteligência Artificial ThinQ AI</div>
+                <div class="product-price">R$ 2.599,90</div>
+                <div class="product-meta">
+                    <span><strong>SKU:</strong> LG-50UQ8050</span>
+                    <span><strong>Estoque:</strong> 10 unidades</span>
+                    <span><strong>GTIN:</strong> 7893299876543</span>
+                    <span><strong>NCM:</strong> 85287200</span>
+                    <span><strong>Categoria:</strong> TVs</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Produto 4 -->
+        <div class="product">
+            <div class="product-image">
+                <img src="https://www.jbl.com.br/dw/image/v2/AAUJ_PRD/on/demandware.static/-/Sites-masterCatalog_Harman/default/dw9f9b4b93/JBL_Tune_510BT_Product%20Image_Hero_Black.png" alt="Fone de Ouvido JBL Tune 510BT">
+            </div>
+            <div class="product-info">
+                <div class="product-name">Fone de Ouvido JBL Tune 510BT</div>
+                <div class="product-description">Fone de Ouvido Bluetooth JBL Tune 510BT, On Ear, com Microfone, Preto, Conexão Multipoint</div>
+                <div class="product-price">R$ 249,90</div>
+                <div class="product-meta">
+                    <span><strong>SKU:</strong> JBLT510BT-BLK</span>
+                    <span><strong>Estoque:</strong> 50 unidades</span>
+                    <span><strong>GTIN:</strong> 7892265098765</span>
+                    <span><strong>NCM:</strong> 85183000</span>
+                    <span><strong>Categoria:</strong> Áudio</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Produto 5 -->
+        <div class="product">
+            <div class="product-image">
+                <img src="https://www.canon.com.br/media/catalog/product/cache/6/image/9df78eab33525d08d6e5fb8d27136e95/c/a/camera-dslr-canon-eos-rebel-t7-com-lente-18-55mm-f-3.5-5.6-is-ii_1.jpg" alt="Câmera Digital Canon EOS Rebel T7+">
+            </div>
+            <div class="product-info">
+                <div class="product-name">Câmera Digital Canon EOS Rebel T7+</div>
+                <div class="product-description">Câmera Digital Canon EOS Rebel T7+ com Lente 18-55mm, 24.1MP, Gravação Full HD, Wi-Fi, NFC</div>
+                <div class="product-price">R$ 3.299,90</div>
+                <div class="product-meta">
+                    <span><strong>SKU:</strong> CAN-EOST7-KIT</span>
+                    <span><strong>Estoque:</strong> 8 unidades</span>
+                    <span><strong>GTIN:</strong> 8714574656458</span>
+                    <span><strong>NCM:</strong> 90066100</span>
+                    <span><strong>Categoria:</strong> Câmeras</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Produto 6 -->
+        <div class="product">
+            <div class="product-image">
+                <img src="https://images.kabum.com.br/produtos/fotos/sync_mirakl/164449/Impressora-Multifuncional-HP-DeskJet-Ink-Advantage-2774-Jato-De-Tinta-Colorida-Wi-Fi-USB-Bivolt-7FR22A_1628879572_gg.jpg" alt="Impressora Multifuncional HP DeskJet 2774">
+            </div>
+            <div class="product-info">
+                <div class="product-name">Impressora Multifuncional HP DeskJet 2774</div>
+                <div class="product-description">Impressora Multifuncional HP DeskJet 2774, Jato de Tinta, Colorida, Wi-Fi, USB, Bivolt</div>
+                <div class="product-price">R$ 399,90</div>
+                <div class="product-meta">
+                    <span><strong>SKU:</strong> HP-DJ2774</span>
+                    <span><strong>Estoque:</strong> 20 unidades</span>
+                    <span><strong>GTIN:</strong> 1957364829105</span>
+                    <span><strong>NCM:</strong> 84433111</span>
+                    <span><strong>Categoria:</strong> Impressoras</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Produto 7 -->
+        <div class="product">
+            <div class="product-image">
+                <img src="https://gmedia.playstation.com/is/image/SIEPDC/ps5-product-thumbnail-01-en-14sep21" alt="Console PlayStation 5 Sony">
+            </div>
+            <div class="product-info">
+                <div class="product-name">Console PlayStation 5 Sony</div>
+                <div class="product-description">Console PlayStation 5 Sony, 825GB SSD, Controle DualSense, Branco</div>
+                <div class="product-price">R$ 4.499,90</div>
+                <div class="product-meta">
+                    <span><strong>SKU:</strong> SONY-PS5-825</span>
+                    <span><strong>Estoque:</strong> 5 unidades</span>
+                    <span><strong>GTIN:</strong> 7111940284756</span>
+                    <span><strong>NCM:</strong> 95045000</span>
+                    <span><strong>Categoria:</strong> Games</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Produto 8 -->
+        <div class="product">
+            <div class="product-image">
+                <img src="https://electrolux.vtexassets.com/arquivos/ids/219283/Ar-Condicionado-Split-Inverter-Electrolux-12.000-BTUs-Frio-QI12F.jpg" alt="Ar Condicionado Split Inverter Electrolux 12000 BTUs">
+            </div>
+            <div class="product-info">
+                <div class="product-name">Ar Condicionado Split Inverter Electrolux 12000 BTUs</div>
+                <div class="product-description">Ar Condicionado Split Inverter Electrolux 12000 BTUs, Frio, Função Siga-me, Função Turbo, 220V</div>
+                <div class="product-price">R$ 1.899,90</div>
+                <div class="product-meta">
+                    <span><strong>SKU:</strong> ELUX-QI12F</span>
+                    <span><strong>Estoque:</strong> 12 unidades</span>
+                    <span><strong>GTIN:</strong> 7896584764321</span>
+                    <span><strong>NCM:</strong> 84151011</span>
+                    <span><strong>Categoria:</strong> Eletrodomésticos</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Produto 9 -->
+        <div class="product">
+            <div class="product-image">
+                <img src="https://images.samsung.com/is/image/samsung/p6pim/br/sm-x700nzaazto/gallery/br-galaxy-tab-s8-x700-sm-x700nzaazto-530765123" alt="Tablet Samsung Galaxy Tab S8">
+            </div>
+            <div class="product-info">
+                <div class="product-name">Tablet Samsung Galaxy Tab S8</div>
+                <div class="product-description">Tablet Samsung Galaxy Tab S8, 11", 128GB, 8GB RAM, Wi-Fi, Android 12, Câmera Traseira 13MP + 6MP, Frontal 12MP</div>
+                <div class="product-price">R$ 3.999,90</div>
+                <div class="product-meta">
+                    <span><strong>SKU:</strong> SM-X700-128</span>
+                    <span><strong>Estoque:</strong> 10 unidades</span>
+                    <span><strong>GTIN:</strong> 7892509112345</span>
+                    <span><strong>NCM:</strong> 84713019</span>
+                    <span><strong>Categoria:</strong> Tablets</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Produto 10 -->
+        <div class="product">
+            <div class="product-image">
+                <img src="https://d2r9epyceweg5n.cloudfront.net/stores/002/043/112/products/amazfit-gtr-3-pro-marrom1-c3a3a0b3a3a9a5a9a016349096232871-1024-1024.jpg" alt="Smartwatch Amazfit GTR 3 Pro">
+            </div>
+            <div class="product-info">
+                <div class="product-name">Smartwatch Amazfit GTR 3 Pro</div>
+                <div class="product-description">Smartwatch Amazfit GTR 3 Pro, Tela AMOLED 1.45", GPS, Bluetooth, 150+ Modos Esportivos, Monitor Cardíaco</div>
+                <div class="product-price">R$ 1.299,90</div>
+                <div class="product-meta">
+                    <span><strong>SKU:</strong> AMZ-GTR3PRO</span>
+                    <span><strong>Estoque:</strong> 15 unidades</span>
+                    <span><strong>GTIN:</strong> 6972596102090</span>
+                    <span><strong>NCM:</strong> 85171300</span>
+                    <span><strong>Categoria:</strong> Wearables</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer style="margin-top: 30px; text-align: center; padding: 20px; color: #666; font-size: 14px;">
+        <p>Catálogo de Produtos - TechSupplier Brasil</p>
+        <p>Gerado em: <span id="current-date"></span></p>
+        <script>
+            document.getElementById('current-date').textContent = new Date().toLocaleDateString('pt-BR');
+        </script>
+    </footer>
+</body>
+</html>
