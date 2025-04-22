@@ -527,10 +527,10 @@ function AppContent() {
   };
 
   const handleMultipleSales = async (paymentMethod) => {
-    // Para pagamentos PIX, apenas mostrar o QR code e não processar a venda ainda
+    // Para pagamentos PIX, mostrar o QR code e depois processar a venda
     if (paymentMethod === 'pix') {
       setShowPixQRCode(true);
-      return;
+      // Continuar com o processamento da venda para PIX
     }
 
     if (selectedItems.length === 0) {
@@ -834,7 +834,16 @@ DETALHES DA VENDA
 ${productsText}
 
 Valor Total: R$ ${(totalAmount || 0).toFixed(2)} (${valorExtenso})
-Forma de Pagamento: ${currentSale?.paymentMethod || item?.paymentMethod || lastCompletedSale?.paymentMethod || 'Não especificado'}
+Forma de Pagamento: ${currentSale?.paymentMethod === 'dinheiro' ? 'Dinheiro' :
+                  currentSale?.paymentMethod === 'cartao' ? 'Cartão' :
+                  currentSale?.paymentMethod === 'pix' ? 'PIX' :
+                  item?.paymentMethod === 'dinheiro' ? 'Dinheiro' :
+                  item?.paymentMethod === 'cartao' ? 'Cartão' :
+                  item?.paymentMethod === 'pix' ? 'PIX' :
+                  lastCompletedSale?.paymentMethod === 'dinheiro' ? 'Dinheiro' :
+                  lastCompletedSale?.paymentMethod === 'cartao' ? 'Cartão' :
+                  lastCompletedSale?.paymentMethod === 'pix' ? 'PIX' :
+                  'Não especificado'}
 
 Declaro para os devidos fins que recebi o valor acima descrito referente à venda dos itens listados.
 
@@ -1923,6 +1932,7 @@ ${clientCPF}
       const updatedItems = [...items];
       const saleDate = new Date().toISOString();
       const localDate = formatDateToBrazilian(new Date().toISOString().split('T')[0]);
+      const localTime = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       const saleItems = [];
 
       for (const index of selectedItems) {
@@ -1969,32 +1979,37 @@ ${clientCPF}
         totalPix: prev.totalPix + Math.abs(totalAmount)
       }));
 
-      // Atualizar o histórico de vendas
-      setCurrentSale({
-        client: selectedClient || { name: 'Cliente não especificado' },
-        items: saleItems,
-        total: Math.abs(totalAmount),
-        paymentMethod: 'pix',
-        date: localDate
-      });
-
-      // Adicionar à lista de vendas - uma única entrada para toda a venda
-      setSalesData(prev => [...prev, {
+      // Criar objeto de venda para adicionar à lista e mostrar no pop-up
+      const newSale = {
         id: Date.now(),
         date: localDate,
+        time: localTime,
         client: selectedClient?.name || 'Cliente não especificado',
         clientDoc: selectedClient?.rg || '',
         clientCpf: selectedClient?.cpf || '',
-        vendor: selectedVendor?.name || 'Vendedor não especificado',
-        vendorDoc: selectedVendor?.document || '',
+        // Usar dados do vendedor logado se disponível, caso contrário usar o vendedor selecionado
+        vendor: currentUser?.name || selectedVendor?.name || 'Vendedor não especificado',
+        vendorDoc: currentUser?.rg || selectedVendor?.document || '',
         product: saleItems.map(item => item.description).join(', '),
         quantity: saleItems.reduce((total, item) => total + Math.abs(item.quantity), 0),
         price: Math.abs(totalAmount) / saleItems.reduce((total, item) => total + Math.abs(item.quantity), 0),
         total: Math.abs(totalAmount),
-        paymentMethod: 'pix'
-      }]);
+        paymentMethod: 'pix',
+        // Adicionar timestamp completo para facilitar ordenação
+        timestamp: new Date().getTime()
+      };
 
-      alert('Venda finalizada com sucesso!');
+      // Adicionar à lista de vendas
+      setSalesData(prev => [...prev, newSale]);
+
+      // Salvar a venda atual para mostrar no pop-up de confirmação
+      console.log('Salvando venda para pop-up de confirmação:', newSale);
+      setLastCompletedSale(newSale);
+
+      // Mostrar o pop-up de confirmação
+      console.log('Exibindo pop-up de confirmação, setShowSaleConfirmation(true)');
+      setShowSaleConfirmation(true);
+      console.log('Estado após atualização:', { showSaleConfirmation: true, lastCompletedSale: newSale });
 
       // Criar backup automático após a venda
       if (autoBackup) {
