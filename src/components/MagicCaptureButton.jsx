@@ -122,13 +122,15 @@ const MagicCaptureButton = ({ onProductDataExtracted }) => {
       // Prompt para o Gemini
       const prompt = `Analise esta imagem de um produto e me retorne um JSON com as informações encontradas.
       Identifique os seguintes campos específicos:
-      - Nome do produto
+      - Nome completo do produto (nome oficial e completo do produto)
+      - Descrição curta do produto (resumo breve do que é o produto)
       - SKU ou código do produto (se visível)
-      - Especificações técnicas (liste as características técnicas do produto em formato objetivo)
+      - GTIN/EAN (código de barras, geralmente 8, 12, 13 ou 14 dígitos)
+      - NCM (Nomenclatura Comum do Mercosul, formato XX.XX.XX.XX)
+      - Especificações técnicas (liste as características técnicas do produto em formato objetivo, incluindo dimensões, peso, material, etc.)
       - Copy de vendas (crie uma descrição persuasiva destacando os benefícios e qualidades do produto)
       - Categoria do produto
       - Preço sugerido (se visível)
-      - Código de barras (se visível)
 
       Considere também o texto extraído por OCR: ${tesseractResult}
       ${barcodeResult ? `Foi detectado um código de barras: ${barcodeResult}` : ''}
@@ -136,19 +138,22 @@ const MagicCaptureButton = ({ onProductDataExtracted }) => {
       Formato de resposta:
       {
         "fields": [
-          {"name": "description", "value": "Nome do produto"},
+          {"name": "productName", "value": "Nome completo do produto"},
+          {"name": "description", "value": "Descrição curta do produto"},
           {"name": "sku", "value": "SKU ou código do produto"},
-          {"name": "technicalSpecs", "value": "Especificações técnicas do produto em formato objetivo"},
+          {"name": "gtin", "value": "Código de barras GTIN/EAN"},
+          {"name": "ncm", "value": "Código NCM"},
+          {"name": "technicalSpecs", "value": "Especificações técnicas do produto em formato objetivo, incluindo dimensões, peso, etc."},
           {"name": "salesCopy", "value": "Copy de vendas persuasiva destacando benefícios"},
           {"name": "category", "value": "Categoria do produto"},
-          {"name": "price", "value": "Preço sugerido"},
-          {"name": "barcode", "value": "${barcodeResult || ''}"}
+          {"name": "price", "value": "Preço sugerido"}
         ]
       }
 
       Se não conseguir identificar algum campo, deixe o valor como string vazia.
       Divida claramente as especificações técnicas (formato objetivo) da copy de vendas (formato persuasivo).
-      Na copy de vendas, seja criativo e persuasivo, destacando os benefícios e qualidades do produto.`;
+      Na copy de vendas, seja criativo e persuasivo, destacando os benefícios e qualidades do produto.
+      Para as dimensões e peso, extraia valores numéricos precisos quando possível.`;
 
       console.log("Enviando imagem para o Gemini...");
       const result = await GeminiService.model.generateContent([prompt, imagePart]);
@@ -190,12 +195,15 @@ const MagicCaptureButton = ({ onProductDataExtracted }) => {
   // Função para mapear os campos para o formato do formulário de produto
   const mapFieldsToProductForm = (data) => {
     const mappedData = {
+      productName: '',
       description: '',
       sku: '',
+      gtin: '',
+      ncm: '',
+      technicalSpecs: '',
       itemDescription: '',
       category: '',
-      price: '',
-      barcode: ''
+      price: ''
     };
 
     if (!data || !data.fields) {
@@ -205,10 +213,7 @@ const MagicCaptureButton = ({ onProductDataExtracted }) => {
     data.fields.forEach(field => {
       if (field.name && field.value) {
         // Mapear campos especiais
-        if (field.name === 'technicalSpecs') {
-          // Guardar especificações técnicas para combinar depois
-          mappedData['technicalSpecs'] = field.value;
-        } else if (field.name === 'salesCopy') {
+        if (field.name === 'salesCopy') {
           // Guardar copy de vendas para combinar depois
           mappedData['salesCopy'] = field.value;
         } else {
@@ -218,18 +223,31 @@ const MagicCaptureButton = ({ onProductDataExtracted }) => {
       }
     });
 
-    // Combinar especificações técnicas e copy de vendas em itemDescription
-    if (mappedData['technicalSpecs'] && mappedData['salesCopy']) {
-      mappedData['itemDescription'] = `**Especificações Técnicas:**\n${mappedData['technicalSpecs']}\n\n**Descrição:**\n${mappedData['salesCopy']}`;
-    } else if (mappedData['technicalSpecs']) {
-      mappedData['itemDescription'] = `**Especificações Técnicas:**\n${mappedData['technicalSpecs']}`;
-    } else if (mappedData['salesCopy']) {
-      mappedData['itemDescription'] = `**Descrição:**\n${mappedData['salesCopy']}`;
+    // Combinar copy de vendas com itemDescription se não estiver vazio
+    if (mappedData['salesCopy']) {
+      if (mappedData['itemDescription']) {
+        mappedData['itemDescription'] += `\n\n**Descrição:**\n${mappedData['salesCopy']}`;
+      } else {
+        mappedData['itemDescription'] = `**Descrição:**\n${mappedData['salesCopy']}`;
+      }
     }
 
     // Remover campos temporários
-    delete mappedData['technicalSpecs'];
     delete mappedData['salesCopy'];
+
+    // Obter o CEP do cliente selecionado se houver um cliente selecionado
+    try {
+      const selectedClientData = localStorage.getItem('selectedClient');
+      if (selectedClientData) {
+        const selectedClient = JSON.parse(selectedClientData);
+        if (selectedClient && selectedClient.address && selectedClient.address.cep) {
+          console.log(`CEP do cliente selecionado: ${selectedClient.address.cep}`);
+          // Aqui você pode usar o CEP para cálculos de frete ou outras finalidades
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao obter CEP do cliente:', error);
+    }
 
     return mappedData;
   };

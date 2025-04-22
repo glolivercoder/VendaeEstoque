@@ -205,13 +205,23 @@ const ProductForm = ({
           </div>
         </div>
         <div className="form-group">
+          <label>Nome do Produto:</label>
+          <input
+            type="text"
+            name="productName"
+            value={newItem.productName || ''}
+            onChange={handleInputChange}
+            placeholder="Nome completo do produto"
+          />
+        </div>
+        <div className="form-group">
           <label>Descriu00e7u00e3o:</label>
           <input
             type="text"
             name="description"
             value={newItem.description}
             onChange={handleInputChange}
-            placeholder="Nome do produto"
+            placeholder="Descrição curta do produto"
           />
         </div>
         <div className="form-group">
@@ -278,6 +288,16 @@ const ProductForm = ({
               <button onClick={handleAddCategory}>Adicionar</button>
             </div>
           )}
+        </div>
+        <div className="form-group">
+          <label>Especificau00e7u00f5es Tu00e9cnicas:</label>
+          <textarea
+            name="technicalSpecs"
+            value={newItem.technicalSpecs || ''}
+            onChange={handleInputChange}
+            placeholder="Especificau00e7u00f5es tu00e9cnicas do produto (dimensu00f5es, peso, material, etc.)"
+            rows="3"
+          ></textarea>
         </div>
         <div className="form-group">
           <label>Descriu00e7u00e3o Detalhada:</label>

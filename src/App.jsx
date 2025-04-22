@@ -107,6 +107,7 @@ function AppContent() {
   const [showLinks, setShowLinks] = useState(false);
   const [newItem, setNewItem] = useState({
     image: null,
+    productName: '',
     description: '',
     price: '',
     quantity: 1,
@@ -119,8 +120,12 @@ function AppContent() {
     client: { name: '', rg: '', cpf: '', fatherName: '', motherName: '', birthDate: '', issueDate: '', birthPlace: '', whatsapp: '', email: '', address: '' },
     expirationDate: null,
     checked: false,
+    technicalSpecs: '',
     itemDescription: '',
-    category: 'Todos' // Adicionar categoria padrão
+    category: 'Todos',
+    sku: '',
+    gtin: '',
+    ncm: ''
   });
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
   const [salesSummary, setSalesSummary] = useState({
@@ -663,6 +668,7 @@ function AppContent() {
 
     try {
       const productData = {
+        productName: newItem.productName || '',
         description: newItem.description,
         price: newItem.price,
         quantity: newItem.quantity || 0,
@@ -671,9 +677,12 @@ function AppContent() {
         additionalImages: newItem.additionalImages || [],
         expirationDate: newItem.expirationDate || null,
         links: newItem.links || [],
+        technicalSpecs: newItem.technicalSpecs || '',
         itemDescription: newItem.itemDescription || '',
-        category: newItem.category || 'Todos', // Adicionar categoria ao produto
-        sku: newItem.sku || ''
+        category: newItem.category || 'Todos',
+        sku: newItem.sku || '',
+        gtin: newItem.gtin || '',
+        ncm: newItem.ncm || ''
       };
 
       const productId = await addProduct(productData);
@@ -690,6 +699,7 @@ function AppContent() {
 
       // Limpar o formulário
       setNewItem({
+        productName: '',
         description: '',
         price: '',
         quantity: '',
@@ -698,9 +708,12 @@ function AppContent() {
         links: [],
         expirationDate: null,
         checked: false,
+        technicalSpecs: '',
         itemDescription: '',
-        category: 'Todos', // Resetar categoria para o padrão
-        sku: ''
+        category: 'Todos',
+        sku: '',
+        gtin: '',
+        ncm: ''
       });
 
       setShowAddItem(false);

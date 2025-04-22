@@ -37,6 +37,21 @@ const MagicWandScanButton = ({ onProductDataDetected }) => {
         },
       };
 
+      // Obter o CEP do cliente selecionado, se houver
+      let clientZipCode = '';
+      try {
+        const selectedClientData = localStorage.getItem('selectedClient');
+        if (selectedClientData) {
+          const selectedClient = JSON.parse(selectedClientData);
+          if (selectedClient && selectedClient.address && selectedClient.address.cep) {
+            clientZipCode = selectedClient.address.cep;
+            console.log(`CEP do cliente selecionado: ${clientZipCode}`);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao obter CEP do cliente:', error);
+      }
+
       // Prompt para o Gemini específico para identificação de GTIN/NCM e informações do produto
       const prompt = `Analise esta imagem de um produto e identifique o código GTIN (código de barras), NCM (Nomenclatura Comum do Mercosul) ou SKU, além de outras informações visíveis sobre o produto.
 
@@ -44,10 +59,12 @@ const MagicWandScanButton = ({ onProductDataDetected }) => {
       1. Código GTIN/EAN (geralmente 8, 12, 13 ou 14 dígitos)
       2. Código NCM (8 dígitos, formato XX.XX.XX.XX)
       3. Código SKU (código de identificação do produto)
-      4. Nome/Descrição do produto
-      5. Dimensões (comprimento, largura, altura em cm)
-      6. Peso (em kg ou g)
-      7. Volume (em litros ou ml, se aplicável)
+      4. Nome completo do produto
+      5. Descrição curta do produto
+      6. Especificações técnicas detalhadas
+      7. Dimensões (comprimento, largura, altura em cm)
+      8. Peso (em kg ou g)
+      9. Volume (em litros ou ml, se aplicável)
 
       Retorne as informações encontradas no formato JSON:
 
@@ -58,7 +75,9 @@ const MagicWandScanButton = ({ onProductDataDetected }) => {
           "confidence": valor entre 0 e 1
         },
         "productInfo": {
-          "name": "nome ou descrição do produto",
+          "productName": "nome completo do produto",
+          "description": "descrição curta do produto",
+          "technicalSpecs": "especificações técnicas detalhadas do produto",
           "dimensions": {
             "length": valor numérico ou null,
             "width": valor numérico ou null,
@@ -76,9 +95,12 @@ const MagicWandScanButton = ({ onProductDataDetected }) => {
         }
       }
 
+      ${clientZipCode ? `Considere que o produto será enviado para o CEP ${clientZipCode} ao calcular informações de frete e disponibilidade.` : ''}
+
       Para os códigos, se encontrar mais de um tipo, priorize na ordem: GTIN, NCM, SKU.
       Para as dimensões, peso e volume, extraia apenas se estiverem claramente visíveis na imagem.
-      Se alguma informação não estiver disponível, use null para valores numéricos ou string vazia para textos.`;
+      Se alguma informação não estiver disponível, use null para valores numéricos ou string vazia para textos.
+      Seja detalhado nas especificações técnicas, incluindo todas as características relevantes do produto.`;
 
       console.log("Enviando imagem para o Gemini...");
       const result = await GeminiService.model.generateContent([prompt, imagePart]);
@@ -109,7 +131,9 @@ const MagicWandScanButton = ({ onProductDataDetected }) => {
                 ...data.productInfo || {},
                 ...additionalInfo,
                 // Priorizar informações da API, mas manter informações da imagem se não existirem na API
-                name: additionalInfo.name || data.productInfo?.name || '',
+                productName: additionalInfo.productName || data.productInfo?.productName || additionalInfo.name || data.productInfo?.name || '',
+                description: additionalInfo.description || data.productInfo?.description || '',
+                technicalSpecs: additionalInfo.technicalSpecs || data.productInfo?.technicalSpecs || '',
                 dimensions: {
                   ...data.productInfo?.dimensions || {},
                   ...additionalInfo.dimensions || {}
@@ -128,19 +152,27 @@ const MagicWandScanButton = ({ onProductDataDetected }) => {
               });
             } else {
               // Se não encontrou informações adicionais, usar apenas as informações da imagem
+              const productInfo = data.productInfo || {};
               onProductDataDetected({
                 code: data.productCode.value,
                 type: data.productCode.type,
-                ...data.productInfo || {}
+                productName: productInfo.productName || productInfo.name || '',
+                description: productInfo.description || '',
+                technicalSpecs: productInfo.technicalSpecs || '',
+                ...productInfo
               });
             }
           } catch (apiError) {
             console.warn("Erro ao buscar informações adicionais do produto:", apiError);
             // Em caso de erro na API, usar apenas as informações da imagem
+            const productInfo = data.productInfo || {};
             onProductDataDetected({
               code: data.productCode.value,
               type: data.productCode.type,
-              ...data.productInfo || {}
+              productName: productInfo.productName || productInfo.name || '',
+              description: productInfo.description || '',
+              technicalSpecs: productInfo.technicalSpecs || '',
+              ...productInfo
             });
           }
         } else {
