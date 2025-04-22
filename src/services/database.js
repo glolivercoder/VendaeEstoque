@@ -475,6 +475,82 @@ export const addSale = async (sale) => {
   });
 };
 
+// Função para obter todas as vendas
+export const getSales = async () => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['sales', 'saleItems'], 'readonly');
+    const salesStore = transaction.objectStore('sales');
+    const salesRequest = salesStore.getAll();
+
+    salesRequest.onsuccess = () => {
+      const sales = salesRequest.result;
+      resolve(sales);
+    };
+
+    salesRequest.onerror = () => {
+      reject(salesRequest.error);
+    };
+  });
+};
+
+// Função para obter vendas de um cliente específico
+export const getSalesByClient = async (clientId) => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['sales', 'saleItems'], 'readonly');
+    const salesStore = transaction.objectStore('sales');
+    const salesRequest = salesStore.getAll();
+
+    salesRequest.onsuccess = () => {
+      const sales = salesRequest.result;
+      const clientSales = sales.filter(sale => sale.clientId === clientId);
+
+      // Ordenar por data, mais recente primeiro
+      clientSales.sort((a, b) => new Date(b.saleDate) - new Date(a.saleDate));
+
+      resolve(clientSales);
+    };
+
+    salesRequest.onerror = () => {
+      reject(salesRequest.error);
+    };
+  });
+};
+
+// Função para obter a última venda de um cliente
+export const getLastClientSale = async (clientId) => {
+  try {
+    const clientSales = await getSalesByClient(clientId);
+    if (clientSales && clientSales.length > 0) {
+      return clientSales[0]; // A primeira venda é a mais recente devido à ordenação
+    }
+    return null;
+  } catch (error) {
+    console.error(`Erro ao obter última venda do cliente ${clientId}:`, error);
+    return null;
+  }
+};
+
+// Função para obter os itens de uma venda específica
+export const getSaleItems = async (saleId) => {
+  const db = await ensureDB();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(['saleItems'], 'readonly');
+    const saleItemsStore = transaction.objectStore('saleItems');
+    const index = saleItemsStore.index('saleId');
+    const request = index.getAll(saleId);
+
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+
+    request.onerror = () => {
+      reject(request.error);
+    };
+  });
+};
+
 export const getProducts = async () => {
   const db = await ensureDB();
   return new Promise((resolve, reject) => {

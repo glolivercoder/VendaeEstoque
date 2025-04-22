@@ -8,7 +8,7 @@ import TrackingPanel from "./TrackingPanel";
 import ShippingLabelGenerator from "./ShippingLabelGenerator";
 import CarrierConfigPanel from "./CarrierConfigPanel";
 import MagicWandScanButton from "./MagicWandScanButton";
-import { searchClients } from "../services/database";
+import { searchClients, getLastClientSale, getSaleItems, getProducts } from "../services/database";
 
 // Ícones
 const PackagePlus = () => (
@@ -99,6 +99,9 @@ const ShippingCalculator = () => {
   const [clientSearchQuery, setClientSearchQuery] = useState("");
   const [filteredClients, setFilteredClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
+  const [lastClientSaleData, setLastClientSaleData] = useState(null);
+  const [lastClientSaleItems, setLastClientSaleItems] = useState([]);
+  const [availableProducts, setAvailableProducts] = useState([]);
 
   // Estados para o pop-up de resultados
   const [showResultsPopup, setShowResultsPopup] = useState(false);
@@ -111,6 +114,30 @@ const ShippingCalculator = () => {
         setShippingHistory(JSON.parse(savedHistory));
       } catch (error) {
         console.error('Erro ao carregar histórico de fretes:', error);
+      }
+    }
+
+    // Carregar produtos disponíveis no Vendas PDV
+    fetchAvailableProducts();
+
+    // Verificar se há um cliente selecionado no localStorage
+    const savedClient = localStorage.getItem('selectedClient');
+    if (savedClient) {
+      try {
+        const client = JSON.parse(savedClient);
+        setSelectedClient(client);
+
+        // Preencher o CEP de origem com o CEP do cliente
+        if (client.address && client.address.cep) {
+          setZipCodeOrigin(client.address.cep.replace(/\D/g, ''));
+        }
+
+        // Buscar a última compra do cliente
+        if (client.id) {
+          fetchLastClientSale(client.id);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar cliente selecionado:', error);
       }
     }
   }, []);
@@ -372,13 +399,91 @@ const ShippingCalculator = () => {
     }
   };
 
+  // Função para buscar a última compra do cliente
+  const fetchLastClientSale = async (clientId) => {
+    try {
+      const lastSale = await getLastClientSale(clientId);
+      setLastClientSaleData(lastSale);
+
+      if (lastSale) {
+        const saleItems = await getSaleItems(lastSale.id);
+        setLastClientSaleItems(saleItems);
+
+        // Se houver itens na última compra, preencher o primeiro item
+        if (saleItems && saleItems.length > 0) {
+          const firstItem = saleItems[0];
+          setSku(firstItem.sku || "");
+          setPackageDescription(firstItem.description || "");
+
+          // Buscar mais informações do produto se disponível
+          if (firstItem.description) {
+            const products = await getProducts();
+            const matchingProduct = products.find(p =>
+              p.description === firstItem.description ||
+              (p.sku && p.sku === firstItem.sku)
+            );
+
+            if (matchingProduct) {
+              setProductName(matchingProduct.productName || matchingProduct.name || "");
+              setTechnicalSpecs(matchingProduct.technicalSpecs || "");
+              setWeight(matchingProduct.weight ? matchingProduct.weight.toString() : "");
+              setLength(matchingProduct.dimensions?.length ? matchingProduct.dimensions.length.toString() : "");
+              setWidth(matchingProduct.dimensions?.width ? matchingProduct.dimensions.width.toString() : "");
+              setHeight(matchingProduct.dimensions?.height ? matchingProduct.dimensions.height.toString() : "");
+            }
+          }
+
+          toast({
+            title: "Última compra encontrada",
+            description: `Informações do último produto comprado por ${selectedClient.name} foram preenchidas.`,
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar última compra do cliente:', error);
+    }
+  };
+
+  // Função para buscar produtos disponíveis no Vendas PDV
+  const fetchAvailableProducts = async () => {
+    try {
+      const products = await getProducts();
+      setAvailableProducts(products);
+
+      // Se não houver cliente selecionado e houver produtos disponíveis, preencher o primeiro produto
+      if (!selectedClient && products.length > 0) {
+        const firstProduct = products[0];
+        setSku(firstProduct.sku || "");
+        setProductName(firstProduct.productName || firstProduct.name || firstProduct.description || "");
+        setPackageDescription(firstProduct.description || "");
+        setTechnicalSpecs(firstProduct.technicalSpecs || "");
+        setWeight(firstProduct.weight ? firstProduct.weight.toString() : "");
+        setLength(firstProduct.dimensions?.length ? firstProduct.dimensions.length.toString() : "");
+        setWidth(firstProduct.dimensions?.width ? firstProduct.dimensions.width.toString() : "");
+        setHeight(firstProduct.dimensions?.height ? firstProduct.dimensions.height.toString() : "");
+
+        toast({
+          title: "Produto carregado",
+          description: `Informações do produto ${firstProduct.description || firstProduct.name} foram preenchidas.`,
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao buscar produtos disponíveis:', error);
+    }
+  };
+
   // Função para limpar o cliente selecionado
   const clearSelectedClient = () => {
     setSelectedClient(null);
+    setLastClientSaleData(null);
+    setLastClientSaleItems([]);
     toast({
       title: "Cliente removido",
       description: "O cliente foi removido da seleção.",
     });
+
+    // Buscar produtos disponíveis quando o cliente é removido
+    fetchAvailableProducts();
   };
 
   return (
@@ -420,6 +525,20 @@ const ShippingCalculator = () => {
                           setSelectedClient(client);
                           setClientSearchQuery("");
                           setFilteredClients([]);
+
+                          // Salvar o cliente selecionado no localStorage
+                          localStorage.setItem('selectedClient', JSON.stringify(client));
+
+                          // Preencher o CEP de origem com o CEP do cliente
+                          if (client.address && client.address.cep) {
+                            setZipCodeOrigin(client.address.cep.replace(/\D/g, ''));
+                          }
+
+                          // Buscar a última compra do cliente
+                          if (client.id) {
+                            fetchLastClientSale(client.id);
+                          }
+
                           toast({
                             title: "Cliente selecionado",
                             description: `${client.name} foi selecionado com sucesso.`,
