@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { formatPhoneNumber, formatCNPJ } from '../utils/format';
 import VendorProductModal from '../components/modals/VendorProductModal';
+import CatalogImporter from '../components/modals/CatalogImporter';
 
 const Vendors = ({
   vendors,
@@ -47,6 +48,8 @@ const Vendors = ({
   // Estado para controlar o modal de produtos do fornecedor
   const [showVendorProducts, setShowVendorProducts] = useState(false);
   const [selectedVendorForProducts, setSelectedVendorForProducts] = useState(null);
+  const [showCatalogImporter, setShowCatalogImporter] = useState(false);
+  const [selectedVendorForCatalog, setSelectedVendorForCatalog] = useState(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -232,6 +235,12 @@ const Vendors = ({
   const handleOpenVendorProducts = (vendor) => {
     setSelectedVendorForProducts(vendor);
     setShowVendorProducts(true);
+  };
+
+  // Abrir modal de importação de catálogo
+  const handleOpenCatalogImporter = (vendor) => {
+    setSelectedVendorForCatalog(vendor);
+    setShowCatalogImporter(true);
   };
 
   // Adicionar produto para o fornecedor
@@ -685,6 +694,15 @@ const Vendors = ({
                         </svg>
                       </button>
                       <button
+                        onClick={() => handleOpenCatalogImporter(vendor)}
+                        className="p-1 rounded-full hover:bg-green-100 text-green-600 transition-colors"
+                        title="Importar Catálogo"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                      </button>
+                      <button
                         onClick={() => {
                           // Chamar a função para mostrar o seletor de produtos
                           window.setShowProductSelector && window.setShowProductSelector(true);
@@ -878,6 +896,18 @@ const Vendors = ({
           }}
           vendor={selectedVendorForProducts}
           onSave={handleAddVendorProduct}
+        />
+      )}
+
+      {/* Catalog Importer Modal */}
+      {showCatalogImporter && selectedVendorForCatalog && (
+        <CatalogImporter
+          isOpen={showCatalogImporter}
+          onClose={() => {
+            setShowCatalogImporter(false);
+            setSelectedVendorForCatalog(null);
+          }}
+          vendor={selectedVendorForCatalog}
         />
       )}
     </div>

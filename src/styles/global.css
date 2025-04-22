@@ -4,8 +4,6 @@
 @import '../themes/theme-green.css';
 @import '../themes/theme-blue.css';
 @import '../themes/theme-purple.css';
-@import '../themes/theme-dark-blue.css';
-@import '../themes/theme-dark-green.css';
 
 /* Estilos base */
 * {
@@ -304,28 +302,4 @@ body.theme-purple {
   --category-text: #8A3FD1;
 }
 
-body.theme-dark-blue {
-  --primary-color: #4A7AFF;
-  --secondary-color: #3D6AE8;
-  --accent-color: #2C5BD9;
-  --text-color: #E0E0E0;
-  --background-color: #121212;
-  --card-background: #1E1E1E;
-  --border-color: #333333;
-  --shadow-color: rgba(0, 0, 0, 0.3);
-  --category-background: #2C3E50;
-  --category-text: #4A7AFF;
-}
 
-body.theme-dark-green {
-  --primary-color: #2ECC71;
-  --secondary-color: #27AE60;
-  --accent-color: #1E9E56;
-  --text-color: #E0E0E0;
-  --background-color: #121212;
-  --card-background: #1E1E1E;
-  --border-color: #333333;
-  --shadow-color: rgba(0, 0, 0, 0.3);
-  --category-background: #2C3E50;
-  --category-text: #2ECC71;
-}

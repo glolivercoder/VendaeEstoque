@@ -13,7 +13,10 @@ const EmployeeManager = () => {
     address: '',
     password: '',
     confirmPassword: '',
-    type: EMPLOYEE_TYPES.SELLER
+    type: EMPLOYEE_TYPES.SELLER, // Definindo 'vendedor' como tipo padrão para novos usuários
+    username: '', // Novo campo para usuário
+    rg: '', // Novo campo para RG
+    cpf: '' // Novo campo para CPF
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -61,7 +64,10 @@ const EmployeeManager = () => {
       address: '',
       password: '',
       confirmPassword: '',
-      type: EMPLOYEE_TYPES.SELLER
+      type: EMPLOYEE_TYPES.SELLER, // Mantendo 'vendedor' como tipo padrão
+      username: '', // Resetando campo de usuário
+      rg: '', // Resetando campo de RG
+      cpf: '' // Resetando campo de CPF
     });
     setEditingEmployee(null);
     setShowAddForm(false);
@@ -79,7 +85,10 @@ const EmployeeManager = () => {
       address: employee.address || '',
       password: '',
       confirmPassword: '',
-      type: employee.type
+      type: employee.type,
+      username: employee.username || '',
+      rg: employee.rg || '',
+      cpf: employee.cpf || ''
     });
     setShowAddForm(true);
     setError('');
@@ -105,16 +114,18 @@ const EmployeeManager = () => {
     setSuccess('');
 
     // Validar campos obrigatórios
-    if (!formData.name || !formData.email) {
-      setError('Nome e e-mail são obrigatórios');
+    if (!formData.username) {
+      setError('Nome de usuário é obrigatório');
       return;
     }
 
-    // Validar formato de e-mail
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      setError('Formato de e-mail inválido');
-      return;
+    // Validar formato de e-mail (apenas se for fornecido)
+    if (formData.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        setError('Formato de e-mail inválido');
+        return;
+      }
     }
 
     // Validar senha para novo funcionário
@@ -145,7 +156,10 @@ const EmployeeManager = () => {
       email: formData.email,
       whatsapp: formData.whatsapp,
       address: formData.address,
-      type: formData.type
+      type: formData.type,
+      username: formData.username,
+      rg: formData.rg,
+      cpf: formData.cpf
     };
 
     // Adicionar senha apenas se for fornecida
@@ -204,8 +218,23 @@ const EmployeeManager = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                Usuário*
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                required
+              />
+            </div>
+
+            <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Nome*
+                Nome
               </label>
               <input
                 type="text"
@@ -214,13 +243,12 @@ const EmployeeManager = () => {
                 value={formData.name}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                required
               />
             </div>
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                E-mail*
+                E-mail
               </label>
               <input
                 type="email"
@@ -229,7 +257,6 @@ const EmployeeManager = () => {
                 value={formData.email}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-                required
               />
             </div>
 
@@ -245,6 +272,34 @@ const EmployeeManager = () => {
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                 placeholder="(XX) XXXXX-XXXX"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="rg" className="block text-sm font-medium text-gray-700 mb-1">
+                RG
+              </label>
+              <input
+                type="text"
+                id="rg"
+                name="rg"
+                value={formData.rg}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="cpf" className="block text-sm font-medium text-gray-700 mb-1">
+                CPF
+              </label>
+              <input
+                type="text"
+                id="cpf"
+                name="cpf"
+                value={formData.cpf}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
               />
             </div>
 
@@ -335,10 +390,10 @@ const EmployeeManager = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Nome
+                  Usuário
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  E-mail
+                  Nome
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Tipo
@@ -355,10 +410,10 @@ const EmployeeManager = () => {
               {employees.map((employee) => (
                 <tr key={employee.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{employee.name}</div>
+                    <div className="text-sm font-medium text-gray-900">{employee.username}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{employee.email}</div>
+                    <div className="text-sm text-gray-500">{employee.name || '-'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${

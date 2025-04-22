@@ -16,7 +16,8 @@ export const useAuth = () => {
 // Tipos de funcionários
 export const EMPLOYEE_TYPES = {
   ADMIN: 'admin',
-  EMPLOYEE: 'employee'
+  EMPLOYEE: 'employee',
+  SELLER: 'vendedor'
 };
 
 // Provedor de autenticação
