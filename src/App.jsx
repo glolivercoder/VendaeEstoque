@@ -44,6 +44,7 @@ import BankQRCodeSelector from './components/QRCode_Bancos/BankQRCodeSelector';
 import ShippingCalculator from './components/ShippingCalculator.jsx';
 import SaleConfirmationPopup from './components/SaleConfirmationPopup';
 import SalesHistory from './components/SalesHistory';
+import ProductSelector from './components/ProductSelector';
 import { ToastProvider } from './components/ui/toast';
 
 // Registrar componentes do Chart.js
@@ -208,6 +209,7 @@ function AppContent() {
   const [showSaleConfirmation, setShowSaleConfirmation] = useState(false);
   const [lastCompletedSale, setLastCompletedSale] = useState(null);
   const [showSalesHistory, setShowSalesHistory] = useState(false);
+  const [showProductSelector, setShowProductSelector] = useState(false);
 
   // Adicionar estado para categorias e nova categoria
   const [categories, setCategories] = useState(['Ferramentas', 'Instrumentos Musicais', 'Informática', 'Gadgets', 'Todos', 'Diversos']);
@@ -217,6 +219,16 @@ function AppContent() {
 
   // Refs para capturar elementos para exportação
   const reportRef = useRef(null);
+
+  // Expor a função setShowProductSelector para componentes externos
+  useEffect(() => {
+    window.setShowProductSelector = setShowProductSelector;
+
+    return () => {
+      // Limpar quando o componente for desmontado
+      delete window.setShowProductSelector;
+    };
+  }, []);
 
   // Initialize database before loading data
   useEffect(() => {
@@ -1876,6 +1888,26 @@ ${clientCPF}
       alert('Produtos sincronizados com sucesso para o WordPress!');
     } catch (error) {
       alert('Erro ao sincronizar produtos: ' + error.message);
+    }
+  };
+
+  // Função para lidar com a seleção de produtos para o PDV
+  const handleSelectProductsForPDV = (selectedProductsList) => {
+    try {
+      // Adicionar produtos selecionados à lista de produtos
+      const newItems = [...items];
+      selectedProductsList.forEach(product => {
+        // Verificar se o produto já existe na lista
+        const existingIndex = newItems.findIndex(item => item.id === product.id);
+        if (existingIndex === -1) {
+          newItems.push(product);
+        }
+      });
+      setItems(newItems);
+      alert(`${selectedProductsList.length} produto(s) adicionado(s) ao PDV com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao adicionar produtos ao PDV:', error);
+      alert('Erro ao adicionar produtos ao PDV. Verifique o console para mais detalhes.');
     }
   };
 
@@ -5174,6 +5206,14 @@ ${clientCPF}
         <SalesHistory
           salesData={salesData}
           onClose={() => setShowSalesHistory(false)}
+        />
+      )}
+
+      {/* Product Selector Popup */}
+      {showProductSelector && (
+        <ProductSelector
+          onClose={() => setShowProductSelector(false)}
+          onSelectForPDV={handleSelectProductsForPDV}
         />
       )}
 

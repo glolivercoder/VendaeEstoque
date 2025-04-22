@@ -685,6 +685,18 @@ const Vendors = ({
                         </svg>
                       </button>
                       <button
+                        onClick={() => {
+                          // Chamar a função para mostrar o seletor de produtos
+                          window.setShowProductSelector && window.setShowProductSelector(true);
+                        }}
+                        className="p-1 rounded-full hover:bg-blue-100 text-blue-600 transition-colors"
+                        title="Selecionar Produtos"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                      </button>
+                      <button
                         onClick={() => handleEdit(vendor)}
                         className="p-1 rounded-full hover:bg-primary/10 text-primary transition-colors"
                         title="Editar fornecedor"
@@ -790,6 +802,22 @@ const Vendors = ({
             </div>
           )}
         </div>
+      </div>
+
+      {/* Botão Selecionar Produtos na parte inferior da página */}
+      <div className="fixed bottom-6 right-6 z-10">
+        <button
+          type="button"
+          className="flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+          onClick={() => {
+            window.setShowProductSelector && window.setShowProductSelector(true);
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          Selecionar Produtos
+        </button>
       </div>
 
       {/* Delete Confirmation Dialog */}
