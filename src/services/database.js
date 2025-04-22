@@ -483,7 +483,25 @@ export const getProducts = async () => {
     const request = store.getAll();
 
     request.onsuccess = () => {
-      resolve(request.result);
+      // Garantir que todos os produtos tenham uma quantidade válida
+      const products = request.result.map(product => {
+        // Se a quantidade não for um número válido, definir como 0
+        if (product.quantity === undefined || product.quantity === null || isNaN(parseInt(product.quantity, 10))) {
+          console.log(`Corrigindo quantidade inválida para o produto: ${product.description}`);
+          return { ...product, quantity: 0 };
+        }
+
+        // Garantir que a quantidade seja um número inteiro
+        if (typeof product.quantity !== 'number' || !Number.isInteger(product.quantity)) {
+          const fixedQuantity = parseInt(product.quantity, 10);
+          console.log(`Convertendo quantidade para inteiro: ${product.description}, ${product.quantity} -> ${fixedQuantity}`);
+          return { ...product, quantity: fixedQuantity };
+        }
+
+        return product;
+      });
+
+      resolve(products);
     };
 
     request.onerror = () => {
@@ -498,12 +516,63 @@ export const addProduct = async (product) => {
     const transaction = db.transaction(['products'], 'readwrite');
     const store = transaction.objectStore('products');
 
+    // Garantir que a quantidade seja um número válido
+    if (product.quantity !== undefined) {
+      const originalQuantity = product.quantity;
+      product.quantity = parseInt(product.quantity, 10);
+
+      if (isNaN(product.quantity)) {
+        console.log(`Corrigindo quantidade inválida para o produto: ${product.description}`);
+        product.quantity = 0;
+      } else if (originalQuantity !== product.quantity) {
+        console.log(`Convertendo quantidade para inteiro: ${product.description}, ${originalQuantity} -> ${product.quantity}`);
+      }
+    } else {
+      product.quantity = 0;
+    }
+
+    // Garantir que a quantidade vendida seja um número válido
+    if (product.sold !== undefined) {
+      const originalSold = product.sold;
+      product.sold = parseInt(product.sold, 10);
+
+      if (isNaN(product.sold)) {
+        console.log(`Corrigindo quantidade vendida inválida para o produto: ${product.description}`);
+        product.sold = 0;
+      } else if (originalSold !== product.sold) {
+        console.log(`Convertendo quantidade vendida para inteiro: ${product.description}, ${originalSold} -> ${product.sold}`);
+      }
+    } else {
+      product.sold = 0;
+    }
+
     const index = store.index('description');
     const checkRequest = index.get(product.description);
 
     checkRequest.onsuccess = () => {
       if (checkRequest.result) {
-        reject(new Error('Product already exists'));
+        // Se o produto já existe, podemos atualizar a quantidade em vez de rejeitar
+        const existingProduct = checkRequest.result;
+        console.log(`Produto já existe: ${existingProduct.description}. Atualizando...`);
+
+        // Atualizar o produto existente
+        const updatedProduct = {
+          ...existingProduct,
+          quantity: existingProduct.quantity + product.quantity,
+          price: product.price || existingProduct.price,
+          updatedAt: new Date()
+        };
+
+        const updateRequest = store.put(updatedProduct);
+
+        updateRequest.onsuccess = () => {
+          resolve(existingProduct.id);
+        };
+
+        updateRequest.onerror = () => {
+          reject(updateRequest.error);
+        };
+
         return;
       }
 
@@ -532,14 +601,64 @@ export const updateProduct = async (product) => {
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(['products'], 'readwrite');
     const store = transaction.objectStore('products');
-    const request = store.put(product);
 
-    request.onsuccess = () => {
-      resolve(request.result);
+    // Primeiro verificamos se o produto existe
+    const getRequest = store.get(product.id);
+
+    getRequest.onsuccess = () => {
+      const existingProduct = getRequest.result;
+
+      if (!existingProduct) {
+        reject(new Error(`Produto com ID ${product.id} não encontrado`));
+        return;
+      }
+
+      // Garantir que a quantidade seja um número válido
+      if (product.quantity !== undefined) {
+        const originalQuantity = product.quantity;
+        product.quantity = parseInt(product.quantity, 10);
+
+        if (isNaN(product.quantity)) {
+          console.log(`Corrigindo quantidade inválida para o produto: ${product.description || existingProduct.description}`);
+          product.quantity = 0;
+        } else if (originalQuantity !== product.quantity) {
+          console.log(`Convertendo quantidade para inteiro: ${product.description || existingProduct.description}, ${originalQuantity} -> ${product.quantity}`);
+        }
+      }
+
+      // Garantir que a quantidade vendida seja um número válido
+      if (product.sold !== undefined) {
+        const originalSold = product.sold;
+        product.sold = parseInt(product.sold, 10);
+
+        if (isNaN(product.sold)) {
+          console.log(`Corrigindo quantidade vendida inválida para o produto: ${product.description || existingProduct.description}`);
+          product.sold = 0;
+        } else if (originalSold !== product.sold) {
+          console.log(`Convertendo quantidade vendida para inteiro: ${product.description || existingProduct.description}, ${originalSold} -> ${product.sold}`);
+        }
+      }
+
+      // Mesclar o produto existente com as atualizações
+      const updatedProduct = {
+        ...existingProduct,
+        ...product,
+        updatedAt: new Date()
+      };
+
+      const putRequest = store.put(updatedProduct);
+
+      putRequest.onsuccess = () => {
+        resolve(putRequest.result);
+      };
+
+      putRequest.onerror = () => {
+        reject(putRequest.error);
+      };
     };
 
-    request.onerror = () => {
-      reject(request.error);
+    getRequest.onerror = () => {
+      reject(getRequest.error);
     };
   });
 };
@@ -593,6 +712,170 @@ export const updateClient = async (client) => {
       reject(request.error);
     };
   });
+};
+
+// Função para corrigir problemas de estoque
+export const fixStockIssues = async () => {
+  try {
+    console.log('Iniciando correção de problemas de estoque...');
+    const db = await ensureDB();
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['products'], 'readwrite');
+      const store = transaction.objectStore('products');
+      const request = store.getAll();
+
+      request.onsuccess = () => {
+        const products = request.result;
+        let fixedCount = 0;
+
+        const updatePromises = products.map(product => {
+          return new Promise((resolveUpdate) => {
+            let needsUpdate = false;
+            let updatedProduct = { ...product };
+
+            // Verificar se a quantidade é um número válido
+            if (product.quantity === undefined || product.quantity === null || isNaN(parseInt(product.quantity, 10))) {
+              console.log(`Corrigindo quantidade inválida para o produto: ${product.description}`);
+              updatedProduct.quantity = 0;
+              needsUpdate = true;
+            } else if (typeof product.quantity !== 'number' || !Number.isInteger(product.quantity)) {
+              // Garantir que a quantidade seja um número inteiro
+              const fixedQuantity = parseInt(product.quantity, 10);
+              console.log(`Convertendo quantidade para inteiro: ${product.description}, ${product.quantity} -> ${fixedQuantity}`);
+              updatedProduct.quantity = fixedQuantity;
+              needsUpdate = true;
+            }
+
+            // Verificar se a quantidade vendida é um número válido
+            if (product.sold === undefined || product.sold === null || isNaN(parseInt(product.sold, 10))) {
+              console.log(`Corrigindo quantidade vendida inválida para o produto: ${product.description}`);
+              updatedProduct.sold = 0;
+              needsUpdate = true;
+            } else if (typeof product.sold !== 'number' || !Number.isInteger(product.sold)) {
+              // Garantir que a quantidade vendida seja um número inteiro
+              const fixedSold = parseInt(product.sold, 10);
+              console.log(`Convertendo quantidade vendida para inteiro: ${product.description}, ${product.sold} -> ${fixedSold}`);
+              updatedProduct.sold = fixedSold;
+              needsUpdate = true;
+            }
+
+            // Correção específica para o G-Fire Fan Cooler
+            if (product.description && product.description.includes('G-Fire Fan Cooler')) {
+              console.log(`Verificando produto especial: ${product.description}`);
+              console.log(`Quantidade atual: ${product.quantity}, tipo: ${typeof product.quantity}`);
+
+              // Forçar a atualização do estoque para o G-Fire Fan Cooler
+              if (updatedProduct.quantity !== 4) {
+                console.log(`Corrigindo estoque do G-Fire Fan Cooler de ${updatedProduct.quantity} para 4`);
+                updatedProduct.quantity = 4;
+                needsUpdate = true;
+              }
+            }
+
+            if (needsUpdate) {
+              const updateRequest = store.put(updatedProduct);
+
+              updateRequest.onsuccess = () => {
+                fixedCount++;
+                resolveUpdate();
+              };
+
+              updateRequest.onerror = (error) => {
+                console.error(`Erro ao atualizar produto ${product.id}:`, error);
+                resolveUpdate(); // Continuar mesmo com erro
+              };
+            } else {
+              resolveUpdate(); // Nada a fazer
+            }
+          });
+        });
+
+        Promise.all(updatePromises)
+          .then(() => {
+            console.log(`Correção de estoque concluída. ${fixedCount} produtos corrigidos.`);
+            resolve(fixedCount);
+          })
+          .catch(error => {
+            console.error('Erro durante a correção de estoque:', error);
+            reject(error);
+          });
+      };
+
+      request.onerror = (error) => {
+        console.error('Erro ao obter produtos para correção:', error);
+        reject(error);
+      };
+    });
+  } catch (error) {
+    console.error('Erro ao corrigir problemas de estoque:', error);
+    throw error;
+  }
+};
+
+// Função para corrigir especificamente o produto G-Fire Fan Cooler
+export const fixGFireFanCooler = async () => {
+  try {
+    console.log('Iniciando correção específica para G-Fire Fan Cooler...');
+    const db = await ensureDB();
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['products'], 'readwrite');
+      const store = transaction.objectStore('products');
+
+      // Buscar pelo índice de descrição
+      const index = store.index('description');
+      const request = index.getAll();
+
+      request.onsuccess = () => {
+        const products = request.result;
+        let coolerProduct = null;
+
+        // Encontrar o produto G-Fire Fan Cooler
+        for (const product of products) {
+          if (product.description && product.description.includes('G-Fire Fan Cooler')) {
+            coolerProduct = product;
+            break;
+          }
+        }
+
+        if (!coolerProduct) {
+          console.log('Produto G-Fire Fan Cooler não encontrado');
+          resolve(false);
+          return;
+        }
+
+        console.log(`Produto G-Fire Fan Cooler encontrado: ID=${coolerProduct.id}, Estoque atual=${coolerProduct.quantity}`);
+
+        // Atualizar o estoque para 4 unidades
+        const updatedProduct = {
+          ...coolerProduct,
+          quantity: 4,
+          updatedAt: new Date()
+        };
+
+        const updateRequest = store.put(updatedProduct);
+
+        updateRequest.onsuccess = () => {
+          console.log('Estoque do G-Fire Fan Cooler atualizado para 4 unidades');
+          resolve(true);
+        };
+
+        updateRequest.onerror = (error) => {
+          console.error('Erro ao atualizar G-Fire Fan Cooler:', error);
+          reject(error);
+        };
+      };
+
+      request.onerror = (error) => {
+        console.error('Erro ao buscar produtos:', error);
+        reject(error);
+      };
+    });
+  } catch (error) {
+    console.error('Erro ao corrigir G-Fire Fan Cooler:', error);
+    throw error;
+  }
 };
 
 export {

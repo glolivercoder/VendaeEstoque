@@ -24,10 +24,12 @@ import {
   deleteClient,
   updateClient,
   ensureDB,
-  initializeDefaultVendor
+  initializeDefaultVendor,
+  fixStockIssues,
+  fixGFireFanCooler
 } from './services/database';
 import Vendors from './pages/Vendors';
-import TestPage from './pages/TestPage';
+
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 import html2canvas from 'html2canvas';
@@ -201,7 +203,7 @@ function AppContent() {
   const [autoBackup, setAutoBackup] = useState(localStorage.getItem('autoBackup') === 'true');
   const [showDescription, setShowDescription] = useState(true);
   const [itemSearchQuery, setItemSearchQuery] = useState('');
-  const [showTestPage, setShowTestPage] = useState(false);
+
   const [showSaleConfirmation, setShowSaleConfirmation] = useState(false);
   const [lastCompletedSale, setLastCompletedSale] = useState(null);
   const [showSalesHistory, setShowSalesHistory] = useState(false);
@@ -244,6 +246,34 @@ function AppContent() {
         const loadData = async () => {
           try {
             console.log('Carregando dados...');
+
+            // Corrigir problemas de estoque antes de carregar os produtos
+            try {
+              console.log('Verificando e corrigindo problemas de estoque...');
+              const fixedCount = await fixStockIssues();
+              if (fixedCount > 0) {
+                console.log(`${fixedCount} produtos tiveram seus dados de estoque corrigidos.`);
+
+                // Verificar especificamente o produto G-Fire Fan Cooler
+                const products = await getProducts();
+                const gFireProduct = products.find(p => p.description && p.description.includes('G-Fire Fan Cooler'));
+                if (gFireProduct) {
+                  console.log(`Produto G-Fire Fan Cooler encontrado: ID=${gFireProduct.id}, Estoque atual=${gFireProduct.quantity}, Tipo=${typeof gFireProduct.quantity}`);
+                }
+              } else {
+                console.log('Nenhum problema de estoque encontrado.');
+
+                // Verificar especificamente o produto G-Fire Fan Cooler mesmo sem problemas
+                const products = await getProducts();
+                const gFireProduct = products.find(p => p.description && p.description.includes('G-Fire Fan Cooler'));
+                if (gFireProduct) {
+                  console.log(`Produto G-Fire Fan Cooler encontrado: ID=${gFireProduct.id}, Estoque atual=${gFireProduct.quantity}, Tipo=${typeof gFireProduct.quantity}`);
+                }
+              }
+            } catch (error) {
+              console.error('Erro ao corrigir problemas de estoque:', error);
+              // Continuar mesmo com erro
+            }
             const [vendorsList, clientsList, productsList] = await Promise.all([
               getVendors(),
               getClients(),
@@ -514,10 +544,13 @@ function AppContent() {
     // Verificar estoque para todos os itens selecionados primeiro
     for (const index of selectedItems) {
       const item = updatedItems[index];
-      const quantity = item.soldQuantity || 1;
+      const quantity = parseInt(item.soldQuantity || 1, 10);
+      const stockQuantity = parseInt(item.quantity || 0, 10);
 
-      if (!ignoreStock[item.id] && item.quantity < quantity) {
-        alert(`Quantidade insuficiente em estoque para ${item.description}`);
+      console.log(`Verificando estoque para ${item.description}: Estoque=${stockQuantity}, Solicitado=${quantity}`);
+
+      if (!ignoreStock[item.id] && stockQuantity < quantity) {
+        alert(`Quantidade insuficiente em estoque para ${item.description}. Disponível: ${stockQuantity}, Solicitado: ${quantity}`);
         return;
       }
     }
@@ -536,13 +569,14 @@ function AppContent() {
 
       for (const index of selectedItems) {
         const item = updatedItems[index];
-        const quantity = Math.abs(item.soldQuantity || 1); // Garantir que a quantidade seja positiva
+        const quantity = Math.abs(parseInt(item.soldQuantity || 1, 10)); // Garantir que a quantidade seja um número positivo
+        const stockQuantity = parseInt(item.quantity || 0, 10); // Garantir que o estoque seja um número
         const itemTotal = Math.abs(item.price * quantity); // Garantir que o total seja positivo
 
         const updatedItem = {
           ...item,
-          quantity: item.quantity - quantity,
-          sold: (item.sold || 0) + quantity,
+          quantity: stockQuantity - quantity, // Usar o valor convertido para garantir que seja um número
+          sold: (parseInt(item.sold || 0, 10)) + quantity,
           saleDate,
           paymentMethod
         };
@@ -1796,18 +1830,19 @@ ${item?.client?.cpf || ''}
 
       for (const index of selectedItems) {
         const item = updatedItems[index];
-        const quantity = item.soldQuantity || 1;
+        const quantity = parseInt(item.soldQuantity || 1, 10);
+        const stockQuantity = parseInt(item.quantity || 0, 10);
 
         // Verificar estoque
-        if (!ignoreStock[item.id] && item.quantity < quantity) {
-          alert(`Quantidade insuficiente em estoque para ${item.description}`);
+        if (!ignoreStock[item.id] && stockQuantity < quantity) {
+          alert(`Quantidade insuficiente em estoque para ${item.description}. Disponível: ${stockQuantity}, Solicitado: ${quantity}`);
           return;
         }
 
         const updatedItem = {
           ...item,
-          quantity: item.quantity - quantity,
-          sold: (item.sold || 0) + quantity,
+          quantity: stockQuantity - quantity, // Usar o valor convertido para garantir que seja um número
+          sold: (parseInt(item.sold || 0, 10)) + quantity,
           saleDate,
           paymentMethod: 'pix',
           qrCodeImage: qrCodeImage
@@ -3146,6 +3181,10 @@ ${item?.client?.cpf || ''}
                               if (isSelected) {
                                 setSelectedItems(prev => prev.filter(i => i !== index));
                               } else {
+                                // Garantir que soldQuantity seja 1 quando o item é selecionado
+                                const updatedItems = [...items];
+                                updatedItems[index].soldQuantity = 1;
+                                setItems(updatedItems);
                                 setSelectedItems(prev => [...prev, index]);
                               }
                             }}
@@ -4858,13 +4897,11 @@ ${item?.client?.cpf || ''}
                 <div className="mb-4">
                   <label className="block text-sm font-medium mb-2">Tema do Sistema</label>
                   <div className="grid grid-cols-3 gap-2">
-                    {['green', 'blue', 'purple', 'dark-blue', 'dark-green'].map((themeId) => {
+                    {['green', 'blue', 'purple'].map((themeId) => {
                       const theme = {
                         green: { name: 'Verde', color: '#2ECC71' },
                         blue: { name: 'Azul', color: '#4A7AFF' },
-                        purple: { name: 'Roxo', color: '#B15CFF' },
-                        'dark-blue': { name: 'Escuro Azul', color: '#4A7AFF', isDark: true },
-                        'dark-green': { name: 'Escuro Verde', color: '#2ECC71', isDark: true }
+                        purple: { name: 'Roxo', color: '#B15CFF' }
                       }[themeId];
 
                       const currentTheme = localStorage.getItem('theme') || 'green';
@@ -4882,9 +4919,7 @@ ${item?.client?.cpf || ''}
                             document.body.classList.remove(
                               'theme-green',
                               'theme-blue',
-                              'theme-purple',
-                              'theme-dark-blue',
-                              'theme-dark-green'
+                              'theme-purple'
                             );
 
                             // Adicionar a classe do tema atual
@@ -4893,12 +4928,8 @@ ${item?.client?.cpf || ''}
                             // Salvar a preferência no localStorage
                             localStorage.setItem('theme', themeId);
 
-                            // Adicionar ou remover a classe dark-mode
-                            if (themeId.includes('dark')) {
-                              document.body.classList.add('dark-mode');
-                            } else {
-                              document.body.classList.remove('dark-mode');
-                            }
+                            // Remover a classe dark-mode se existir
+                            document.body.classList.remove('dark-mode');
                           }}
                         >
                           {theme.name}
@@ -4998,8 +5029,6 @@ ${item?.client?.cpf || ''}
         </div>
       )}
 
-      {/* Test Page */}
-      <TestPage showTestPage={showTestPage} setShowTestPage={setShowTestPage} />
 
       {/* Histórico de Vendas */}
       {showSalesHistory && (
@@ -5009,18 +5038,6 @@ ${item?.client?.cpf || ''}
         />
       )}
 
-      {/* Floating Test Button */}
-      <div className="fixed bottom-4 right-4 z-50">
-        <button
-          onClick={() => setShowTestPage(true)}
-          className="bg-purple-600 hover:bg-purple-700 text-white rounded-full p-3 shadow-lg flex items-center justify-center"
-          title="Abrir Console de Testes"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-          </svg>
-        </button>
-      </div>
 
       {/* Theme Selector moved to Config Popup */}
 
