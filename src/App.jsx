@@ -715,8 +715,109 @@ function AppContent() {
       return `${days[date.getDay()]}, ${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
     };
 
+    // Função para converter valor numérico em texto por extenso
+    const valorPorExtenso = (valor) => {
+      if (valor === 0) return 'zero reais';
+
+      const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
+      const dezADezenove = ['dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
+      const dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
+      const centenas = ['', 'cem', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
+
+      // Arredondar para duas casas decimais e separar parte inteira e decimal
+      const valorArredondado = Math.round(valor * 100) / 100;
+      const parteInteira = Math.floor(valorArredondado);
+      const parteDecimal = Math.round((valorArredondado - parteInteira) * 100);
+
+      let resultado = '';
+
+      // Processar parte inteira
+      if (parteInteira > 0) {
+        if (parteInteira < 10) {
+          resultado = unidades[parteInteira];
+        } else if (parteInteira < 20) {
+          resultado = dezADezenove[parteInteira - 10];
+        } else if (parteInteira < 100) {
+          const dezena = Math.floor(parteInteira / 10);
+          const unidade = parteInteira % 10;
+          resultado = dezenas[dezena] + (unidade > 0 ? ' e ' + unidades[unidade] : '');
+        } else if (parteInteira < 1000) {
+          const centena = Math.floor(parteInteira / 100);
+          const resto = parteInteira % 100;
+
+          if (centena === 1 && resto > 0) {
+            resultado = 'cento';
+          } else {
+            resultado = centenas[centena];
+          }
+
+          if (resto > 0) {
+            if (resto < 10) {
+              resultado += ' e ' + unidades[resto];
+            } else if (resto < 20) {
+              resultado += ' e ' + dezADezenove[resto - 10];
+            } else {
+              const dezena = Math.floor(resto / 10);
+              const unidade = resto % 10;
+              resultado += ' e ' + dezenas[dezena] + (unidade > 0 ? ' e ' + unidades[unidade] : '');
+            }
+          }
+        } else if (parteInteira === 1000) {
+          resultado = 'mil';
+        } else {
+          resultado = 'valor muito alto';
+        }
+
+        resultado += parteInteira === 1 ? ' real' : ' reais';
+      }
+
+      // Processar parte decimal (centavos)
+      if (parteDecimal > 0) {
+        if (parteInteira > 0) {
+          resultado += ' e ';
+        }
+
+        if (parteDecimal < 10) {
+          resultado += unidades[parteDecimal] + (parteDecimal === 1 ? ' centavo' : ' centavos');
+        } else if (parteDecimal < 20) {
+          resultado += dezADezenove[parteDecimal - 10] + ' centavos';
+        } else {
+          const dezena = Math.floor(parteDecimal / 10);
+          const unidade = parteDecimal % 10;
+          resultado += dezenas[dezena] + (unidade > 0 ? ' e ' + unidades[unidade] : '') + ' centavos';
+        }
+      } else if (parteInteira === 0) {
+        resultado = 'zero reais';
+      }
+
+      return resultado;
+    };
+
     // Get total amount from current sale with null check
     const totalAmount = currentSale?.total || (item?.price * (item?.saleQuantity || 1));
+
+    // Obter os dados do cliente selecionado ou do objeto de venda
+    const clientName = selectedClient?.name || item?.client?.name || lastCompletedSale?.client || 'Não especificado';
+    const clientRG = selectedClient?.rg || item?.client?.rg || lastCompletedSale?.clientDoc || '';
+    const clientCPF = selectedClient?.cpf || item?.client?.cpf || lastCompletedSale?.clientCpf || '';
+
+    // Obter os produtos e quantidades
+    let productsText = '';
+    if (lastCompletedSale?.product) {
+      // Se temos uma venda completa, usar os dados dela
+      productsText = `- ${lastCompletedSale.product}: ${lastCompletedSale.quantity}x R$ ${(lastCompletedSale.price || 0).toFixed(2)} = R$ ${(lastCompletedSale.total || 0).toFixed(2)}`;
+    } else if (currentSale?.items) {
+      // Se temos itens no carrinho atual
+      productsText = currentSale.items.map(saleItem =>
+        `- ${saleItem?.description || 'Item'}: ${saleItem?.quantity || 1}x R$ ${(saleItem?.price || 0).toFixed(2)} = R$ ${((saleItem?.price || 0) * (saleItem?.quantity || 1)).toFixed(2)}`
+      ).join('\n');
+    } else {
+      // Caso contrário, usar o item individual
+      productsText = `- ${item?.description || 'Item'}: ${item?.soldQuantity || 1}x R$ ${(item?.price || 0).toFixed(2)} = R$ ${((item?.price || 0) * (item?.soldQuantity || 1)).toFixed(2)}`;
+    }
+
+    // Valor por extenso
+    const valorExtenso = valorPorExtenso(totalAmount);
 
     const receiptContent = `RECIBO DE VENDA
 
@@ -725,35 +826,30 @@ Nome: ${currentUser?.name || item?.vendor?.name || 'Não especificado'}
 Documento: ${currentUser?.rg || item?.vendor?.doc || 'Não especificado'}
 
 DADOS DO CLIENTE
-Nome: ${item?.client?.name || 'Não especificado'}
-RG: ${item?.client?.rg || 'Não especificado'}
-CPF: ${item?.client?.cpf || 'Não especificado'}
+Nome: ${clientName}
+RG: ${clientRG}
+CPF: ${clientCPF}
 
 DETALHES DA VENDA
-${currentSale?.items ?
-  currentSale.items.map(saleItem =>
-    `- ${saleItem?.description || 'Item'}: ${saleItem?.quantity || 1}x R$ ${(saleItem?.price || 0).toFixed(2)} = R$ ${((saleItem?.price || 0) * (saleItem?.quantity || 1)).toFixed(2)}`
-  ).join('\n') :
-  `- ${item?.description || 'Item'}: 1x R$ ${(item?.price || 0).toFixed(2)} = R$ ${(item?.price || 0).toFixed(2)}`
-}
+${productsText}
 
-Valor Total: R$ ${(totalAmount || 0).toFixed(2)}
-Forma de Pagamento: ${currentSale?.paymentMethod || item?.paymentMethod || 'Não especificado'}
+Valor Total: R$ ${(totalAmount || 0).toFixed(2)} (${valorExtenso})
+Forma de Pagamento: ${currentSale?.paymentMethod || item?.paymentMethod || lastCompletedSale?.paymentMethod || 'Não especificado'}
 
 Declaro para os devidos fins que recebi o valor acima descrito referente à venda dos itens listados.
 
-${navigator.geolocation ? 'Cidade Local' : 'Local'}, ${formatDateInPortuguese(currentDate)}
+Salvador-BA, ${formatDateInPortuguese(currentDate)}
 
 
 _______________________________
-${item?.vendor?.name || 'Vendedor'}
-${item?.vendor?.doc || ''}
+${currentUser?.name || item?.vendor?.name || lastCompletedSale?.vendor || 'Vendedor'}
+${currentUser?.rg || item?.vendor?.doc || lastCompletedSale?.vendorDoc || ''}
 
 
 _______________________________
-${item?.client?.name || 'Cliente'}
-${item?.client?.rg || ''}
-${item?.client?.cpf || ''}
+${clientName}
+${clientRG}
+${clientCPF}
 `;
 
     const blob = new Blob([receiptContent], { type: 'text/plain' });
