@@ -794,7 +794,7 @@ function AppContent() {
     };
 
     // Get total amount from current sale with null check
-    const totalAmount = currentSale?.total || (item?.price * (item?.saleQuantity || 1));
+    const totalAmount = lastCompletedSale?.total || currentSale?.total || (item?.price * (item?.saleQuantity || 1));
 
     // Obter os dados do cliente selecionado ou do objeto de venda
     const clientName = selectedClient?.name || item?.client?.name || lastCompletedSale?.client || 'Não especificado';
