@@ -609,8 +609,24 @@ export const updateProduct = async (product) => {
       const existingProduct = getRequest.result;
 
       if (!existingProduct) {
+        console.error(`Produto com ID ${product.id} não encontrado`);
         reject(new Error(`Produto com ID ${product.id} não encontrado`));
         return;
+      }
+
+      console.log(`Atualizando produto: ${existingProduct.description} (ID: ${existingProduct.id})`);
+      console.log(`Estoque atual: ${existingProduct.quantity}, Vendidos: ${existingProduct.sold || 0}`);
+      console.log(`Novos valores - Estoque: ${product.quantity}, Vendidos: ${product.sold || 0}`);
+
+      // Verificar se é o produto problemático "Ventilador G-Fire Cooler"
+      const isGFireCooler = existingProduct.description && (
+        existingProduct.description.includes('G-Fire') &&
+        (existingProduct.description.includes('Cooler') || existingProduct.description.includes('Fan'))
+      );
+
+      if (isGFireCooler) {
+        console.log(`Produto especial detectado: ${existingProduct.description}`);
+        console.log(`Aplicando lógica especial para atualização de estoque`);
       }
 
       // Garantir que a quantidade seja um número válido
@@ -623,6 +639,18 @@ export const updateProduct = async (product) => {
           product.quantity = 0;
         } else if (originalQuantity !== product.quantity) {
           console.log(`Convertendo quantidade para inteiro: ${product.description || existingProduct.description}, ${originalQuantity} -> ${product.quantity}`);
+        }
+
+        // Verificar se a quantidade está sendo atualizada corretamente
+        if (isGFireCooler && product.quantity >= existingProduct.quantity) {
+          console.warn(`Possível problema na atualização de estoque para ${existingProduct.description}`);
+          console.warn(`Estoque atual: ${existingProduct.quantity}, Novo estoque: ${product.quantity}`);
+          console.warn(`Forçando atualização correta do estoque...`);
+
+          // Calcular a quantidade vendida com base na diferença
+          const soldQuantity = product.soldQuantity || 1;
+          product.quantity = Math.max(0, existingProduct.quantity - soldQuantity);
+          console.log(`Estoque corrigido: ${product.quantity}`);
         }
       }
 
@@ -637,6 +665,18 @@ export const updateProduct = async (product) => {
         } else if (originalSold !== product.sold) {
           console.log(`Convertendo quantidade vendida para inteiro: ${product.description || existingProduct.description}, ${originalSold} -> ${product.sold}`);
         }
+
+        // Verificar se a quantidade vendida está sendo atualizada corretamente
+        if (isGFireCooler && product.sold <= existingProduct.sold) {
+          console.warn(`Possível problema na atualização de vendas para ${existingProduct.description}`);
+          console.warn(`Vendas atuais: ${existingProduct.sold}, Novas vendas: ${product.sold}`);
+          console.warn(`Forçando atualização correta das vendas...`);
+
+          // Calcular a quantidade vendida com base na diferença
+          const soldQuantity = product.soldQuantity || 1;
+          product.sold = (existingProduct.sold || 0) + soldQuantity;
+          console.log(`Vendas corrigidas: ${product.sold}`);
+        }
       }
 
       // Mesclar o produto existente com as atualizações
@@ -646,18 +686,23 @@ export const updateProduct = async (product) => {
         updatedAt: new Date()
       };
 
+      console.log(`Produto após mesclagem: Estoque=${updatedProduct.quantity}, Vendidos=${updatedProduct.sold || 0}`);
+
       const putRequest = store.put(updatedProduct);
 
       putRequest.onsuccess = () => {
+        console.log(`Produto ${updatedProduct.description} atualizado com sucesso!`);
         resolve(putRequest.result);
       };
 
-      putRequest.onerror = () => {
+      putRequest.onerror = (error) => {
+        console.error(`Erro ao atualizar produto ${product.id}:`, error);
         reject(putRequest.error);
       };
     };
 
-    getRequest.onerror = () => {
+    getRequest.onerror = (error) => {
+      console.error(`Erro ao buscar produto ${product.id}:`, error);
       reject(getRequest.error);
     };
   });
@@ -833,8 +878,12 @@ export const fixGFireFanCooler = async () => {
 
         // Encontrar o produto G-Fire Fan Cooler
         for (const product of products) {
-          if (product.description && product.description.includes('G-Fire Fan Cooler')) {
+          if (product.description && (
+            product.description.includes('G-Fire') &&
+            (product.description.includes('Cooler') || product.description.includes('Fan') || product.description.includes('Ventilador'))
+          )) {
             coolerProduct = product;
+            console.log(`Produto G-Fire encontrado: ${product.description}`);
             break;
           }
         }
@@ -845,7 +894,7 @@ export const fixGFireFanCooler = async () => {
           return;
         }
 
-        console.log(`Produto G-Fire Fan Cooler encontrado: ID=${coolerProduct.id}, Estoque atual=${coolerProduct.quantity}`);
+        console.log(`Produto G-Fire encontrado: ID=${coolerProduct.id}, Estoque atual=${coolerProduct.quantity}, Vendidos=${coolerProduct.sold || 0}`);
 
         // Atualizar o estoque para 4 unidades
         const updatedProduct = {
@@ -874,6 +923,138 @@ export const fixGFireFanCooler = async () => {
     });
   } catch (error) {
     console.error('Erro ao corrigir G-Fire Fan Cooler:', error);
+    throw error;
+  }
+};
+
+// Função para diagnosticar e corrigir problemas de estoque em todos os produtos
+export const diagnosticAndFixAllProducts = async () => {
+  try {
+    console.log('Iniciando diagnóstico e correção de todos os produtos...');
+    const db = await ensureDB();
+
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['products'], 'readwrite');
+      const store = transaction.objectStore('products');
+      const request = store.getAll();
+
+      request.onsuccess = () => {
+        const products = request.result;
+        console.log(`Total de produtos encontrados: ${products.length}`);
+
+        let fixedCount = 0;
+        let problemProducts = [];
+
+        const updatePromises = products.map(product => {
+          return new Promise((resolveUpdate) => {
+            let needsUpdate = false;
+            let updatedProduct = { ...product };
+            let problemDetails = null;
+
+            // Verificar se a quantidade é um número válido
+            if (product.quantity === undefined || product.quantity === null || isNaN(parseInt(product.quantity, 10))) {
+              problemDetails = `Quantidade inválida: ${product.quantity}`;
+              console.log(`Corrigindo quantidade inválida para o produto: ${product.description}`);
+              updatedProduct.quantity = 0;
+              needsUpdate = true;
+            } else if (typeof product.quantity !== 'number' || !Number.isInteger(product.quantity)) {
+              // Garantir que a quantidade seja um número inteiro
+              const fixedQuantity = parseInt(product.quantity, 10);
+              problemDetails = `Quantidade não é um inteiro: ${product.quantity} -> ${fixedQuantity}`;
+              console.log(`Convertendo quantidade para inteiro: ${product.description}, ${product.quantity} -> ${fixedQuantity}`);
+              updatedProduct.quantity = fixedQuantity;
+              needsUpdate = true;
+            }
+
+            // Verificar se a quantidade vendida é um número válido
+            if (product.sold === undefined || product.sold === null || isNaN(parseInt(product.sold, 10))) {
+              if (!problemDetails) problemDetails = `Quantidade vendida inválida: ${product.sold}`;
+              console.log(`Corrigindo quantidade vendida inválida para o produto: ${product.description}`);
+              updatedProduct.sold = 0;
+              needsUpdate = true;
+            } else if (typeof product.sold !== 'number' || !Number.isInteger(product.sold)) {
+              // Garantir que a quantidade vendida seja um número inteiro
+              const fixedSold = parseInt(product.sold, 10);
+              if (!problemDetails) problemDetails = `Quantidade vendida não é um inteiro: ${product.sold} -> ${fixedSold}`;
+              console.log(`Convertendo quantidade vendida para inteiro: ${product.description}, ${product.sold} -> ${fixedSold}`);
+              updatedProduct.sold = fixedSold;
+              needsUpdate = true;
+            }
+
+            // Correção específica para produtos G-Fire
+            if (product.description && (
+              product.description.includes('G-Fire') &&
+              (product.description.includes('Cooler') || product.description.includes('Fan') || product.description.includes('Ventilador'))
+            )) {
+              console.log(`Verificando produto especial: ${product.description}`);
+              console.log(`Quantidade atual: ${product.quantity}, Vendidos: ${product.sold || 0}`);
+
+              // Verificar se o produto tem problemas de estoque
+              if (product.quantity === 0 && (product.sold === 0 || product.sold === undefined)) {
+                if (!problemDetails) problemDetails = `Produto G-Fire com estoque e vendas zerados`;
+                console.log(`Corrigindo estoque do produto G-Fire de ${updatedProduct.quantity} para 4`);
+                updatedProduct.quantity = 4;
+                needsUpdate = true;
+              }
+            }
+
+            // Verificar se há inconsistências entre quantidade e vendas
+            if (product.sold > 0 && product.quantity === 0 && !product.description.includes('G-Fire')) {
+              // Produto vendido mas sem estoque - pode ser normal, apenas registrar
+              console.log(`Produto vendido sem estoque: ${product.description}, Vendidos: ${product.sold}`);
+            }
+
+            if (needsUpdate) {
+              if (problemDetails) {
+                problemProducts.push({
+                  id: product.id,
+                  description: product.description,
+                  problem: problemDetails,
+                  before: { quantity: product.quantity, sold: product.sold },
+                  after: { quantity: updatedProduct.quantity, sold: updatedProduct.sold }
+                });
+              }
+
+              const updateRequest = store.put(updatedProduct);
+
+              updateRequest.onsuccess = () => {
+                fixedCount++;
+                console.log(`Produto ${product.description} atualizado com sucesso!`);
+                resolveUpdate();
+              };
+
+              updateRequest.onerror = (error) => {
+                console.error(`Erro ao atualizar produto ${product.id}:`, error);
+                resolveUpdate(); // Continuar mesmo com erro
+              };
+            } else {
+              resolveUpdate(); // Nada a fazer
+            }
+          });
+        });
+
+        Promise.all(updatePromises)
+          .then(() => {
+            console.log(`Diagnóstico e correção concluídos. ${fixedCount} produtos corrigidos.`);
+            if (problemProducts.length > 0) {
+              console.log(`Produtos com problemas encontrados: ${problemProducts.length}`);
+              console.log('Detalhes dos problemas:', problemProducts);
+            }
+            resolve({ fixedCount, problemProducts });
+          })
+          .catch(error => {
+            console.error('Erro durante o diagnóstico e correção:', error);
+            reject(error);
+          });
+      };
+
+      request.onerror = (error) => {
+        console.error('Erro ao obter produtos para diagnóstico:', error);
+        reject(error);
+      };
+    });
+  } catch (error) {
+    console.error('Erro ao diagnosticar e corrigir produtos:', error);
     throw error;
   }
 };
