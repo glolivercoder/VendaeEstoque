@@ -604,8 +604,9 @@ function AppContent() {
         client: selectedClient?.name || 'Cliente não especificado',
         clientDoc: selectedClient?.rg || '',
         clientCpf: selectedClient?.cpf || '',
-        vendor: selectedVendor?.name || 'Vendedor não especificado',
-        vendorDoc: selectedVendor?.document || '',
+        // Usar dados do vendedor logado se disponível, caso contrário usar o vendedor selecionado
+        vendor: currentUser?.name || selectedVendor?.name || 'Vendedor não especificado',
+        vendorDoc: currentUser?.rg || selectedVendor?.document || '',
         product: selectedItems.map(index => updatedItems[index].description).join(', '),
         quantity: selectedItems.reduce((total, index) => total + Math.abs(updatedItems[index].soldQuantity || 1), 0),
         price: Math.abs(totalAmount) / selectedItems.reduce((total, index) => total + Math.abs(updatedItems[index].soldQuantity || 1), 0),
@@ -720,8 +721,8 @@ function AppContent() {
     const receiptContent = `RECIBO DE VENDA
 
 DADOS DO VENDEDOR
-Nome: ${item?.vendor?.name || 'Não especificado'}
-Documento: ${item?.vendor?.doc || 'Não especificado'}
+Nome: ${currentUser?.name || item?.vendor?.name || 'Não especificado'}
+Documento: ${currentUser?.rg || item?.vendor?.doc || 'Não especificado'}
 
 DADOS DO CLIENTE
 Nome: ${item?.client?.name || 'Não especificado'}

@@ -139,6 +139,12 @@ const SaleConfirmationPopup = ({
             </div>
 
             <div className="sale-info-section">
+              <h4>Vendedor</h4>
+              <p>{sale.vendor}</p>
+              {sale.vendorDoc && <p className="sale-info-doc">{sale.vendorDoc}</p>}
+            </div>
+
+            <div className="sale-info-section">
               <h4>Produtos</h4>
               <div className="product-list">
                 {sale.product.split(', ').map((product, index) => (
