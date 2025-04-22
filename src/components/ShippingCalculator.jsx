@@ -72,7 +72,9 @@ const ShippingCalculator = () => {
   const [zipCodeOrigin, setZipCodeOrigin] = useState("");
   const [zipCodeDestination, setZipCodeDestination] = useState("");
   const [sku, setSku] = useState("");
+  const [productName, setProductName] = useState("");
   const [packageDescription, setPackageDescription] = useState("");
+  const [technicalSpecs, setTechnicalSpecs] = useState("");
   const [weight, setWeight] = useState("");
   const [length, setLength] = useState("");
   const [width, setWidth] = useState("");
@@ -152,7 +154,9 @@ const ShippingCalculator = () => {
         origin: zipCodeOrigin,
         destination: zipCodeDestination,
         package: {
+          productName: productName,
           description: packageDescription,
+          technicalSpecs: technicalSpecs,
           weight: Number(weight),
           dimensions: {
             length: Number(length),
@@ -220,15 +224,19 @@ const ShippingCalculator = () => {
         setLength(product.dimensions.length.toString());
         setWidth(product.dimensions.width.toString());
         setHeight(product.dimensions.height.toString());
+
+        // Preencher os novos campos
+        setProductName(product.name || product.productName || "");
         setPackageDescription(
           product.ncm
-            ? `${product.name} (NCM: ${product.ncm})`
-            : product.name
+            ? `${product.name || product.productName || ""} (NCM: ${product.ncm})`
+            : (product.name || product.productName || "")
         );
+        setTechnicalSpecs(product.technicalSpecs || "");
 
         toast({
           title: "Produto encontrado",
-          description: `Dimensões preenchidas automaticamente para ${product.name}`,
+          description: `Informações preenchidas automaticamente para ${product.name || product.productName || ""}`
         });
       } else {
         toast({
@@ -250,7 +258,9 @@ const ShippingCalculator = () => {
 
   const handleClearForm = () => {
     setSku("");
+    setProductName("");
     setPackageDescription("");
+    setTechnicalSpecs("");
     setWeight("");
     setLength("");
     setWidth("");
@@ -262,7 +272,9 @@ const ShippingCalculator = () => {
   const handleLoadHistoryEntry = (entry) => {
     setZipCodeOrigin(entry.origin);
     setZipCodeDestination(entry.destination);
-    setPackageDescription(entry.package.description);
+    setProductName(entry.package.productName || "");
+    setPackageDescription(entry.package.description || "");
+    setTechnicalSpecs(entry.package.technicalSpecs || "");
     setWeight(entry.package.weight.toString());
     setLength(entry.package.dimensions.length.toString());
     setWidth(entry.package.dimensions.width.toString());
@@ -528,9 +540,31 @@ const ShippingCalculator = () => {
                             onProductDataDetected={(productData) => {
                               setSku(productData.code);
 
-                              // Preencher a descrição do produto se disponível
-                              if (productData.name) {
+                              // Obter o CEP do cliente selecionado, se houver
+                              if (selectedClient && selectedClient.address && selectedClient.address.cep) {
+                                const clientZipCode = selectedClient.address.cep;
+                                console.log(`CEP do cliente selecionado: ${clientZipCode}`);
+                                // Preencher o CEP de destino com o CEP do cliente
+                                setZipCodeDestination(clientZipCode.replace(/\D/g, ""));
+                              }
+
+                              // Preencher o nome do produto se disponível
+                              if (productData.productName) {
+                                setProductName(productData.productName);
+                              } else if (productData.name) {
+                                setProductName(productData.name);
+                              }
+
+                              // Preencher a descrição do produto
+                              if (productData.description) {
+                                setPackageDescription(productData.description);
+                              } else if (productData.name && !productData.productName) {
                                 setPackageDescription(productData.name);
+                              }
+
+                              // Preencher as especificações técnicas
+                              if (productData.technicalSpecs) {
+                                setTechnicalSpecs(productData.technicalSpecs);
                               }
 
                               // Preencher as dimensões se disponíveis
@@ -577,6 +611,17 @@ const ShippingCalculator = () => {
                     </div>
 
                     <div className="form-group">
+                      <label htmlFor="productName">Nome do Produto</label>
+                      <input
+                        type="text"
+                        id="productName"
+                        placeholder="Nome completo do produto"
+                        value={productName}
+                        onChange={(e) => setProductName(e.target.value)}
+                        className="form-control"
+                      />
+                    </div>
+                    <div className="form-group">
                       <label htmlFor="packageDescription">Descrição da Encomenda</label>
                       <input
                         type="text"
@@ -585,6 +630,17 @@ const ShippingCalculator = () => {
                         value={packageDescription}
                         onChange={(e) => setPackageDescription(e.target.value)}
                         className="form-control"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="technicalSpecs">Especificações Técnicas</label>
+                      <textarea
+                        id="technicalSpecs"
+                        placeholder="Especificações técnicas do produto"
+                        value={technicalSpecs}
+                        onChange={(e) => setTechnicalSpecs(e.target.value)}
+                        className="form-control"
+                        rows="3"
                       />
                     </div>
                   </div>

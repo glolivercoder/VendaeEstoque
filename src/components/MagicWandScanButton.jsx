@@ -59,9 +59,9 @@ const MagicWandScanButton = ({ onProductDataDetected }) => {
       1. Código GTIN/EAN (geralmente 8, 12, 13 ou 14 dígitos)
       2. Código NCM (8 dígitos, formato XX.XX.XX.XX)
       3. Código SKU (código de identificação do produto)
-      4. Nome completo do produto
-      5. Descrição curta do produto
-      6. Especificações técnicas detalhadas
+      4. Nome completo do produto (nome oficial e completo do produto)
+      5. Descrição curta do produto (resumo breve do que é o produto)
+      6. Especificações técnicas detalhadas (características técnicas, materiais, funcionalidades)
       7. Dimensões (comprimento, largura, altura em cm)
       8. Peso (em kg ou g)
       9. Volume (em litros ou ml, se aplicável)
@@ -144,6 +144,20 @@ const MagicWandScanButton = ({ onProductDataDetected }) => {
                 }
               };
 
+              // Obter o CEP do cliente selecionado, se houver
+              try {
+                const selectedClientData = localStorage.getItem('selectedClient');
+                if (selectedClientData) {
+                  const selectedClient = JSON.parse(selectedClientData);
+                  if (selectedClient && selectedClient.address && selectedClient.address.cep) {
+                    mergedProductInfo.clientZipCode = selectedClient.address.cep;
+                    console.log(`CEP do cliente associado ao produto: ${mergedProductInfo.clientZipCode}`);
+                  }
+                }
+              } catch (error) {
+                console.error('Erro ao obter CEP do cliente para o produto:', error);
+              }
+
               // Chamar o callback com o código e informações completas do produto
               onProductDataDetected({
                 code: data.productCode.value,
@@ -153,12 +167,29 @@ const MagicWandScanButton = ({ onProductDataDetected }) => {
             } else {
               // Se não encontrou informações adicionais, usar apenas as informações da imagem
               const productInfo = data.productInfo || {};
+
+              // Obter o CEP do cliente selecionado, se houver
+              let clientZipCode = '';
+              try {
+                const selectedClientData = localStorage.getItem('selectedClient');
+                if (selectedClientData) {
+                  const selectedClient = JSON.parse(selectedClientData);
+                  if (selectedClient && selectedClient.address && selectedClient.address.cep) {
+                    clientZipCode = selectedClient.address.cep;
+                    console.log(`CEP do cliente associado ao produto: ${clientZipCode}`);
+                  }
+                }
+              } catch (error) {
+                console.error('Erro ao obter CEP do cliente para o produto:', error);
+              }
+
               onProductDataDetected({
                 code: data.productCode.value,
                 type: data.productCode.type,
                 productName: productInfo.productName || productInfo.name || '',
                 description: productInfo.description || '',
                 technicalSpecs: productInfo.technicalSpecs || '',
+                clientZipCode,
                 ...productInfo
               });
             }
@@ -166,12 +197,29 @@ const MagicWandScanButton = ({ onProductDataDetected }) => {
             console.warn("Erro ao buscar informações adicionais do produto:", apiError);
             // Em caso de erro na API, usar apenas as informações da imagem
             const productInfo = data.productInfo || {};
+
+            // Obter o CEP do cliente selecionado, se houver
+            let clientZipCode = '';
+            try {
+              const selectedClientData = localStorage.getItem('selectedClient');
+              if (selectedClientData) {
+                const selectedClient = JSON.parse(selectedClientData);
+                if (selectedClient && selectedClient.address && selectedClient.address.cep) {
+                  clientZipCode = selectedClient.address.cep;
+                  console.log(`CEP do cliente associado ao produto: ${clientZipCode}`);
+                }
+              }
+            } catch (error) {
+              console.error('Erro ao obter CEP do cliente para o produto:', error);
+            }
+
             onProductDataDetected({
               code: data.productCode.value,
               type: data.productCode.type,
               productName: productInfo.productName || productInfo.name || '',
               description: productInfo.description || '',
               technicalSpecs: productInfo.technicalSpecs || '',
+              clientZipCode,
               ...productInfo
             });
           }
