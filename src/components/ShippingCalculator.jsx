@@ -1477,7 +1477,6 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
                 </div>
               )}
             </div>
-            </div>
           </div>
         </div>
       )}
