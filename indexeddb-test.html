@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de IndexedDB</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .result {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .actions {
+            margin: 20px 0;
+        }
+        .info {
+            background-color: #e7f3fe;
+            border-left: 6px solid #2196F3;
+            padding: 10px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste de IndexedDB</h1>
+    
+    <div class="info">
+        <p>Esta página testa como o IndexedDB funciona em diferentes portas.</p>
+        <p>Origem atual: <span id="origin"></span></p>
+        <p>Porta atual: <span id="port"></span></p>
+    </div>
+    
+    <div class="actions">
+        <button id="diagnose">Diagnosticar IndexedDB</button>
+        <button id="addProduct">Adicionar Produto de Teste</button>
+        <button id="listProducts">Listar Produtos</button>
+        <button id="clearProducts">Limpar Produtos</button>
+    </div>
+    
+    <div class="result" id="result">Os resultados aparecerão aqui...</div>
+    
+    <script>
+        // Exibir informações de origem
+        document.getElementById('origin').textContent = window.location.origin;
+        document.getElementById('port').textContent = window.location.port;
+        
+        // Elemento para exibir resultados
+        const resultElement = document.getElementById('result');
+        
+        // Função para adicionar mensagem ao resultado
+        function log(message) {
+            if (typeof message === 'object') {
+                message = JSON.stringify(message, null, 2);
+            }
+            resultElement.textContent += message + '\n';
+            resultElement.scrollTop = resultElement.scrollHeight;
+        }
+        
+        // Função para limpar o resultado
+        function clearLog() {
+            resultElement.textContent = '';
+        }
+        
+        // Constantes do banco de dados
+        const DB_NAME = 'estoqueDB';
+        const DB_VERSION = 4;
+        
+        // Função para abrir o banco de dados
+        function openDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = (event) => {
+                    reject(`Erro ao abrir banco de dados: ${event.target.error}`);
+                };
+                
+                request.onsuccess = (event) => {
+                    resolve(event.target.result);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    log(`Atualizando estrutura do banco de dados (${event.oldVersion} -> ${event.newVersion})...`);
+                    
+                    // Criar object store de produtos se não existir
+                    if (!db.objectStoreNames.contains('products')) {
+                        const productsStore = db.createObjectStore('products', { keyPath: 'id', autoIncrement: true });
+                        productsStore.createIndex('description', 'description', { unique: false });
+                        log('Object store "products" criada');
+                    }
+                };
+            });
+        }
+        
+        // Função para diagnosticar o IndexedDB
+        async function diagnoseIndexedDB() {
+            clearLog();
+            log('=== DIAGNÓSTICO DO INDEXEDDB ===');
+            
+            try {
+                // Verificar se o IndexedDB está disponível
+                if (!window.indexedDB) {
+                    log('IndexedDB não está disponível neste navegador');
+                    return;
+                }
+                
+                log('IndexedDB está disponível');
+                
+                // Tentar abrir o banco de dados
+                log(`Tentando abrir banco de dados: ${DB_NAME} (versão ${DB_VERSION})`);
+                
+                const db = await openDatabase();
+                log('Banco de dados aberto com sucesso');
+                log(`Versão atual: ${db.version}`);
+                
+                // Listar object stores
+                const objectStoreNames = Array.from(db.objectStoreNames);
+                log(`Object stores disponíveis: ${objectStoreNames.join(', ')}`);
+                
+                // Verificar dados em cada object store
+                const transaction = db.transaction(objectStoreNames, 'readonly');
+                
+                for (const storeName of objectStoreNames) {
+                    const store = transaction.objectStore(storeName);
+                    const countRequest = store.count();
+                    
+                    const count = await new Promise((resolve) => {
+                        countRequest.onsuccess = () => resolve(countRequest.result);
+                    });
+                    
+                    log(`${storeName}: ${count} registros`);
+                    
+                    // Se for a store de produtos, mostrar mais detalhes
+                    if (storeName === 'products') {
+                        const getAllRequest = store.getAll();
+                        
+                        const products = await new Promise((resolve) => {
+                            getAllRequest.onsuccess = () => resolve(getAllRequest.result);
+                        });
+                        
+                        log(`Detalhes dos produtos (${products.length} encontrados):`);
+                        
+                        if (products.length > 0) {
+                            // Mostrar todos os produtos
+                            products.forEach((product, index) => {
+                                log(`- Produto ${index+1}: ${JSON.stringify({
+                                    id: product.id,
+                                    description: product.description,
+                                    price: product.price,
+                                    quantity: product.quantity
+                                }, null, 2)}`);
+                            });
+                        } else {
+                            log('Nenhum produto encontrado');
+                        }
+                    }
+                }
+                
+                // Verificar origem do banco de dados
+                log('\nOrigem do banco de dados:');
+                log(`- URL: ${window.location.href}`);
+                log(`- Hostname: ${window.location.hostname}`);
+                log(`- Porta: ${window.location.port}`);
+                log(`- Protocolo: ${window.location.protocol}`);
+                log(`- Origin: ${window.location.origin}`);
+                
+                // Verificar se há outros bancos de dados
+                if ('databases' in indexedDB) {
+                    const databases = await indexedDB.databases();
+                    log('\nOutros bancos de dados IndexedDB nesta origem:');
+                    databases.forEach(database => {
+                        log(`- ${database.name} (versão ${database.version})`);
+                    });
+                } else {
+                    log('\nAPI indexedDB.databases() não disponível neste navegador');
+                }
+                
+                // Fechar o banco de dados
+                db.close();
+                
+            } catch (error) {
+                log(`Erro durante o diagnóstico: ${error}`);
+            }
+        }
+        
+        // Função para adicionar um produto de teste
+        async function addTestProduct() {
+            clearLog();
+            log('Adicionando produto de teste...');
+            
+            try {
+                const db = await openDatabase();
+                
+                const transaction = db.transaction(['products'], 'readwrite');
+                const store = transaction.objectStore('products');
+                
+                const timestamp = new Date().toISOString();
+                const product = {
+                    description: `Produto de Teste (Porta: ${window.location.port}) - ${timestamp}`,
+                    price: Math.floor(Math.random() * 100) + 1,
+                    quantity: Math.floor(Math.random() * 10) + 1,
+                    createdAt: timestamp
+                };
+                
+                const request = store.add(product);
+                
+                request.onsuccess = () => {
+                    log(`Produto adicionado com ID: ${request.result}`);
+                    log(`Detalhes: ${JSON.stringify(product, null, 2)}`);
+                };
+                
+                request.onerror = () => {
+                    log(`Erro ao adicionar produto: ${request.error}`);
+                };
+                
+                transaction.oncomplete = () => {
+                    log('Transação concluída');
+                    db.close();
+                };
+                
+            } catch (error) {
+                log(`Erro ao adicionar produto: ${error}`);
+            }
+        }
+        
+        // Função para listar produtos
+        async function listProducts() {
+            clearLog();
+            log('Listando produtos...');
+            
+            try {
+                const db = await openDatabase();
+                
+                const transaction = db.transaction(['products'], 'readonly');
+                const store = transaction.objectStore('products');
+                
+                const request = store.getAll();
+                
+                request.onsuccess = () => {
+                    const products = request.result;
+                    log(`Total de produtos: ${products.length}`);
+                    
+                    if (products.length > 0) {
+                        products.forEach((product, index) => {
+                            log(`\nProduto ${index+1}:`);
+                            log(`- ID: ${product.id}`);
+                            log(`- Descrição: ${product.description}`);
+                            log(`- Preço: ${product.price}`);
+                            log(`- Quantidade: ${product.quantity}`);
+                            log(`- Criado em: ${product.createdAt}`);
+                        });
+                    } else {
+                        log('Nenhum produto encontrado');
+                    }
+                };
+                
+                request.onerror = () => {
+                    log(`Erro ao listar produtos: ${request.error}`);
+                };
+                
+                transaction.oncomplete = () => {
+                    db.close();
+                };
+                
+            } catch (error) {
+                log(`Erro ao listar produtos: ${error}`);
+            }
+        }
+        
+        // Função para limpar produtos
+        async function clearProducts() {
+            clearLog();
+            log('Limpando produtos...');
+            
+            try {
+                const db = await openDatabase();
+                
+                const transaction = db.transaction(['products'], 'readwrite');
+                const store = transaction.objectStore('products');
+                
+                const request = store.clear();
+                
+                request.onsuccess = () => {
+                    log('Todos os produtos foram removidos');
+                };
+                
+                request.onerror = () => {
+                    log(`Erro ao limpar produtos: ${request.error}`);
+                };
+                
+                transaction.oncomplete = () => {
+                    log('Transação concluída');
+                    db.close();
+                };
+                
+            } catch (error) {
+                log(`Erro ao limpar produtos: ${error}`);
+            }
+        }
+        
+        // Adicionar event listeners aos botões
+        document.getElementById('diagnose').addEventListener('click', diagnoseIndexedDB);
+        document.getElementById('addProduct').addEventListener('click', addTestProduct);
+        document.getElementById('listProducts').addEventListener('click', listProducts);
+        document.getElementById('clearProducts').addEventListener('click', clearProducts);
+        
+        // Executar diagnóstico inicial
+        diagnoseIndexedDB();
+    </script>
+</body>
+</html>

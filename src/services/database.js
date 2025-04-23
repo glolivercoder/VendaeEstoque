@@ -1,4 +1,11 @@
-const DB_NAME = 'estoqueDB';
+// Usar o origin como parte do nome do banco de dados para evitar conflitos entre portas
+const getDBName = () => {
+  // Usar o hostname e a porta como parte do nome do banco de dados
+  // Isso garante que cada porta tenha seu próprio banco de dados
+  return `estoqueDB_${window.location.hostname}_${window.location.port}`;
+};
+
+const DB_NAME = getDBName();
 const DB_VERSION = 4;
 
 let db;
@@ -6,6 +13,9 @@ let dbInitPromise;
 
 const initDB = () => {
   if (dbInitPromise) return dbInitPromise;
+
+  console.log(`Inicializando banco de dados: ${DB_NAME} (versão ${DB_VERSION})`);
+  console.log(`Origem: ${window.location.origin}`);
 
   dbInitPromise = new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -80,11 +90,122 @@ const initDB = () => {
   return dbInitPromise;
 };
 
+// Função para migrar dados do banco de dados antigo para o novo
+const migrateFromOldDB = async () => {
+  try {
+    // Verificar se existe o banco de dados antigo
+    const oldDBName = 'estoqueDB';
+
+    // Tentar abrir o banco de dados antigo
+    const oldDBPromise = new Promise((resolve, reject) => {
+      const request = indexedDB.open(oldDBName);
+
+      request.onsuccess = (event) => {
+        resolve(event.target.result);
+      };
+
+      request.onerror = () => {
+        // Se não conseguir abrir, provavelmente não existe
+        resolve(null);
+      };
+
+      // Não queremos atualizar o banco antigo
+      request.onupgradeneeded = (event) => {
+        event.target.transaction.abort();
+        resolve(null);
+      };
+    });
+
+    const oldDB = await oldDBPromise;
+
+    // Se não existe o banco antigo, não há o que migrar
+    if (!oldDB) {
+      console.log('Banco de dados antigo não encontrado. Nada para migrar.');
+      return false;
+    }
+
+    console.log('Banco de dados antigo encontrado. Iniciando migração...');
+
+    // Verificar quais object stores existem no banco antigo
+    const storeNames = Array.from(oldDB.objectStoreNames);
+    console.log(`Object stores encontradas no banco antigo: ${storeNames.join(', ')}`);
+
+    // Garantir que o novo banco está inicializado
+    const newDB = db;
+
+    // Migrar dados de cada object store
+    for (const storeName of storeNames) {
+      if (!newDB.objectStoreNames.contains(storeName)) {
+        console.log(`Object store ${storeName} não existe no novo banco. Pulando...`);
+        continue;
+      }
+
+      console.log(`Migrando dados da object store ${storeName}...`);
+
+      // Obter todos os dados da object store antiga
+      const oldData = await new Promise((resolve, reject) => {
+        const transaction = oldDB.transaction([storeName], 'readonly');
+        const store = transaction.objectStore(storeName);
+        const request = store.getAll();
+
+        request.onsuccess = () => {
+          resolve(request.result);
+        };
+
+        request.onerror = () => {
+          reject(request.error);
+        };
+      });
+
+      console.log(`${oldData.length} registros encontrados em ${storeName}`);
+
+      // Se não há dados, pular
+      if (oldData.length === 0) {
+        continue;
+      }
+
+      // Adicionar dados ao novo banco
+      const transaction = newDB.transaction([storeName], 'readwrite');
+      const store = transaction.objectStore(storeName);
+
+      for (const item of oldData) {
+        store.add(item);
+      }
+
+      // Aguardar a conclusão da transação
+      await new Promise((resolve, reject) => {
+        transaction.oncomplete = () => {
+          console.log(`Migração de ${storeName} concluída com sucesso`);
+          resolve();
+        };
+
+        transaction.onerror = () => {
+          console.error(`Erro na migração de ${storeName}:`, transaction.error);
+          reject(transaction.error);
+        };
+      });
+    }
+
+    console.log('Migração concluída com sucesso!');
+
+    // Fechar o banco antigo
+    oldDB.close();
+
+    return true;
+  } catch (error) {
+    console.error('Erro durante a migração:', error);
+    return false;
+  }
+};
+
 // Define ensureDB before it's used by other functions
 const ensureDB = async () => {
   if (!db) {
     try {
       await initDB();
+
+      // Tentar migrar dados do banco antigo, se existir
+      await migrateFromOldDB();
     } catch (error) {
       console.error('Erro em ensureDB:', error);
       throw error;
