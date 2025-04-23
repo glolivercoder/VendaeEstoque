@@ -224,6 +224,17 @@ h6:not(button):not(.btn):not([class*="bg-"]),
   font-weight: 600;
 }
 
+/* Garantir que os botões de compartilhamento tenham a cor correta */
+.share-btn,
+.action-btn.share-btn,
+.share-btn span,
+.share-btn font,
+.share-btn * {
+  background-color: #2196F3 !important;
+  color: white !important;
+  font-weight: 500 !important;
+}
+
 /* Garantir que apenas os textos em branco que não estão em botões sejam convertidos para preto */
 .text-white:not(button):not(.btn):not(.btn-primary):not(.btn-secondary):not(.btn-success):not(.btn-danger):not(.run-all-btn):not(.clear-btn):not([class*="bg-"]),
 [class*="text-white"]:not(button):not(.btn):not(.btn-primary):not(.btn-secondary):not(.btn-success):not(.btn-danger):not(.run-all-btn):not(.clear-btn):not([class*="bg-"]) {

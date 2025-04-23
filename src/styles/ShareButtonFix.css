@@ -1,0 +1,29 @@
+/* Estilos específicos para corrigir o botão de compartilhamento */
+
+.action-btn.share-btn {
+  background-color: #2196F3 !important;
+  color: white !important;
+  font-weight: 500 !important;
+}
+
+.action-btn.share-btn span,
+.action-btn.share-btn font,
+.action-btn.share-btn * {
+  color: white !important;
+  font-weight: 500 !important;
+}
+
+/* Garantir que o botão de compartilhamento tenha a cor correta no hover */
+.action-btn.share-btn:hover {
+  background-color: #1976D2 !important;
+}
+
+/* Garantir que o ícone tenha a cor correta */
+.action-btn.share-btn .action-icon {
+  color: white !important;
+}
+
+/* Garantir que o texto tenha a cor correta */
+.action-btn.share-btn span font {
+  color: white !important;
+}

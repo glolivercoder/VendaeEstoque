@@ -238,8 +238,15 @@
 
 .share-btn {
   background-color: #2196F3;
-  color: white;
+  color: white !important;
   font-weight: 500;
+}
+
+.share-btn span,
+.share-btn font,
+.share-btn * {
+  color: white !important;
+  font-weight: 500 !important;
 }
 
 .share-btn:hover {
