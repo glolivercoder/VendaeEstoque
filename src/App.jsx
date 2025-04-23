@@ -187,7 +187,17 @@ function AppContent() {
   const [qrCodeImage, setQRCodeImage] = useState(() => {
     const savedQRCode = localStorage.getItem('selectedQRCode');
     console.log('QR Code carregado do localStorage:', savedQRCode ? 'Encontrado' : 'Não encontrado');
-    return savedQRCode || '/QRCode_Bancos/default_pix.png';
+
+    // Se houver um QR code salvo, usá-lo; caso contrário, usar o padrão
+    if (savedQRCode) {
+      // Registrar a data/hora de carregamento para debug
+      const lastTimestamp = localStorage.getItem('lastQRCodeTimestamp');
+      const lastQRCodeName = localStorage.getItem('lastQRCodeName');
+      console.log(`Usando QR Code salvo: ${lastQRCodeName || 'sem nome'}, última modificação: ${lastTimestamp ? new Date(parseInt(lastTimestamp)).toLocaleString() : 'desconhecida'}`);
+      return savedQRCode;
+    } else {
+      return '/QRCode_Bancos/default_pix.png';
+    }
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
@@ -1963,9 +1973,14 @@ ${clientCPF}
       reader.onload = (e) => {
         const qrCodeUrl = e.target.result;
         setQRCodeImage(qrCodeUrl);
+
         // Salvar o QR code selecionado no localStorage para persistência
         localStorage.setItem('selectedQRCode', qrCodeUrl);
-        console.log('QR Code salvo no localStorage');
+        localStorage.setItem('lastQRCodeName', file.name);
+        console.log('QR Code salvo no localStorage com nome:', file.name);
+
+        // Salvar a data e hora da última seleção para garantir que o QR code mais recente seja usado
+        localStorage.setItem('lastQRCodeTimestamp', new Date().getTime());
       };
       reader.readAsDataURL(file);
     }
