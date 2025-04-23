@@ -545,10 +545,11 @@ function AppContent() {
   };
 
   const handleMultipleSales = async (paymentMethod) => {
-    // Para pagamentos PIX, mostrar o QR code e depois processar a venda
+    // Para pagamentos PIX, mostrar o QR code e interromper o fluxo
+    // A venda só será processada quando o usuário clicar em "Confirmar Pagamento"
     if (paymentMethod === 'pix') {
       setShowPixQRCode(true);
-      // Continuar com o processamento da venda para PIX
+      return; // Interrompe o fluxo aqui
     }
 
     if (selectedItems.length === 0) {
@@ -790,6 +791,15 @@ function AppContent() {
           }
         } else if (parteInteira === 1000) {
           resultado = 'mil';
+        } else if (parteInteira < 2000) {
+          resultado = 'mil ' + valorPorExtenso(parteInteira - 1000).replace(' reais', '');
+        } else if (parteInteira < 10000) {
+          const milhares = Math.floor(parteInteira / 1000);
+          const resto = parteInteira % 1000;
+          resultado = unidades[milhares] + ' mil';
+          if (resto > 0) {
+            resultado += ' e ' + valorPorExtenso(resto).replace(' reais', '');
+          }
         } else {
           resultado = 'valor muito alto';
         }
