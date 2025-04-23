@@ -1484,6 +1484,57 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
       <div className="export-buttons-container">
         <div className="export-buttons">
           <button
+            className="btn btn-primary"
+            onClick={() => {
+              // Verificar se há um produto preenchido
+              if (!productName && !sku) {
+                toast({
+                  title: "Erro",
+                  description: "Preencha os dados do produto antes de exportar para o PDV Vendas.",
+                  variant: "destructive",
+                });
+                return;
+              }
+
+              // Criar objeto do produto com os dados preenchidos
+              const productToExport = {
+                description: productName,
+                productName: productName,
+                itemDescription: packageDescription,
+                technicalSpecs: technicalSpecs,
+                sku: sku,
+                price: 0, // Valor padrão, será editado no PDV
+                quantity: 1, // Valor padrão, será editado no PDV
+                weight: weight ? parseFloat(weight) : null,
+                dimensions: {
+                  length: length ? parseFloat(length) : null,
+                  width: width ? parseFloat(width) : null,
+                  height: height ? parseFloat(height) : null
+                }
+              };
+
+              // Verificar se a função global está disponível
+              if (typeof window.handleSelectProductsForPDV === 'function') {
+                // Chamar a função global para adicionar o produto ao PDV
+                window.handleSelectProductsForPDV([productToExport]);
+                toast({
+                  title: "Produto Exportado",
+                  description: `${productName} foi adicionado ao PDV Vendas com sucesso.`,
+                });
+              } else {
+                console.error('Função handleSelectProductsForPDV não encontrada no escopo global');
+                toast({
+                  title: "Erro",
+                  description: "Não foi possível adicionar o produto ao PDV Vendas. Tente novamente.",
+                  variant: "destructive",
+                });
+              }
+            }}
+          >
+            Exportar para Vendas PDV
+          </button>
+
+          <button
             className="btn btn-secondary"
             onClick={() => {
               toast({

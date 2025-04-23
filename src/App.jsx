@@ -238,19 +238,50 @@ function AppContent() {
   // Refs para capturar elementos para exportação
   const reportRef = useRef(null);
 
+  // Função para lidar com a seleção de produtos para o PDV
+  const handleSelectProductsForPDV = (selectedProductsList) => {
+    try {
+      // Adicionar produtos selecionados à lista de produtos
+      const newItems = [...items];
+      selectedProductsList.forEach(product => {
+        // Verificar se o produto já existe na lista
+        const existingIndex = newItems.findIndex(item =>
+          item.description === product.description &&
+          item.sku === product.sku
+        );
+        if (existingIndex === -1) {
+          // Gerar um ID único para o produto
+          const newProduct = {
+            ...product,
+            id: Date.now() + Math.floor(Math.random() * 1000),
+            createdAt: new Date().toISOString()
+          };
+          newItems.push(newProduct);
+        }
+      });
+      setItems(newItems);
+      console.log(`${selectedProductsList.length} produto(s) adicionado(s) ao PDV com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao adicionar produtos ao PDV:', error);
+      alert('Erro ao adicionar produtos ao PDV. Verifique o console para mais detalhes.');
+    }
+  };
+
   // Expor funções para componentes externos
   useEffect(() => {
     window.setShowProductSelector = setShowProductSelector;
     window.setShowShippingCalculator = setShowShippingCalculator;
     window.setShippingCalculatorData = setShippingCalculatorData;
+    window.handleSelectProductsForPDV = handleSelectProductsForPDV;
 
     return () => {
       // Limpar quando o componente for desmontado
       delete window.setShowProductSelector;
       delete window.setShowShippingCalculator;
       delete window.setShippingCalculatorData;
+      delete window.handleSelectProductsForPDV;
     };
-  }, []);
+  }, [items]);
 
   // Initialize database before loading data
   useEffect(() => {
@@ -1931,25 +1962,7 @@ ${clientCPF}
     }
   };
 
-  // Função para lidar com a seleção de produtos para o PDV
-  const handleSelectProductsForPDV = (selectedProductsList) => {
-    try {
-      // Adicionar produtos selecionados à lista de produtos
-      const newItems = [...items];
-      selectedProductsList.forEach(product => {
-        // Verificar se o produto já existe na lista
-        const existingIndex = newItems.findIndex(item => item.id === product.id);
-        if (existingIndex === -1) {
-          newItems.push(product);
-        }
-      });
-      setItems(newItems);
-      alert(`${selectedProductsList.length} produto(s) adicionado(s) ao PDV com sucesso!`);
-    } catch (error) {
-      console.error('Erro ao adicionar produtos ao PDV:', error);
-      alert('Erro ao adicionar produtos ao PDV. Verifique o console para mais detalhes.');
-    }
-  };
+
 
   // Função para configurar webhook do WordPress
   const handleSetupWebhook = async () => {
