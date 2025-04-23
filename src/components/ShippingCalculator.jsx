@@ -19,36 +19,23 @@ import { searchClients, getLastClientSale, getSaleItems, getProducts } from "../
 import "../styles/ShippingCalculator.css";
 
 // Importar bibliotecas para o mapa
-let L = null;
-let Map = null;
-let TileLayer = null;
-let Marker = null;
-let Popup = null;
+import L from 'leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
-// Carregar as bibliotecas de mapa dinamicamente
-// Nota: As bibliotecas serão carregadas sob demanda quando o mapa for exibido
-// Isso evita o erro de 'require is not defined' no navegador
-const loadMapLibraries = async () => {
-  try {
-    if (typeof window !== 'undefined' && !L) {
-      // Importação dinâmica usando import() em vez de require()
-      const leaflet = await import('leaflet');
-      const reactLeaflet = await import('react-leaflet');
+// Corrigir o problema dos ícones do Leaflet
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
-      L = leaflet.default;
-      Map = reactLeaflet.MapContainer;
-      TileLayer = reactLeaflet.TileLayer;
-      Marker = reactLeaflet.Marker;
-      Popup = reactLeaflet.Popup;
+// Configurar ícones padrão do Leaflet
+let DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41]
+});
 
-      return true;
-    }
-    return !!L; // Retorna true se as bibliotecas já estiverem carregadas
-  } catch (error) {
-    console.error('Erro ao carregar bibliotecas de mapa:', error);
-    return false;
-  }
-}
+L.Marker.prototype.options.icon = DefaultIcon;
 
 // Ícones
 const PackagePlus = () => (
@@ -783,18 +770,6 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
     setIsLoadingCarriers(true);
     setShowMap(true);
 
-    // Carregar as bibliotecas do mapa antes de continuar
-    const librariesLoaded = await loadMapLibraries();
-    if (!librariesLoaded) {
-      toast({
-        title: "Erro ao carregar mapa",
-        description: "Não foi possível carregar as bibliotecas do mapa. Tente novamente.",
-        variant: "destructive",
-      });
-      setIsLoadingCarriers(false);
-      return;
-    }
-
     try {
       // Primeiro, converter o CEP em coordenadas geográficas
       const addressData = await handleCepSearch(zipCodeOrigin);
@@ -1432,66 +1407,48 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
             </div>
 
             <div className="map-popup-content">
-              {typeof window !== 'undefined' && Map && L && (
-                <div style={{ height: '400px', width: '100%' }}>
-                  <Map
-                    center={mapCenter}
-                    zoom={13}
-                    style={{ height: '100%', width: '100%' }}
-                    ref={mapRef}
-                  >
-                    <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    />
+              <div style={{ height: '400px', width: '100%' }}>
+                <MapContainer
+                  center={mapCenter}
+                  zoom={13}
+                  style={{ height: '100%', width: '100%' }}
+                  ref={mapRef}
+                >
+                  <TileLayer
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  />
 
-                    {/* Marcador para o CEP de origem */}
-                    <Marker position={mapCenter}>
+                  {/* Marcador para o CEP de origem */}
+                  <Marker position={mapCenter}>
+                    <Popup>
+                      <strong>Sua localização</strong><br />
+                      CEP: {zipCodeOrigin}
+                    </Popup>
+                  </Marker>
+
+                  {/* Marcadores para as transportadoras próximas */}
+                  {nearbyCarriers.map((carrier, index) => (
+                    <Marker
+                      key={carrier.id || index}
+                      position={[carrier.lat, carrier.lon]}
+                    >
                       <Popup>
-                        <strong>Sua localização</strong><br />
-                        CEP: {zipCodeOrigin}
+                        <strong>{carrier.tags?.name || `Transportadora ${index + 1}`}</strong><br />
+                        {carrier.tags?.phone && <div>Telefone: {carrier.tags.phone}</div>}
+                        {carrier.tags?.website && (
+                          <div>
+                            <a href={carrier.tags.website} target="_blank" rel="noopener noreferrer">
+                              Visitar site
+                            </a>
+                          </div>
+                        )}
                       </Popup>
                     </Marker>
-
-                    {/* Marcadores para as transportadoras próximas */}
-                    {nearbyCarriers.map((carrier, index) => (
-                      <Marker
-                        key={carrier.id || index}
-                        position={[carrier.lat, carrier.lon]}
-                      >
-                        <Popup>
-                          <strong>{carrier.tags?.name || `Transportadora ${index + 1}`}</strong><br />
-                          {carrier.tags?.phone && <div>Telefone: {carrier.tags.phone}</div>}
-                          {carrier.tags?.website && (
-                            <div>
-                              <a href={carrier.tags.website} target="_blank" rel="noopener noreferrer">
-                                Visitar site
-                              </a>
-                            </div>
-                          )}
-                        </Popup>
-                      </Marker>
-                    ))}
-                  </Map>
-                </div>
-              )}
-
-              {typeof window !== 'undefined' && (!Map || !L) && (
-                <div className="map-loading-message">
-                  <p>Carregando bibliotecas do mapa...</p>
-                  <button
-                    className="btn btn-primary"
-                    onClick={async () => {
-                      await loadMapLibraries();
-                      // Forçar atualização do componente
-                      setShowMap(false);
-                      setTimeout(() => setShowMap(true), 100);
-                    }}
-                  >
-                    Tentar novamente
-                  </button>
-                </div>
-              )}
+                  ))}
+                </MapContainer>
+              </div>
+            </div>
 
               {isLoadingCarriers && (
                 <div className="loading-overlay">
