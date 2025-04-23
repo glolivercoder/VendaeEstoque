@@ -81,6 +81,22 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: true
     },
+    weight: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+      defaultValue: 0
+    },
+    dimensions: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      get() {
+        const value = this.getDataValue('dimensions');
+        return value ? JSON.parse(value) : { length: 0, width: 0, height: 0 };
+      },
+      set(value) {
+        this.setDataValue('dimensions', JSON.stringify(value || { length: 0, width: 0, height: 0 }));
+      }
+    },
     links: {
       type: DataTypes.TEXT,
       allowNull: true,

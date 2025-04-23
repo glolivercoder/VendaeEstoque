@@ -158,8 +158,20 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
 
       // Preencher o CEP de destino com o CEP do cliente
       if (preselectedClient.cep) {
-        setZipCodeDestination(preselectedClient.cep.replace(/\D/g, ''));
-        console.log(`CEP do cliente definido como destino: ${preselectedClient.cep}`);
+        const cleanCep = preselectedClient.cep.replace(/\D/g, '');
+        setZipCodeDestination(cleanCep);
+        console.log(`CEP do cliente definido como destino: ${preselectedClient.cep} (limpo: ${cleanCep})`);
+
+        // Forçar atualização do campo de CEP de destino no DOM
+        setTimeout(() => {
+          const destInput = document.getElementById('zipCodeDestination');
+          if (destInput) {
+            destInput.value = cleanCep;
+            // Disparar evento de mudança para atualizar o estado
+            const event = new Event('input', { bubbles: true });
+            destInput.dispatchEvent(event);
+          }
+        }, 100);
       }
 
       // Buscar a última compra do cliente
@@ -190,14 +202,58 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
 
     // Verificar se há um produto pré-selecionado
     if (preselectedProduct) {
+      console.log('Produto pré-selecionado:', preselectedProduct);
       setSku(preselectedProduct.sku || "");
       setProductName(preselectedProduct.productName || preselectedProduct.name || preselectedProduct.description || "");
       setPackageDescription(preselectedProduct.description || "");
       setTechnicalSpecs(preselectedProduct.technicalSpecs || "");
-      setWeight(preselectedProduct.weight ? preselectedProduct.weight.toString() : "");
-      setLength(preselectedProduct.dimensions?.length ? preselectedProduct.dimensions.length.toString() : "");
-      setWidth(preselectedProduct.dimensions?.width ? preselectedProduct.dimensions.width.toString() : "");
-      setHeight(preselectedProduct.dimensions?.height ? preselectedProduct.dimensions.height.toString() : "");
+
+      // Verificar e definir o peso
+      if (preselectedProduct.weight) {
+        const weightValue = preselectedProduct.weight.toString();
+        setWeight(weightValue);
+        console.log(`Peso do produto pré-selecionado definido como ${weightValue} kg`);
+      }
+
+      // Verificar e definir as dimensões
+      if (preselectedProduct.dimensions) {
+        if (preselectedProduct.dimensions.length) {
+          const lengthValue = preselectedProduct.dimensions.length.toString();
+          setLength(lengthValue);
+          console.log(`Comprimento do produto pré-selecionado definido como ${lengthValue} cm`);
+        }
+        if (preselectedProduct.dimensions.width) {
+          const widthValue = preselectedProduct.dimensions.width.toString();
+          setWidth(widthValue);
+          console.log(`Largura do produto pré-selecionado definida como ${widthValue} cm`);
+        }
+        if (preselectedProduct.dimensions.height) {
+          const heightValue = preselectedProduct.dimensions.height.toString();
+          setHeight(heightValue);
+          console.log(`Altura do produto pré-selecionado definida como ${heightValue} cm`);
+        }
+      }
+
+      // Forçar atualização dos campos no DOM após um pequeno atraso
+      setTimeout(() => {
+        const weightInput = document.getElementById('weight');
+        const lengthInput = document.getElementById('length');
+        const widthInput = document.getElementById('width');
+        const heightInput = document.getElementById('height');
+
+        if (weightInput && preselectedProduct.weight) weightInput.value = weight;
+        if (lengthInput && preselectedProduct.dimensions?.length) lengthInput.value = length;
+        if (widthInput && preselectedProduct.dimensions?.width) widthInput.value = width;
+        if (heightInput && preselectedProduct.dimensions?.height) heightInput.value = height;
+
+        // Disparar eventos de mudança para atualizar o estado
+        [weightInput, lengthInput, widthInput, heightInput].forEach(input => {
+          if (input) {
+            const event = new Event('input', { bubbles: true });
+            input.dispatchEvent(event);
+          }
+        });
+      }, 100);
     }
 
     // Obter o CEP do vendedor para o CEP de origem
@@ -382,28 +438,46 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
 
   // Função auxiliar para preencher os dados do produto
   const fillProductData = (product) => {
+    console.log('Preenchendo dados do produto:', product);
+
     // Preencher peso e dimensões se disponíveis
     if (product.weight) {
-      setWeight(product.weight.toString());
+      // Verificar se o peso é um objeto ou um valor direto
+      if (typeof product.weight === 'object' && product.weight.value) {
+        // Converter para kg se estiver em gramas
+        const weightValue = product.weight.unit === 'g'
+          ? product.weight.value / 1000
+          : product.weight.value;
+        setWeight(weightValue.toString());
+        console.log(`Peso definido como ${weightValue} kg`);
+      } else {
+        setWeight(product.weight.toString());
+        console.log(`Peso definido como ${product.weight} kg`);
+      }
     }
 
     if (product.dimensions) {
       if (product.dimensions.length) {
         setLength(product.dimensions.length.toString());
+        console.log(`Comprimento definido como ${product.dimensions.length} cm`);
       }
       if (product.dimensions.width) {
         setWidth(product.dimensions.width.toString());
+        console.log(`Largura definida como ${product.dimensions.width} cm`);
       }
       if (product.dimensions.height) {
         setHeight(product.dimensions.height.toString());
+        console.log(`Altura definida como ${product.dimensions.height} cm`);
       }
     }
 
     // Preencher os campos de descrição
-    setProductName(product.name || product.productName || product.description || "");
+    const productName = product.name || product.productName || product.description || "";
+    setProductName(productName);
+    console.log(`Nome do produto definido como: ${productName}`);
 
     // Incluir informações de NCM/GTIN na descrição se disponíveis
-    let description = product.name || product.productName || product.description || "";
+    let description = productName;
     if (product.ncm) {
       description += ` (NCM: ${product.ncm})`;
     }
@@ -415,11 +489,34 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
     }
 
     setPackageDescription(description);
+    console.log(`Descrição do pacote definida como: ${description}`);
+
     setTechnicalSpecs(product.technicalSpecs || "");
+
+    // Forçar atualização dos campos no DOM
+    setTimeout(() => {
+      const weightInput = document.getElementById('weight');
+      const lengthInput = document.getElementById('length');
+      const widthInput = document.getElementById('width');
+      const heightInput = document.getElementById('height');
+
+      if (weightInput && product.weight) weightInput.value = weight;
+      if (lengthInput && product.dimensions?.length) lengthInput.value = length;
+      if (widthInput && product.dimensions?.width) widthInput.value = width;
+      if (heightInput && product.dimensions?.height) heightInput.value = height;
+
+      // Disparar eventos de mudança para atualizar o estado
+      [weightInput, lengthInput, widthInput, heightInput].forEach(input => {
+        if (input) {
+          const event = new Event('input', { bubbles: true });
+          input.dispatchEvent(event);
+        }
+      });
+    }, 100);
 
     toast({
       title: "Produto encontrado",
-      description: `Informações preenchidas automaticamente para ${product.name || product.productName || product.description || ""}`
+      description: `Informações preenchidas automaticamente para ${productName}`
     });
   };
 
