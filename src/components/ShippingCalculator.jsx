@@ -1273,38 +1273,39 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
         </div>
       )}
 
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    toast({
-                      title: "PDF Exportado",
-                      description: selectedClient
-                        ? `Cotação enviada para ${selectedClient.name} por e-mail.`
-                        : "Cotação exportada como PDF.",
-                    });
-                  }}
-                >
-                  Exportar PDF
-                </button>
+      {/* Botões de exportação */}
+      <div className="export-buttons-container">
+        <div className="export-buttons">
+          <button
+            className="btn btn-secondary"
+            onClick={() => {
+              toast({
+                title: "PDF Exportado",
+                description: selectedClient
+                  ? `Cotação enviada para ${selectedClient.name} por e-mail.`
+                  : "Cotação exportada como PDF.",
+              });
+            }}
+          >
+            Exportar PDF
+          </button>
 
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    toast({
-                      title: "Imagem Exportada",
-                      description: selectedClient
-                        ? `Cotação enviada para ${selectedClient.name} por WhatsApp.`
-                        : "Cotação exportada como imagem.",
-                    });
-                  }}
-                >
-                  Exportar Imagem
-                </button>
-              </div>
-            </div>
-          </div>
+          <button
+            className="btn btn-secondary"
+            onClick={() => {
+              toast({
+                title: "Imagem Exportada",
+                description: selectedClient
+                  ? `Cotação enviada para ${selectedClient.name} por WhatsApp.`
+                  : "Cotação exportada como imagem.",
+              });
+            }}
+          >
+            Exportar Imagem
+          </button>
         </div>
-      )}
+      </div>
+      }
     </div>
   );
 };
