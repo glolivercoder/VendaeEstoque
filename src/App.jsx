@@ -226,6 +226,8 @@ function AppContent() {
   const [lastCompletedSale, setLastCompletedSale] = useState(null);
   const [showSalesHistory, setShowSalesHistory] = useState(false);
   const [showProductSelector, setShowProductSelector] = useState(false);
+  const [showEmployeeSection, setShowEmployeeSection] = useState(false);
+  const [showMaintenanceSection, setShowMaintenanceSection] = useState(false);
 
   // Adicionar estado para categorias e nova categoria
   const [categories, setCategories] = useState(['Ferramentas', 'Instrumentos Musicais', 'Informática', 'Gadgets', 'Todos', 'Diversos']);
@@ -5079,8 +5081,13 @@ ${clientCPF}
 
               {/* Gerenciamento de Funcionários */}
               <div className="mt-4 pt-4 border-t border-gray-200">
-                <h3 className="text-md font-medium mb-2">Funcionários</h3>
-                <EmployeeManager />
+                <div className="flex justify-between items-center cursor-pointer" onClick={() => setShowEmployeeSection(!showEmployeeSection)}>
+                  <h3 className="text-md font-medium mb-2">Funcionários</h3>
+                  <svg className={`h-5 w-5 transform ${showEmployeeSection ? 'rotate-180' : ''} transition-transform duration-200`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+                {showEmployeeSection && <EmployeeManager />}
               </div>
 
               <div className="mt-4 pt-4 border-t border-gray-200">
@@ -5132,52 +5139,59 @@ ${clientCPF}
                   </div>
                 </div>
 
-                <h3 className="text-md font-medium mb-2 mt-4">Manutenção do Sistema</h3>
-                <div className="grid grid-cols-1 gap-3 mb-3">
-                  <button
-                    onClick={async () => {
-                      try {
-                        const result = await diagnosticAndFixAllProducts();
-                        alert(`Diagnóstico concluído! ${result.fixedCount} produtos corrigidos.`);
-                        // Recarregar a lista de produtos
-                        const updatedProducts = await getProducts();
-                        setItems(updatedProducts);
-                      } catch (error) {
-                        console.error('Erro ao executar diagnóstico:', error);
-                        alert('Erro ao executar diagnóstico. Verifique o console para mais detalhes.');
-                      }
-                    }}
-                    className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 flex items-center justify-center w-full"
-                  >
-                    <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                    Diagnosticar e Corrigir Estoque
-                  </button>
-                  <p className="text-xs text-gray-500 mt-0 mb-3">
-                    Use esta opção para corrigir problemas de estoque, incluindo o item "Ventilador G-Fire Cooler".
-                  </p>
-
-                  <button
-                    onClick={() => {
-                      if (window.confirm('Tem certeza que deseja limpar o cache do sistema? Isso pode resolver problemas de instabilidade, mas você precisará recarregar a página. Seus dados não serão perdidos.')) {
-                        // Importar e executar a função de limpeza do localStorage
-                        import('./utils/clearLocalStorage.js').then(module => {
-                          module.clearLocalStorage();
-                        });
-                      }
-                    }}
-                    className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 flex items-center justify-center w-full"
-                  >
-                    <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Limpar Cache do Sistema
-                  </button>
-                  <p className="text-xs text-gray-500 mt-0">
-                    Use esta opção se o sistema estiver apresentando problemas de carregamento ou instabilidade.
-                  </p>
+                <div className="flex justify-between items-center cursor-pointer" onClick={() => setShowMaintenanceSection(!showMaintenanceSection)}>
+                  <h3 className="text-md font-medium mb-2 mt-4">Manutenção do Sistema</h3>
+                  <svg className={`h-5 w-5 transform ${showMaintenanceSection ? 'rotate-180' : ''} transition-transform duration-200`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
+                {showMaintenanceSection && (
+                  <div className="grid grid-cols-1 gap-3 mb-3">
+                    <button
+                      onClick={async () => {
+                        try {
+                          const result = await diagnosticAndFixAllProducts();
+                          alert(`Diagnóstico concluído! ${result.fixedCount} produtos corrigidos.`);
+                          // Recarregar a lista de produtos
+                          const updatedProducts = await getProducts();
+                          setItems(updatedProducts);
+                        } catch (error) {
+                          console.error('Erro ao executar diagnóstico:', error);
+                          alert('Erro ao executar diagnóstico. Verifique o console para mais detalhes.');
+                        }
+                      }}
+                      className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 flex items-center justify-center w-full"
+                    >
+                      <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                      Diagnosticar e Corrigir Estoque
+                    </button>
+                    <p className="text-xs text-gray-500 mt-0 mb-3">
+                      Use esta opção para corrigir problemas de estoque, incluindo o item "Ventilador G-Fire Cooler".
+                    </p>
+
+                    <button
+                      onClick={() => {
+                        if (window.confirm('Tem certeza que deseja limpar o cache do sistema? Isso pode resolver problemas de instabilidade, mas você precisará recarregar a página. Seus dados não serão perdidos.')) {
+                          // Importar e executar a função de limpeza do localStorage
+                          import('./utils/clearLocalStorage.js').then(module => {
+                            module.clearLocalStorage();
+                          });
+                        }
+                      }}
+                      className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 flex items-center justify-center w-full"
+                    >
+                      <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Limpar Cache do Sistema
+                    </button>
+                    <p className="text-xs text-gray-500 mt-0">
+                      Use esta opção se o sistema estiver apresentando problemas de carregamento ou instabilidade.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end mt-6 pt-4 border-t border-gray-200">
