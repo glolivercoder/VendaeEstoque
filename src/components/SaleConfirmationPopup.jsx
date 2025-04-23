@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import html2canvas from 'html2canvas';
+import { useToast } from '../hooks/useToast';
 import '../styles/SaleConfirmationPopup.css';
 
 const SaleConfirmationPopup = ({
@@ -11,6 +12,7 @@ const SaleConfirmationPopup = ({
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [contactInfo, setContactInfo] = useState({ whatsapp: '', email: '' });
   const [showContactForm, setShowContactForm] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     console.log('SaleConfirmationPopup renderizado com venda:', sale);
@@ -35,12 +37,38 @@ const SaleConfirmationPopup = ({
       const canvas = await html2canvas(popupRef.current);
       const imageData = canvas.toDataURL('image/png');
 
+      // Copiar a imagem para a área de transferência
+      try {
+        // Converter a imagem para blob
+        const blobPromise = new Promise(resolve => {
+          canvas.toBlob(resolve, 'image/png');
+        });
+        const blob = await blobPromise;
+
+        // Criar um objeto ClipboardItem e copiar para a área de transferência
+        if (navigator.clipboard && navigator.clipboard.write) {
+          const clipboardItem = new ClipboardItem({ 'image/png': blob });
+          await navigator.clipboard.write([clipboardItem]);
+          console.log('Imagem copiada para a área de transferência');
+          toast({
+            title: "Imagem copiada",
+            description: "O comprovante foi copiado para a área de transferência.",
+          });
+        } else {
+          console.warn('API de área de transferência não suportada neste navegador');
+        }
+      } catch (clipboardError) {
+        console.error('Erro ao copiar para a área de transferência:', clipboardError);
+        // Continuar com o método normal mesmo se falhar a cópia para a área de transferência
+      }
+
       if (method === 'download') {
         // Download direto
         const link = document.createElement('a');
         link.href = imageData;
         link.download = `venda_${sale.id}_${new Date().toISOString().slice(0, 10)}.png`;
         link.click();
+        alert('A imagem também foi copiada para a área de transferência. Você pode colá-la diretamente no WhatsApp ou email.');
       } else if (method === 'whatsapp') {
         // Primeiro baixar a imagem
         const link = document.createElement('a');
@@ -51,9 +79,9 @@ const SaleConfirmationPopup = ({
         // Depois abrir o WhatsApp
         if (contactInfo.whatsapp) {
           setTimeout(() => {
-            const encodedMessage = encodeURIComponent('Comprovante de venda (enviando o arquivo que acabei de baixar)');
+            const encodedMessage = encodeURIComponent('Comprovante de venda');
             window.open(`https://wa.me/${contactInfo.whatsapp.replace(/\D/g, '')}?text=${encodedMessage}`, '_blank');
-            alert('O arquivo foi baixado. Agora você pode enviá-lo manualmente pelo WhatsApp que acabou de abrir.');
+            alert('A imagem foi copiada para a área de transferência. Você pode colá-la diretamente no WhatsApp que acabou de abrir.');
           }, 1000);
         } else {
           setShowContactForm(true);
@@ -69,9 +97,9 @@ const SaleConfirmationPopup = ({
         if (contactInfo.email) {
           setTimeout(() => {
             const subject = encodeURIComponent('Comprovante de Venda');
-            const body = encodeURIComponent('Segue em anexo o comprovante de venda (enviando o arquivo que acabei de baixar).');
+            const body = encodeURIComponent('Segue em anexo o comprovante de venda.');
             window.open(`mailto:${contactInfo.email}?subject=${subject}&body=${body}`, '_blank');
-            alert('O arquivo foi baixado. Agora você pode enviá-lo manualmente pelo email que acabou de abrir.');
+            alert('A imagem foi copiada para a área de transferência. Você pode colá-la diretamente no email que acabou de abrir.');
           }, 1000);
         } else {
           setShowContactForm(true);
