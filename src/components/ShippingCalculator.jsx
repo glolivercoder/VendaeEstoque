@@ -48,6 +48,13 @@ const PackagePlus = () => (
   </svg>
 );
 
+const Camera = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path>
+    <circle cx="12" cy="13" r="3"></circle>
+  </svg>
+);
+
 const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
   const [zipCodeOrigin, setZipCodeOrigin] = useState("");
   const [zipCodeDestination, setZipCodeDestination] = useState("");
@@ -156,11 +163,11 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
     setProductName(product.name || product.description || "");
     setPackageDescription(product.description || "");
     setTechnicalSpecs(product.technicalSpecs || "");
-    
+
     if (product.weight) {
       setWeight(product.weight.toString());
     }
-    
+
     if (product.dimensions) {
       if (product.dimensions.length) setLength(product.dimensions.length.toString());
       if (product.dimensions.width) setWidth(product.dimensions.width.toString());
@@ -184,7 +191,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
       const lastSale = await getLastClientSale(clientId);
       if (lastSale) {
         setLastClientSaleData(lastSale);
-        
+
         // Buscar os itens da última venda
         const items = await getSaleItems(lastSale.id);
         setLastClientSaleItems(items);
@@ -200,7 +207,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
       setFilteredClients([]);
       return;
     }
-    
+
     try {
       const clients = await searchClients(query);
       setFilteredClients(clients);
@@ -214,17 +221,17 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
     setSelectedClient(client);
     setClientSearchQuery("");
     setFilteredClients([]);
-    
+
     // Preencher o CEP de destino com o CEP do cliente
     if (client.cep) {
       setZipCodeDestination(client.cep.replace(/\D/g, ''));
     }
-    
+
     // Buscar a última compra do cliente
     if (client.id) {
       fetchLastClientSale(client.id);
     }
-    
+
     // Salvar o cliente selecionado no localStorage
     localStorage.setItem('selectedClient', JSON.stringify(client));
   };
@@ -239,7 +246,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
       });
       return;
     }
-    
+
     // Simulação de cálculo de frete
     setIsCalculating(true);
     setTimeout(() => {
@@ -266,7 +273,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
           carrier: { id: "jadlog", name: "Jadlog", logo: "jadlog.png" }
         }
       ];
-      
+
       setShippingOptions(options);
       setIsCalculating(false);
       setShowResultsPopup(true);
@@ -651,7 +658,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
                 if (typeof window.handleSelectProductsForPDV === 'function') {
                   // Chamar a função global para adicionar o produto ao PDV
                   await window.handleSelectProductsForPDV([productToExport]);
-                  
+
                   toast({
                     title: "Produto Exportado",
                     description: `${productName} foi adicionado ao PDV Vendas com sucesso.`,
