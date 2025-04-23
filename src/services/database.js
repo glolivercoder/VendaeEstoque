@@ -685,8 +685,41 @@ export const updateProduct = async (product) => {
       const existingProduct = getRequest.result;
 
       if (!existingProduct) {
-        console.error(`Produto com ID ${product.id} não encontrado`);
-        reject(new Error(`Produto com ID ${product.id} não encontrado`));
+        console.warn(`Produto com ID ${product.id} não encontrado. Criando novo produto.`);
+
+        // Criar um novo produto com os dados fornecidos
+        const newProduct = {
+          ...product,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        // Garantir que o produto tenha os campos obrigatórios
+        if (!newProduct.description) {
+          newProduct.description = `Produto ${product.id}`;
+        }
+
+        if (newProduct.quantity === undefined) {
+          newProduct.quantity = 0;
+        }
+
+        if (newProduct.price === undefined) {
+          newProduct.price = 0;
+        }
+
+        // Adicionar o novo produto
+        const addRequest = store.add(newProduct);
+
+        addRequest.onsuccess = () => {
+          console.log(`Novo produto criado com ID ${product.id}`);
+          resolve(addRequest.result);
+        };
+
+        addRequest.onerror = (error) => {
+          console.error(`Erro ao criar novo produto ${product.id}:`, error);
+          reject(addRequest.error);
+        };
+
         return;
       }
 
