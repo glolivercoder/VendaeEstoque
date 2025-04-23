@@ -355,7 +355,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
                     >
                       <Camera />
                     </button>
-                    <MagicWandScanButton onProductFound={fillProductData} />
+                    <MagicWandScanButton onProductDataDetected={fillProductData} />
                   </div>
                 </div>
               </div>
