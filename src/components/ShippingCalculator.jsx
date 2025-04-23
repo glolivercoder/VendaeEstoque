@@ -687,39 +687,6 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
     fetchAvailableProducts();
   };
 
-  // Função para buscar o endereço a partir do CEP
-  const handleCepSearch = async (cep) => {
-    try {
-      const formattedCep = cep.replace(/\D/g, '');
-      if (formattedCep.length !== 8) {
-        throw new Error('CEP inválido');
-      }
-
-      const response = await fetch(`https://viacep.com.br/ws/${formattedCep}/json/`);
-      const data = await response.json();
-
-      if (data.erro) {
-        throw new Error('CEP não encontrado');
-      }
-
-      return {
-        cep: data.cep,
-        address: data.logradouro,
-        neighborhood: data.bairro,
-        city: data.localidade,
-        state: data.uf
-      };
-    } catch (error) {
-      console.error('Erro ao buscar CEP:', error);
-      toast({
-        title: "Erro ao buscar CEP",
-        description: error.message || "Não foi possível buscar o endereço para o CEP informado.",
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
-
   return (
     <div className="shipping-calculator">
       <div className="card">
