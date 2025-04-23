@@ -159,6 +159,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
       // Preencher o CEP de destino com o CEP do cliente
       if (preselectedClient.cep) {
         setZipCodeDestination(preselectedClient.cep.replace(/\D/g, ''));
+        console.log(`CEP do cliente definido como destino: ${preselectedClient.cep}`);
       }
 
       // Buscar a última compra do cliente
@@ -206,13 +207,34 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
         const vendor = JSON.parse(vendorInfo);
         if (vendor.cep) {
           setZipCodeOrigin(vendor.cep.replace(/\D/g, ''));
+          console.log(`CEP do vendedor definido como origem: ${vendor.cep}`);
         }
       } catch (error) {
         console.error('Erro ao carregar vendedor selecionado:', error);
       }
     } else {
-      // CEP padrão para Salvador-BA
-      setZipCodeOrigin('40010000');
+      // Tentar obter o CEP do usuário atual (vendedor/administrador)
+      const currentUserInfo = localStorage.getItem('currentUser');
+      if (currentUserInfo) {
+        try {
+          const currentUser = JSON.parse(currentUserInfo);
+          if (currentUser.cep) {
+            setZipCodeOrigin(currentUser.cep.replace(/\D/g, ''));
+            console.log(`CEP do usuário atual definido como origem: ${currentUser.cep}`);
+          } else {
+            // CEP padrão para Salvador-BA
+            setZipCodeOrigin('40255310');
+            console.log('CEP padrão definido como origem: 40255-310');
+          }
+        } catch (error) {
+          console.error('Erro ao carregar usuário atual:', error);
+          setZipCodeOrigin('40255310');
+        }
+      } else {
+        // CEP padrão para Salvador-BA
+        setZipCodeOrigin('40255310');
+        console.log('CEP padrão definido como origem: 40255-310');
+      }
     }
   }, [preselectedClient, preselectedProduct]);
 
@@ -318,35 +340,36 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
   const lookupProduct = async (code) => {
     try {
       setIsFetchingProduct(true);
+
+      // Primeiro, tentar buscar o produto pelo SKU
       const product = await fetchProductBySku(code);
 
-      if (product) {
-        setWeight(product.weight.toString());
-        setLength(product.dimensions.length.toString());
-        setWidth(product.dimensions.width.toString());
-        setHeight(product.dimensions.height.toString());
-
-        // Preencher os novos campos
-        setProductName(product.name || product.productName || "");
-        setPackageDescription(
-          product.ncm
-            ? `${product.name || product.productName || ""} (NCM: ${product.ncm})`
-            : (product.name || product.productName || "")
+      // Se não encontrar pelo SKU, buscar nos produtos disponíveis
+      if (!product) {
+        const products = await getProducts();
+        const matchingProduct = products.find(p =>
+          p.sku === code ||
+          p.gtin === code ||
+          p.ncm === code ||
+          (p.description && p.description.includes(code))
         );
-        setTechnicalSpecs(product.technicalSpecs || "");
 
-        toast({
-          title: "Produto encontrado",
-          description: `Informações preenchidas automaticamente para ${product.name || product.productName || ""}`
-        });
+        if (matchingProduct) {
+          fillProductData(matchingProduct);
+          return;
+        }
       } else {
-        toast({
-          title: "Produto não encontrado",
-          description: "Não foi possível encontrar informações para este código.",
-          variant: "destructive",
-        });
+        fillProductData(product);
+        return;
       }
+
+      toast({
+        title: "Produto não encontrado",
+        description: "Não foi possível encontrar informações para este código.",
+        variant: "destructive",
+      });
     } catch (error) {
+      console.error('Erro ao buscar produto:', error);
       toast({
         title: "Erro ao buscar produto",
         description: "Não foi possível obter as dimensões do produto.",
@@ -355,6 +378,49 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
     } finally {
       setIsFetchingProduct(false);
     }
+  };
+
+  // Função auxiliar para preencher os dados do produto
+  const fillProductData = (product) => {
+    // Preencher peso e dimensões se disponíveis
+    if (product.weight) {
+      setWeight(product.weight.toString());
+    }
+
+    if (product.dimensions) {
+      if (product.dimensions.length) {
+        setLength(product.dimensions.length.toString());
+      }
+      if (product.dimensions.width) {
+        setWidth(product.dimensions.width.toString());
+      }
+      if (product.dimensions.height) {
+        setHeight(product.dimensions.height.toString());
+      }
+    }
+
+    // Preencher os campos de descrição
+    setProductName(product.name || product.productName || product.description || "");
+
+    // Incluir informações de NCM/GTIN na descrição se disponíveis
+    let description = product.name || product.productName || product.description || "";
+    if (product.ncm) {
+      description += ` (NCM: ${product.ncm})`;
+    }
+    if (product.gtin && !description.includes(product.gtin)) {
+      description += ` (GTIN: ${product.gtin})`;
+    }
+    if (product.sku && !description.includes(product.sku)) {
+      description += ` (SKU: ${product.sku})`;
+    }
+
+    setPackageDescription(description);
+    setTechnicalSpecs(product.technicalSpecs || "");
+
+    toast({
+      title: "Produto encontrado",
+      description: `Informações preenchidas automaticamente para ${product.name || product.productName || product.description || ""}`
+    });
   };
 
   const handleClearForm = () => {

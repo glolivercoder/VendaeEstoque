@@ -45,6 +45,8 @@ export const AuthProvider = ({ children }) => {
         password: 'admin123', // Em produção, usar hash
         type: EMPLOYEE_TYPES.ADMIN,
         permissions: ['dashboard', 'inventory', 'sales', 'clients', 'vendors', 'reports', 'settings'],
+        address: 'Rua Exemplo, 123, Salvador-BA',
+        cep: '40255-310', // CEP padrão para Salvador-BA
         createdAt: new Date().toISOString()
       };
 

@@ -11,6 +11,7 @@ const EmployeeManager = () => {
     email: '',
     whatsapp: '',
     address: '',
+    cep: '',
     password: '',
     confirmPassword: '',
     type: EMPLOYEE_TYPES.SELLER, // Definindo 'vendedor' como tipo padrão para novos usuários
@@ -62,6 +63,7 @@ const EmployeeManager = () => {
       email: '',
       whatsapp: '',
       address: '',
+      cep: '',
       password: '',
       confirmPassword: '',
       type: EMPLOYEE_TYPES.SELLER, // Mantendo 'vendedor' como tipo padrão
@@ -83,6 +85,7 @@ const EmployeeManager = () => {
       email: employee.email,
       whatsapp: employee.whatsapp || '',
       address: employee.address || '',
+      cep: employee.cep || '',
       password: '',
       confirmPassword: '',
       type: employee.type,
@@ -156,6 +159,7 @@ const EmployeeManager = () => {
       email: formData.email,
       whatsapp: formData.whatsapp,
       address: formData.address,
+      cep: formData.cep,
       type: formData.type,
       username: formData.username,
       rg: formData.rg,
@@ -323,18 +327,39 @@ const EmployeeManager = () => {
               </select>
             </div>
 
-            <div className="md:col-span-2">
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-                Endereço
-              </label>
-              <input
-                type="text"
-                id="address"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
-              />
+            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="md:col-span-3">
+                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
+                  Endereço
+                </label>
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                />
+              </div>
+              <div>
+                <label htmlFor="cep" className="block text-sm font-medium text-gray-700 mb-1">
+                  CEP
+                </label>
+                <input
+                  type="text"
+                  id="cep"
+                  name="cep"
+                  value={formData.cep || ''}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    const formattedValue = value.length > 5 ? `${value.slice(0, 5)}-${value.slice(5, 8)}` : value;
+                    setFormData(prev => ({ ...prev, cep: formattedValue }));
+                  }}
+                  maxLength="9"
+                  placeholder="00000-000"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
+                />
+              </div>
             </div>
 
             <div>
