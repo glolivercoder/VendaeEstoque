@@ -1282,6 +1282,58 @@ input:checked + .toggle-slider:before {
   margin-top: 2rem;
 }
 
+/* Estilos para o modal da calculadora de frete */
+.shipping-calculator-modal {
+  width: 90%;
+  max-width: 1200px;
+  height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.shipping-calculator-modal .modal-header {
+  background-color: #2196F3;
+  color: white;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.shipping-calculator-modal .modal-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+}
+
+.shipping-calculator-modal .modal-body {
+  flex: 1;
+  overflow: auto;
+  padding: 0;
+}
+
+.shipping-calculator-modal .shipping-calculator {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  max-width: none;
+}
+
+.shipping-calculator-modal .card {
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  margin: 0;
+  height: 100%;
+}
+
+.shipping-calculator-modal .card-header {
+  background-color: #2196F3;
+}
+
 /* Responsividade */
 @media (max-width: 768px) {
   .shipping-calculator .form-row,
