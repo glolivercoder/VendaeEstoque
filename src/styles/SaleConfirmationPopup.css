@@ -236,6 +236,15 @@
   background-color: #1976D2;
 }
 
+.freight-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.freight-btn:hover {
+  background-color: #388E3C;
+}
+
 .share-btn {
   background-color: #2196F3;
   color: white !important;

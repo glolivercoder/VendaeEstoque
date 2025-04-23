@@ -203,6 +203,44 @@ const SaleConfirmationPopup = ({
             </button>
 
             <button
+              onClick={() => {
+                // Obter o cliente da venda
+                const client = {
+                  name: sale.client,
+                  document: sale.clientDoc,
+                  cep: sale.clientCep || ''
+                };
+
+                // Obter o produto da venda
+                const product = {
+                  description: sale.product,
+                  price: sale.total
+                };
+
+                // Abrir a calculadora de frete e passar os dados
+                if (window.setShowShippingCalculator) {
+                  window.setShowShippingCalculator(true);
+                  if (window.setShippingCalculatorData) {
+                    window.setShippingCalculatorData({
+                      client: client,
+                      product: product
+                    });
+                  }
+                }
+
+                // Fechar o popup de confirmação de venda
+                onClose();
+              }}
+              className="action-btn freight-btn"
+              style={{ backgroundColor: '#4CAF50', color: 'white', fontWeight: 500 }}
+            >
+              <svg className="action-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+              </svg>
+              <span style={{ color: 'white', fontWeight: 500 }}>Frete</span>
+            </button>
+
+            <button
               onClick={() => setShowShareOptions(!showShareOptions)}
               className="action-btn share-btn"
               style={{ backgroundColor: '#2196F3', color: 'white', fontWeight: 500 }}
