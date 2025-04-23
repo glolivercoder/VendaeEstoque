@@ -8,6 +8,13 @@ import TrackingPanel from "./TrackingPanel";
 import ShippingLabelGenerator from "./ShippingLabelGenerator";
 import CarrierConfigPanel from "./CarrierConfigPanel";
 import MagicWandScanButton from "./MagicWandScanButton";
+
+// Ícone de carregamento
+const Loader2 = () => (
+  <svg className="animate-spin" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+  </svg>
+);
 import { searchClients, getLastClientSale, getSaleItems, getProducts } from "../services/database";
 import "../styles/ShippingCalculator.css";
 
@@ -136,6 +143,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
   const [mapCenter, setMapCenter] = useState([-12.9704, -38.5124]); // Salvador-BA
   const [nearbyCarriers, setNearbyCarriers] = useState([]);
   const [isLoadingCarriers, setIsLoadingCarriers] = useState(false);
+  const [isExportingToPDV, setIsExportingToPDV] = useState(false);
   const mapRef = useRef(null);
 
   // Carregar histórico de cálculos de frete do localStorage e inicializar com dados pré-selecionados
@@ -1485,7 +1493,8 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
         <div className="export-buttons">
           <button
             className="btn btn-primary"
-            onClick={() => {
+            disabled={isExportingToPDV}
+            onClick={async () => {
               // Verificar se há um produto preenchido
               if (!productName && !sku) {
                 toast({
@@ -1496,42 +1505,73 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
                 return;
               }
 
-              // Criar objeto do produto com os dados preenchidos
-              const productToExport = {
-                description: productName,
-                productName: productName,
-                itemDescription: packageDescription,
-                technicalSpecs: technicalSpecs,
-                sku: sku,
-                price: 0, // Valor padrão, será editado no PDV
-                quantity: 1, // Valor padrão, será editado no PDV
-                weight: weight ? parseFloat(weight) : null,
-                dimensions: {
-                  length: length ? parseFloat(length) : null,
-                  width: width ? parseFloat(width) : null,
-                  height: height ? parseFloat(height) : null
-                }
-              };
-
-              // Verificar se a função global está disponível
-              if (typeof window.handleSelectProductsForPDV === 'function') {
-                // Chamar a função global para adicionar o produto ao PDV
-                window.handleSelectProductsForPDV([productToExport]);
+              // Verificar se há dimensões e peso preenchidos
+              if (!weight || !length || !width || !height) {
                 toast({
-                  title: "Produto Exportado",
-                  description: `${productName} foi adicionado ao PDV Vendas com sucesso.`,
-                });
-              } else {
-                console.error('Função handleSelectProductsForPDV não encontrada no escopo global');
-                toast({
-                  title: "Erro",
-                  description: "Não foi possível adicionar o produto ao PDV Vendas. Tente novamente.",
+                  title: "Dados incompletos",
+                  description: "Preencha o peso e as dimensões do produto para exportar para o PDV Vendas.",
                   variant: "destructive",
                 });
+                return;
+              }
+
+              try {
+                setIsExportingToPDV(true);
+
+                // Criar objeto do produto com os dados preenchidos
+                const productToExport = {
+                  description: productName,
+                  productName: productName,
+                  itemDescription: packageDescription,
+                  technicalSpecs: technicalSpecs,
+                  sku: sku,
+                  price: 0, // Valor padrão, será editado no PDV
+                  quantity: 1, // Valor padrão, será editado no PDV
+                  weight: weight ? parseFloat(weight) : null,
+                  dimensions: {
+                    length: length ? parseFloat(length) : null,
+                    width: width ? parseFloat(width) : null,
+                    height: height ? parseFloat(height) : null
+                  }
+                };
+
+                // Verificar se a função global está disponível
+                if (typeof window.handleSelectProductsForPDV === 'function') {
+                  // Chamar a função global para adicionar o produto ao PDV
+                  await window.handleSelectProductsForPDV([productToExport]);
+
+                  toast({
+                    title: "Produto Exportado",
+                    description: `${productName} foi adicionado ao PDV Vendas com sucesso.`,
+                  });
+                } else {
+                  console.error('Função handleSelectProductsForPDV não encontrada no escopo global');
+                  toast({
+                    title: "Erro",
+                    description: "Não foi possível adicionar o produto ao PDV Vendas. Tente novamente.",
+                    variant: "destructive",
+                  });
+                }
+              } catch (error) {
+                console.error('Erro ao exportar produto para PDV Vendas:', error);
+                toast({
+                  title: "Erro",
+                  description: "Ocorreu um erro ao exportar o produto. Tente novamente.",
+                  variant: "destructive",
+                });
+              } finally {
+                setIsExportingToPDV(false);
               }
             }}
           >
-            Exportar para Vendas PDV
+            {isExportingToPDV ? (
+              <>
+                <Loader2 />
+                <span>Exportando...</span>
+              </>
+            ) : (
+              "Exportar para Vendas PDV"
+            )}
           </button>
 
           <button
