@@ -45,8 +45,11 @@ const {
   // URL base da API do WooCommerce
   VITE_WORDPRESS_URL: SITE_URL = 'https://achadinhoshopp.com.br/loja',
   // Chaves da API do WooCommerce (substitua pelos valores reais obtidos no painel do WooCommerce)
-  VITE_WOOCOMMERCE_CONSUMER_KEY: CONSUMER_KEY = 'ck_a117i65gmQYOokVzyA8QRLSw',
-  VITE_WOOCOMMERCE_CONSUMER_SECRET: CONSUMER_SECRET = 'cs_a117i65gmQYOokVzyA8QRLSw'
+  VITE_WOOCOMMERCE_CONSUMER_KEY: CONSUMER_KEY = 'ck_40b4a1a674084d504579a2ba2d51530c260d3645',
+  VITE_WOOCOMMERCE_CONSUMER_SECRET: CONSUMER_SECRET = 'cs_8fa4b36ab57ddb02415e4fc346451791ab1782f9',
+  // Credenciais do usuário WordPress
+  VITE_WORDPRESS_USERNAME: WP_USERNAME = 'gloliverx',
+  VITE_WORDPRESS_APP_PASSWORD: WP_APP_PASSWORD = '0lr4 umHb 8pfx 5Cqf v7KW oq8S'
 } = import.meta.env;
 
 // URL base da API do WooCommerce
@@ -433,28 +436,18 @@ export const syncProductsToWordPress = async (products) => {
               formData.append('alt_text', product.description || product.name);
 
               // Usar a API de mídia do WordPress para fazer upload
-              // Obter credenciais do WordPress do localStorage se disponível
-              let wpUsername = localStorage.getItem('wp_username') || '';
-              let wpPassword = localStorage.getItem('wp_password') || '';
+              // Usar as credenciais do arquivo .env
+              console.log('Usando credenciais do WordPress para upload de imagem:', {
+                username: WP_USERNAME,
+                appPasswordLength: WP_APP_PASSWORD ? WP_APP_PASSWORD.length : 0
+              });
 
-              // Se não houver credenciais no localStorage, solicitar ao usuário
-              if (!wpUsername || !wpPassword) {
-                wpUsername = prompt('Digite seu nome de usuário do WordPress:', '');
-                wpPassword = prompt('Digite sua senha de aplicativo do WordPress:', '');
-
-                if (wpUsername && wpPassword) {
-                  // Salvar credenciais no localStorage para uso futuro
-                  localStorage.setItem('wp_username', wpUsername);
-                  localStorage.setItem('wp_password', wpPassword);
-                }
-              }
-
-              // Usar as credenciais fornecidas pelo usuário
+              // Usar as credenciais do arquivo .env
               const mediaResponse = await axios.post(`${SITE_URL}/wp-json/wp/v2/media`, formData, {
                 headers: {
                   'Content-Disposition': `attachment; filename=${filename}`,
                   'Content-Type': 'multipart/form-data',
-                  Authorization: `Basic ${btoa(`${wpUsername}:${wpPassword}`)}`
+                  Authorization: `Basic ${btoa(`${WP_USERNAME}:${WP_APP_PASSWORD}`)}`
                 }
               });
 
