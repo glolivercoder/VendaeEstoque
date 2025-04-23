@@ -19,27 +19,35 @@ import { searchClients, getLastClientSale, getSaleItems, getProducts } from "../
 import "../styles/ShippingCalculator.css";
 
 // Importar bibliotecas para o mapa
-let L;
-let Map;
-let TileLayer;
-let Marker;
-let Popup;
+let L = null;
+let Map = null;
+let TileLayer = null;
+let Marker = null;
+let Popup = null;
 
 // Carregar as bibliotecas de mapa dinamicamente
-try {
-  if (typeof window !== 'undefined') {
-    L = require('leaflet');
-    const ReactLeaflet = require('react-leaflet');
-    Map = ReactLeaflet.MapContainer;
-    TileLayer = ReactLeaflet.TileLayer;
-    Marker = ReactLeaflet.Marker;
-    Popup = ReactLeaflet.Popup;
+// Nota: As bibliotecas serão carregadas sob demanda quando o mapa for exibido
+// Isso evita o erro de 'require is not defined' no navegador
+const loadMapLibraries = async () => {
+  try {
+    if (typeof window !== 'undefined' && !L) {
+      // Importação dinâmica usando import() em vez de require()
+      const leaflet = await import('leaflet');
+      const reactLeaflet = await import('react-leaflet');
 
-    // Não importamos o CSS aqui para evitar erros
-    // O CSS do Leaflet deve ser importado no arquivo principal ou em um arquivo CSS
+      L = leaflet.default;
+      Map = reactLeaflet.MapContainer;
+      TileLayer = reactLeaflet.TileLayer;
+      Marker = reactLeaflet.Marker;
+      Popup = reactLeaflet.Popup;
+
+      return true;
+    }
+    return !!L; // Retorna true se as bibliotecas já estiverem carregadas
+  } catch (error) {
+    console.error('Erro ao carregar bibliotecas de mapa:', error);
+    return false;
   }
-} catch (error) {
-  console.error('Erro ao carregar bibliotecas de mapa:', error);
 }
 
 // Ícones
@@ -775,6 +783,18 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
     setIsLoadingCarriers(true);
     setShowMap(true);
 
+    // Carregar as bibliotecas do mapa antes de continuar
+    const librariesLoaded = await loadMapLibraries();
+    if (!librariesLoaded) {
+      toast({
+        title: "Erro ao carregar mapa",
+        description: "Não foi possível carregar as bibliotecas do mapa. Tente novamente.",
+        variant: "destructive",
+      });
+      setIsLoadingCarriers(false);
+      return;
+    }
+
     try {
       // Primeiro, converter o CEP em coordenadas geográficas
       const addressData = await handleCepSearch(zipCodeOrigin);
@@ -1412,7 +1432,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
             </div>
 
             <div className="map-popup-content">
-              {typeof window !== 'undefined' && Map && (
+              {typeof window !== 'undefined' && Map && L && (
                 <div style={{ height: '400px', width: '100%' }}>
                   <Map
                     center={mapCenter}
@@ -1453,6 +1473,23 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
                       </Marker>
                     ))}
                   </Map>
+                </div>
+              )}
+
+              {typeof window !== 'undefined' && (!Map || !L) && (
+                <div className="map-loading-message">
+                  <p>Carregando bibliotecas do mapa...</p>
+                  <button
+                    className="btn btn-primary"
+                    onClick={async () => {
+                      await loadMapLibraries();
+                      // Forçar atualização do componente
+                      setShowMap(false);
+                      setTimeout(() => setShowMap(true), 100);
+                    }}
+                  >
+                    Tentar novamente
+                  </button>
                 </div>
               )}
 
