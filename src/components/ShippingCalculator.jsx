@@ -1448,7 +1448,6 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
                   ))}
                 </MapContainer>
               </div>
-            </div>
 
               {isLoadingCarriers && (
                 <div className="loading-overlay">
@@ -1477,6 +1476,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
                   </ul>
                 </div>
               )}
+            </div>
             </div>
           </div>
         </div>
@@ -1597,7 +1597,6 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
           </button>
         </div>
       </div>
-      }
     </div>
   );
 };
