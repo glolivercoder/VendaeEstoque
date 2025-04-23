@@ -28,8 +28,8 @@ try {
     Marker = ReactLeaflet.Marker;
     Popup = ReactLeaflet.Popup;
 
-    // Importar os estilos do Leaflet
-    import('leaflet/dist/leaflet.css');
+    // Não importamos o CSS aqui para evitar erros
+    // O CSS do Leaflet deve ser importado no arquivo principal ou em um arquivo CSS
   }
 } catch (error) {
   console.error('Erro ao carregar bibliotecas de mapa:', error);
