@@ -673,6 +673,7 @@ function AppContent() {
         client: selectedClient?.name || 'Cliente não especificado',
         clientDoc: selectedClient?.rg || '',
         clientCpf: selectedClient?.cpf || '',
+        clientCep: selectedClient?.cep || '', // Adicionar CEP do cliente
         // Usar dados do vendedor logado se disponível, caso contrário usar o vendedor selecionado
         vendor: currentUser?.name || selectedVendor?.name || 'Vendedor não especificado',
         vendorDoc: currentUser?.rg || selectedVendor?.document || '',

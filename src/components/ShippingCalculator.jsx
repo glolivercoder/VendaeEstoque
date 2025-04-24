@@ -114,7 +114,195 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
   const [isExportingToPDV, setIsExportingToPDV] = useState(false);
   const mapRef = useRef(null);
 
+  // Estado para armazenar os dados recebidos de outros componentes
+  const [receivedShippingData, setReceivedShippingData] = useState(null);
+
   const { toast } = useToast();
+
+  // Efeito para processar os dados recebidos
+  useEffect(() => {
+    if (receivedShippingData) {
+      console.log("Processando dados recebidos na calculadora de frete:", receivedShippingData);
+
+      // Processar dados do cliente
+      if (receivedShippingData.client) {
+        const client = receivedShippingData.client;
+        setSelectedClient(client);
+
+        // Preencher o CEP de destino com o CEP do cliente
+        if (client.cep) {
+          const cleanCep = client.cep.replace(/\D/g, '');
+          setZipCodeDestination(cleanCep);
+          console.log(`CEP do cliente definido como destino: ${client.cep} (limpo: ${cleanCep})`);
+
+          // Forçar atualização do campo de CEP de destino no DOM
+          setTimeout(() => {
+            // Usar o ID específico para garantir que encontramos o campo correto
+            const destInput = document.getElementById('zipCodeDestination');
+            if (destInput) {
+              destInput.value = cleanCep;
+              // Disparar evento de mudança para atualizar o estado
+              const event = new Event('input', { bubbles: true });
+              destInput.dispatchEvent(event);
+              console.log(`Campo de CEP de destino atualizado com: ${cleanCep}`);
+            } else {
+              // Tentar pelo placeholder como fallback
+              const destInputs = document.querySelectorAll('input[placeholder="00000-000"]');
+              if (destInputs && destInputs.length > 1) { // O segundo input é o de destino
+                const destInput = destInputs[1];
+                destInput.value = cleanCep;
+                // Disparar evento de mudança para atualizar o estado
+                const event = new Event('input', { bubbles: true });
+                destInput.dispatchEvent(event);
+                console.log(`Campo de CEP de destino atualizado com: ${cleanCep}`);
+              } else {
+                console.error('Campo de CEP de destino não encontrado no DOM');
+              }
+            }
+          }, 800); // Aumentar o tempo para garantir que o DOM esteja pronto
+        } else {
+          console.warn("Cliente não possui CEP definido:", client);
+
+          // Tentar buscar o CEP do cliente no banco de dados ou localStorage
+          try {
+            const savedClients = localStorage.getItem('clients');
+            if (savedClients) {
+              console.log("Buscando CEP do cliente no localStorage");
+              const clients = JSON.parse(savedClients);
+              console.log(`Buscando cliente com nome: ${client.name} ou documento: ${client.document}`);
+
+              const foundClient = clients.find(c =>
+                c.name === client.name ||
+                (c.document && c.document === client.document) ||
+                (c.cpf && c.cpf === client.document)
+              );
+
+              if (foundClient) {
+                console.log("Cliente encontrado no localStorage:", foundClient);
+
+                if (foundClient.cep || (foundClient.address && foundClient.address.cep)) {
+                  const clientCep = foundClient.cep || foundClient.address.cep;
+                  const cleanCep = clientCep.replace(/\D/g, '');
+                  setZipCodeDestination(cleanCep);
+                  console.log(`CEP do cliente encontrado no localStorage: ${clientCep} (limpo: ${cleanCep})`);
+
+                  // Atualizar o campo no DOM
+                  setTimeout(() => {
+                    const destInput = document.getElementById('zipCodeDestination');
+                    if (destInput) {
+                      destInput.value = cleanCep;
+                      const event = new Event('input', { bubbles: true });
+                      destInput.dispatchEvent(event);
+                      console.log(`Campo de CEP de destino atualizado com: ${cleanCep}`);
+                    } else {
+                      // Tentar pelo placeholder como fallback
+                      const destInputs = document.querySelectorAll('input[placeholder="00000-000"]');
+                      if (destInputs && destInputs.length > 1) { // O segundo input é o de destino
+                        const destInput = destInputs[1];
+                        destInput.value = cleanCep;
+                        const event = new Event('input', { bubbles: true });
+                        destInput.dispatchEvent(event);
+                        console.log(`Campo de CEP de destino atualizado com: ${cleanCep}`);
+                      }
+                    }
+                  }, 800); // Aumentar ainda mais o tempo para garantir que o DOM esteja pronto
+                } else {
+                  console.log("Cliente encontrado, mas não possui CEP");
+                }
+              } else {
+                console.log("Cliente não encontrado no localStorage");
+              }
+            } else {
+              console.log("Nenhum cliente encontrado no localStorage");
+            }
+          } catch (error) {
+            console.error("Erro ao buscar CEP do cliente:", error);
+          }
+        }
+      }
+
+      // Processar dados do produto
+      if (receivedShippingData.product) {
+        const product = receivedShippingData.product;
+        console.log("Processando dados do produto:", product);
+
+        // Preencher os campos do produto
+        setProductName(product.description || product.name || "");
+        setPackageDescription(product.description || "");
+
+        if (product.technicalSpecs) {
+          setTechnicalSpecs(product.technicalSpecs);
+        }
+
+        // Preencher dimensões e peso
+        if (product.dimensions) {
+          if (product.dimensions.length) {
+            setLength(product.dimensions.length.toString());
+            console.log(`Comprimento definido como: ${product.dimensions.length}`);
+          }
+          if (product.dimensions.width) {
+            setWidth(product.dimensions.width.toString());
+            console.log(`Largura definida como: ${product.dimensions.width}`);
+          }
+          if (product.dimensions.height) {
+            setHeight(product.dimensions.height.toString());
+            console.log(`Altura definida como: ${product.dimensions.height}`);
+          }
+        }
+
+        if (product.weight) {
+          setWeight(product.weight.toString());
+          console.log(`Peso definido como: ${product.weight}`);
+        }
+
+        // Forçar atualização dos campos no DOM
+        setTimeout(() => {
+          const weightInput = document.querySelector('input[placeholder="0.5"]');
+          const lengthInput = document.querySelector('input[placeholder="20"]');
+          const widthInput = document.querySelector('input[placeholder="15"]');
+          const heightInput = document.querySelector('input[placeholder="10"]');
+
+          if (weightInput && product.weight) {
+            weightInput.value = product.weight.toString();
+            const event = new Event('input', { bubbles: true });
+            weightInput.dispatchEvent(event);
+          }
+
+          if (lengthInput && product.dimensions?.length) {
+            lengthInput.value = product.dimensions.length.toString();
+            const event = new Event('input', { bubbles: true });
+            lengthInput.dispatchEvent(event);
+          }
+
+          if (widthInput && product.dimensions?.width) {
+            widthInput.value = product.dimensions.width.toString();
+            const event = new Event('input', { bubbles: true });
+            widthInput.dispatchEvent(event);
+          }
+
+          if (heightInput && product.dimensions?.height) {
+            heightInput.value = product.dimensions.height.toString();
+            const event = new Event('input', { bubbles: true });
+            heightInput.dispatchEvent(event);
+          }
+        }, 800);
+      }
+    }
+  }, [receivedShippingData]);
+
+  // Expor funções para outros componentes
+  useEffect(() => {
+    // Expor a função para definir os dados da calculadora de frete
+    window.setShippingCalculatorData = (data) => {
+      console.log("Dados recebidos para a calculadora de frete:", data);
+      setReceivedShippingData(data);
+    };
+
+    // Limpar ao desmontar
+    return () => {
+      window.setShippingCalculatorData = undefined;
+    };
+  }, []);
 
   // Função para buscar transportadoras próximas usando a API do OpenStreetMap
   const findNearbyCarriers = async () => {
@@ -352,6 +540,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
                 <div className="form-group">
                   <label>CEP de Destino</label>
                   <input
+                    id="zipCodeDestination"
                     type="text"
                     placeholder="00000-000"
                     value={zipCodeDestination}
