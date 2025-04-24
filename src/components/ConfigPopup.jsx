@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import EnhancedBackupConfig from './EnhancedBackupConfig';
 import { useToast } from './ui/toast';
+import { createEnhancedBackup, saveBackupFile, restoreBackup } from '../services/enhancedBackupService';
 
 const ConfigPopup = ({
   showConfigPopup,
@@ -8,9 +9,7 @@ const ConfigPopup = ({
   backupLocation,
   setBackupLocation,
   autoBackup,
-  setAutoBackup,
-  createBackup,
-  importBackup
+  setAutoBackup
 }) => {
   const [tempBackupLocation, setTempBackupLocation] = useState(backupLocation);
   const [tempAutoBackup, setTempAutoBackup] = useState(autoBackup);
@@ -79,13 +78,25 @@ const ConfigPopup = ({
               <div className="backup-actions">
                 <button
                   className="btn-backup"
-                  onClick={() => {
-                    createBackup();
-                    toast({
-                      title: "Backup Criado",
-                      description: "Backup criado com sucesso!",
-                      variant: "success"
-                    });
+                  onClick={async () => {
+                    try {
+                      // Criar backup usando o serviço aprimorado
+                      const backupContent = await createEnhancedBackup('js');
+                      // Salvar o backup
+                      const fileName = saveBackupFile(backupContent, 'js');
+                      toast({
+                        title: "Backup Criado",
+                        description: `Backup criado com sucesso e salvo como ${fileName}!`,
+                        variant: "success"
+                      });
+                    } catch (error) {
+                      console.error('Erro ao criar backup:', error);
+                      toast({
+                        title: "Erro",
+                        description: `Erro ao criar backup: ${error.message || 'Erro desconhecido'}`,
+                        variant: "destructive"
+                      });
+                    }
                   }}
                 >
                   Fazer Backup Agora
@@ -101,15 +112,30 @@ const ConfigPopup = ({
                 <input
                   type="file"
                   ref={fileInputRef}
-                  onChange={(e) => {
-                    importBackup(e);
-                    toast({
-                      title: "Backup Restaurado",
-                      description: "Backup restaurado com sucesso!",
-                      variant: "success"
-                    });
+                  onChange={async (e) => {
+                    try {
+                      const file = e.target.files[0];
+                      if (!file) return;
+
+                      // Restaurar o backup usando o serviço aprimorado
+                      await restoreBackup(file);
+                      toast({
+                        title: "Backup Restaurado",
+                        description: "Backup restaurado com sucesso!",
+                        variant: "success"
+                      });
+                      // Recarregar a página para aplicar as alterações
+                      window.location.reload();
+                    } catch (error) {
+                      console.error('Erro ao restaurar backup:', error);
+                      toast({
+                        title: "Erro",
+                        description: `Erro ao restaurar backup: ${error.message || 'Erro desconhecido'}`,
+                        variant: "destructive"
+                      });
+                    }
                   }}
-                  accept=".json"
+                  accept=".zip"
                   style={{ display: 'none' }}
                 />
               </div>

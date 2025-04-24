@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { createEnhancedBackup, saveBackupFile, restoreBackup } from '../services/enhancedBackup';
+import { createEnhancedBackup, saveBackupFile, restoreBackup } from '../services/enhancedBackupService';
 import { useToast } from './ui/toast';
 
 /**
@@ -9,11 +9,11 @@ import { useToast } from './ui/toast';
 const EnhancedBackupConfig = ({ onClose }) => {
   // Estado para controlar o formato do backup
   const [backupFormat, setBackupFormat] = useState('js');
-  
+
   // Estado para controlar o progresso do backup
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentOperation, setCurrentOperation] = useState('');
-  
+
   // Estado para controlar as seções selecionadas para backup
   const [selectedSections, setSelectedSections] = useState({
     produtos: true,
@@ -25,13 +25,13 @@ const EnhancedBackupConfig = ({ onClose }) => {
     rastreamento: true,
     fotos: true
   });
-  
+
   // Referência para o input de arquivo
   const fileInputRef = useRef(null);
-  
+
   // Toast para notificações
   const { toast } = useToast();
-  
+
   // Lista de seções disponíveis para backup
   const availableSections = [
     { id: 'produtos', label: 'Produtos', description: 'Dados de produtos, incluindo estoque, preços e informações técnicas' },
@@ -43,7 +43,7 @@ const EnhancedBackupConfig = ({ onClose }) => {
     { id: 'rastreamento', label: 'Rastreamento', description: 'Dados de rastreamento de encomendas' },
     { id: 'fotos', label: 'Fotos de Produtos', description: 'Imagens dos produtos cadastrados' }
   ];
-  
+
   // Função para selecionar/deselecionar todas as seções
   const toggleAllSections = (selected) => {
     const newSelectedSections = {};
@@ -52,13 +52,13 @@ const EnhancedBackupConfig = ({ onClose }) => {
     });
     setSelectedSections(newSelectedSections);
   };
-  
+
   // Função para criar um backup
   const handleCreateBackup = async () => {
     try {
       setIsProcessing(true);
       setCurrentOperation('Coletando dados para backup...');
-      
+
       // Verificar se pelo menos uma seção foi selecionada
       const hasSelectedSections = Object.values(selectedSections).some(selected => selected);
       if (!hasSelectedSections) {
@@ -70,15 +70,15 @@ const EnhancedBackupConfig = ({ onClose }) => {
         setIsProcessing(false);
         return;
       }
-      
+
       // Criar o backup
       setCurrentOperation('Criando arquivos de backup...');
-      const backupContent = await createEnhancedBackup(backupFormat === 'md');
-      
+      const backupContent = await createEnhancedBackup(backupFormat);
+
       // Salvar o backup
       setCurrentOperation('Salvando arquivo de backup...');
       const fileName = saveBackupFile(backupContent, backupFormat);
-      
+
       // Notificar o usuário
       toast({
         title: 'Backup Criado',
@@ -97,26 +97,26 @@ const EnhancedBackupConfig = ({ onClose }) => {
       setCurrentOperation('');
     }
   };
-  
+
   // Função para restaurar um backup
   const handleRestoreBackup = async (event) => {
     try {
       const file = event.target.files[0];
       if (!file) return;
-      
+
       setIsProcessing(true);
       setCurrentOperation('Lendo arquivo de backup...');
-      
+
       // Restaurar o backup
       await restoreBackup(file);
-      
+
       // Notificar o usuário
       toast({
         title: 'Backup Restaurado',
         description: 'Os dados foram restaurados com sucesso. A página será recarregada.',
         variant: 'success'
       });
-      
+
       // Recarregar a página após 2 segundos
       setTimeout(() => {
         window.location.reload();
@@ -131,23 +131,23 @@ const EnhancedBackupConfig = ({ onClose }) => {
     } finally {
       setIsProcessing(false);
       setCurrentOperation('');
-      
+
       // Limpar o input de arquivo
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
   };
-  
+
   return (
     <div className="backup-config-container">
       <h2 className="text-2xl font-bold mb-4">Configurações de Backup</h2>
-      
+
       {/* Formato do backup */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-2">Formato do Backup</h3>
-        <div className="flex space-x-4">
-          <label className="flex items-center">
+        <div className="flex space-x-4 flex-wrap">
+          <label className="flex items-center mr-4 mb-2">
             <input
               type="radio"
               name="backupFormat"
@@ -159,7 +159,7 @@ const EnhancedBackupConfig = ({ onClose }) => {
             />
             <span>JavaScript (.js)</span>
           </label>
-          <label className="flex items-center">
+          <label className="flex items-center mr-4 mb-2">
             <input
               type="radio"
               name="backupFormat"
@@ -171,14 +171,28 @@ const EnhancedBackupConfig = ({ onClose }) => {
             />
             <span>Markdown (.md)</span>
           </label>
+          <label className="flex items-center mb-2">
+            <input
+              type="radio"
+              name="backupFormat"
+              value="jsx"
+              checked={backupFormat === 'jsx'}
+              onChange={() => setBackupFormat('jsx')}
+              className="mr-2"
+              disabled={isProcessing}
+            />
+            <span>React JSX (.jsx)</span>
+          </label>
         </div>
         <p className="text-sm text-gray-500 mt-1">
-          {backupFormat === 'js' 
-            ? 'Formato JavaScript: Mais fácil de importar programaticamente, ideal para desenvolvedores.' 
-            : 'Formato Markdown: Mais legível para humanos, ideal para documentação e análise.'}
+          {backupFormat === 'js'
+            ? 'Formato JavaScript: Mais fácil de importar programaticamente, ideal para desenvolvedores.'
+            : backupFormat === 'md'
+              ? 'Formato Markdown: Mais legível para humanos, ideal para documentação e análise.'
+              : 'Formato JSX: Inclui componentes React para visualização interativa dos dados.'}
         </p>
       </div>
-      
+
       {/* Seções para backup */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-2">
@@ -203,7 +217,7 @@ const EnhancedBackupConfig = ({ onClose }) => {
             </button>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {availableSections.map(section => (
             <div key={section.id} className="border rounded p-3 hover:bg-gray-50">
@@ -227,7 +241,7 @@ const EnhancedBackupConfig = ({ onClose }) => {
           ))}
         </div>
       </div>
-      
+
       {/* Ações de backup */}
       <div className="flex flex-col space-y-4">
         <div className="flex flex-wrap gap-3">
@@ -249,7 +263,7 @@ const EnhancedBackupConfig = ({ onClose }) => {
               'Criar Backup'
             )}
           </button>
-          
+
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
@@ -268,7 +282,7 @@ const EnhancedBackupConfig = ({ onClose }) => {
               'Restaurar Backup'
             )}
           </button>
-          
+
           <input
             type="file"
             ref={fileInputRef}
@@ -278,14 +292,14 @@ const EnhancedBackupConfig = ({ onClose }) => {
             disabled={isProcessing}
           />
         </div>
-        
+
         {isProcessing && (
           <div className="text-sm text-gray-600">
             {currentOperation}
           </div>
         )}
       </div>
-      
+
       {/* Informações adicionais */}
       <div className="mt-6 p-4 bg-gray-50 rounded border text-sm">
         <h4 className="font-semibold mb-2">Informações sobre Backup</h4>
@@ -297,7 +311,7 @@ const EnhancedBackupConfig = ({ onClose }) => {
           <li>Recomendamos fazer backups regulares para evitar perda de dados.</li>
         </ul>
       </div>
-      
+
       {/* Botão de fechar */}
       <div className="mt-6 flex justify-end">
         <button
