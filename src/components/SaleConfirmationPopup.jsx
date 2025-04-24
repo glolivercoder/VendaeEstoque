@@ -204,32 +204,109 @@ const SaleConfirmationPopup = ({
 
             <button
               onClick={() => {
-                // Obter o cliente da venda
-                const client = {
-                  name: sale.client,
-                  document: sale.clientDoc,
-                  cep: sale.clientCep || ''
-                };
+                try {
+                  console.log("Botão de frete clicado. Dados da venda:", sale);
 
-                // Obter o produto da venda
-                const product = {
-                  description: sale.product,
-                  price: sale.total
-                };
+                  // Obter o cliente da venda
+                  const client = {
+                    name: sale.client,
+                    document: sale.clientDoc,
+                    cep: sale.clientCep || ''
+                  };
 
-                // Abrir a calculadora de frete e passar os dados
-                if (window.setShowShippingCalculator) {
-                  window.setShowShippingCalculator(true);
-                  if (window.setShippingCalculatorData) {
-                    window.setShippingCalculatorData({
-                      client: client,
-                      product: product
-                    });
+                  // Verificar se o CEP do cliente está disponível e logar
+                  if (sale.clientCep) {
+                    console.log(`CEP do cliente encontrado na venda: ${sale.clientCep}`);
+                  } else {
+                    console.log("CEP do cliente não encontrado na venda");
+                    // Tentar buscar o CEP do cliente no localStorage
+                    try {
+                      const savedClients = localStorage.getItem('clients');
+                      if (savedClients) {
+                        console.log("Clientes encontrados no localStorage:", savedClients.substring(0, 100) + "...");
+                        const clients = JSON.parse(savedClients);
+                        console.log(`Buscando cliente com nome: ${sale.client} ou documento: ${sale.clientDoc}`);
+
+                        const foundClient = clients.find(c =>
+                          c.name === sale.client ||
+                          (c.document && c.document === sale.clientDoc) ||
+                          (c.cpf && c.cpf === sale.clientDoc)
+                        );
+
+                        if (foundClient) {
+                          console.log("Cliente encontrado no localStorage:", foundClient);
+
+                          if (foundClient.cep || (foundClient.address && foundClient.address.cep)) {
+                            client.cep = foundClient.cep || foundClient.address.cep;
+                            console.log(`CEP do cliente encontrado no localStorage: ${client.cep}`);
+                          } else {
+                            console.log("Cliente encontrado, mas não possui CEP");
+                          }
+                        } else {
+                          console.log("Cliente não encontrado no localStorage");
+                        }
+                      } else {
+                        console.log("Nenhum cliente encontrado no localStorage");
+                      }
+                    } catch (error) {
+                      console.error("Erro ao buscar CEP do cliente no localStorage:", error);
+                    }
                   }
-                }
 
-                // Fechar o popup de confirmação de venda
-                onClose();
+                  // Obter o produto da venda
+                  // Dividir a string de produtos se houver múltiplos
+                  const productNames = sale.product.split(', ');
+                  const firstProductName = productNames[0] || '';
+
+                  // Buscar informações detalhadas do produto no banco de dados
+                  // Aqui vamos usar os dados disponíveis na venda
+                  const product = {
+                    description: firstProductName,
+                    price: sale.total,
+                    // Adicionar dimensões e peso padrão se não estiverem disponíveis
+                    dimensions: {
+                      length: sale.productLength || "20",
+                      width: sale.productWidth || "15",
+                      height: sale.productHeight || "10"
+                    },
+                    weight: sale.productWeight || "0.5",
+                    technicalSpecs: sale.productSpecs || ""
+                  };
+
+                  console.log("Dados do cliente para calculadora de frete:", client);
+                  console.log("Dados do produto para calculadora de frete:", product);
+
+                  // Abrir a calculadora de frete e passar os dados
+                  if (typeof window.setShowShippingCalculator === 'function') {
+                    window.setShowShippingCalculator(true);
+
+                    if (typeof window.setShippingCalculatorData === 'function') {
+                      console.log("Enviando dados para a calculadora de frete:", {
+                        client: client,
+                        product: product
+                      });
+
+                      // Pequeno atraso para garantir que a calculadora esteja aberta antes de enviar os dados
+                      setTimeout(() => {
+                        window.setShippingCalculatorData({
+                          client: client,
+                          product: product
+                        });
+                        console.log("Dados enviados para a calculadora de frete após delay");
+                      }, 300);
+                    } else {
+                      console.error("Função setShippingCalculatorData não está disponível");
+                    }
+                  } else {
+                    console.error("Função setShowShippingCalculator não está disponível");
+                  }
+
+                  // Fechar o popup de confirmação de venda
+                  onClose();
+                } catch (error) {
+                  console.error("Erro ao processar dados para calculadora de frete:", error);
+                  alert("Erro ao abrir calculadora de frete. Tente novamente.");
+                }
               }}
               className="action-btn freight-btn"
               style={{ backgroundColor: '#4CAF50', color: 'white', fontWeight: 500 }}
