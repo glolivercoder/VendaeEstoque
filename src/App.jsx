@@ -3230,6 +3230,139 @@ ${clientCPF}
                 Finalizar Venda
               </button>
 
+              {/* Clientes button - Movido para logo após o botão Finalizar Venda */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowClients(!showClients)}
+                  className={`btn btn-primary w-full px-6 py-3 rounded-lg text-lg font-bold flex items-center justify-center gap-2 ${
+                    showClients ? 'active' : ''
+                  }`}
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+                  </svg>
+                  Clientes
+                  <svg
+                    className={`w-6 h-6 transform ${showClients ? 'rotate-180' : ''} transition-transform`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Dropdown de clientes que aparece abaixo do botão */}
+                {showClients && (
+                  <div className="absolute z-50 left-0 right-0 mt-1 bg-white rounded-lg shadow-md p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold">Clientes</h3>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder="Buscar cliente..."
+                          className="px-3 py-2 border rounded-lg"
+                          onChange={(e) => handleClientSearch(e.target.value)}
+                        />
+                        <button
+                          onClick={() => setShowAddClient(true)}
+                          className="p-2 bg-purple-100 rounded-full hover:bg-purple-200 text-purple-600"
+                          title="Adicionar Novo Cliente"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {filteredClients.map((client) => (
+                        <div key={client.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div
+                            className="flex-1 cursor-pointer hover:text-purple-600"
+                            onClick={() => {
+                              setSelectedClient(client);
+                              setShowClients(false);
+                            }}
+                          >
+                            <div className="font-medium">{client.name}</div>
+                            <div className="text-sm text-gray-600">
+                              {client.document}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditClient(client);
+                              }}
+                              className="p-2 text-blue-500 hover:text-blue-600"
+                              title="Editar Cliente"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                            {client.whatsapp && (
+                              <a
+                                href={`tel:${client.whatsapp}`}
+                                className="p-2 text-green-500 hover:text-green-600 flex items-center"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleWhatsAppClick(client.whatsapp);
+                                  return false; // Impede o comportamento padrão do link
+                                }}
+                                title="Abrir WhatsApp"
+                              >
+                                <img
+                                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/767px-WhatsApp.svg.png"
+                                  alt="WhatsApp"
+                                  className="w-5 h-5"
+                                />
+                              </a>
+                            )}
+
+                            {client.email && (
+                              <a
+                                href={`mailto:${client.email}`}
+                                className="p-2 text-blue-500 hover:text-blue-600 flex items-center"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEmailClick(client.email);
+                                  return false; // Impede o comportamento padrão do link
+                                }}
+                                title="Enviar Email"
+                              >
+                                <img
+                                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Gmail_icon_%282020%29.svg/2560px-Gmail_icon_%282020%29.svg.png"
+                                  alt="Email"
+                                  className="w-5 h-5"
+                                />
+                              </a>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm(`Deseja realmente excluir o cliente ${client.name}?`)) {
+                                  handleDeleteClient(client.id);
+                                }
+                              }}
+                              className="p-2 text-red-500 hover:text-red-600"
+                              title="Excluir Cliente"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Relatório de Vendas button */}
               <button
                 onClick={() => {
@@ -3274,27 +3407,6 @@ ${clientCPF}
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Histórico de Vendas
-              </button>
-
-              {/* Clientes button */}
-              <button
-                onClick={() => setShowClients(!showClients)}
-                className={`btn btn-primary w-full px-6 py-3 rounded-lg text-lg font-bold flex items-center justify-center gap-2 ${
-                  showClients ? 'active' : ''
-                }`}
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
-                </svg>
-                Clientes
-                <svg
-                  className={`w-6 h-6 transform ${showClients ? 'rotate-180' : ''} transition-transform`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
               </button>
 
               {/* Fornecedores button */}
@@ -3343,115 +3455,7 @@ ${clientCPF}
 
             </div>
 
-            {/* Clients Section */}
-            {showClients && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Clientes</h3>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      placeholder="Buscar cliente..."
-                      className="px-3 py-2 border rounded-lg"
-                      onChange={(e) => handleClientSearch(e.target.value)}
-                    />
-                    <button
-                      onClick={() => setShowAddClient(true)}
-                      className="p-2 bg-purple-100 rounded-full hover:bg-purple-200 text-purple-600"
-                      title="Adicionar Novo Cliente"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {filteredClients.map((client) => (
-                    <div key={client.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div
-                        className="flex-1 cursor-pointer hover:text-purple-600"
-                        onClick={() => {
-                          setSelectedClient(client);
-                          setShowClients(false);
-                        }}
-                      >
-                        <div className="font-medium">{client.name}</div>
-                        <div className="text-sm text-gray-600">
-                          {client.document}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditClient(client);
-                          }}
-                          className="p-2 text-blue-500 hover:text-blue-600"
-                          title="Editar Cliente"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                        </button>
-                        {client.whatsapp && (
-                          <a
-                            href={`tel:${client.whatsapp}`}
-                            className="p-2 text-green-500 hover:text-green-600 flex items-center"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleWhatsAppClick(client.whatsapp);
-                              return false; // Impede o comportamento padrão do link
-                            }}
-                            title="Abrir WhatsApp"
-                          >
-                            <img
-                              src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/767px-WhatsApp.svg.png"
-                              alt="WhatsApp"
-                              className="w-5 h-5"
-                            />
-                          </a>
-                        )}
-
-                        {client.email && (
-                          <a
-                            href={`mailto:${client.email}`}
-                            className="p-2 text-blue-500 hover:text-blue-600 flex items-center"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEmailClick(client.email);
-                              return false; // Impede o comportamento padrão do link
-                            }}
-                            title="Enviar Email"
-                          >
-                            <img
-                              src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Gmail_icon_%282020%29.svg/2560px-Gmail_icon_%282020%29.svg.png"
-                              alt="Email"
-                              className="w-5 h-5"
-                            />
-                          </a>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (window.confirm(`Deseja realmente excluir o cliente ${client.name}?`)) {
-                              handleDeleteClient(client.id);
-                            }
-                          }}
-                          className="p-2 text-red-500 hover:text-red-600"
-                          title="Excluir Cliente"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Clients Section - Removido e movido para dentro do botão Clientes */}
 
             {/* Add Client Modal */}
             <div className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${showAddClient ? 'flex' : 'hidden'} items-center justify-center p-4`}>
