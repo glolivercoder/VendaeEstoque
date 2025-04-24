@@ -29,6 +29,8 @@ import {
   fixGFireFanCooler,
   diagnosticAndFixAllProducts
 } from './services/database';
+import { createEnhancedBackup, saveBackupFile, restoreBackup } from './services/enhancedBackupService';
+import { saveAs } from 'file-saver';
 import Vendors from './pages/Vendors';
 
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from 'chart.js';
@@ -2354,207 +2356,9 @@ ${clientCPF}
     }
   };
 
-  const importBackup = async (event) => {
-    try {
-      console.log('Iniciando importação de backup...');
+  // Função de importação de backup substituída pelo serviço aprimorado
 
-      // Verificar se o evento veio de um input de arquivo
-      let file = null;
-      if (event && event.target && event.target.files && event.target.files[0]) {
-        file = event.target.files[0];
-        console.log('Arquivo selecionado do input:', file.name);
-      } else if (event instanceof File) {
-        file = event;
-        console.log('Arquivo fornecido diretamente:', file.name);
-      } else {
-        console.log('Nenhum arquivo fornecido, abrindo seletor de arquivos...');
-
-        // Criar um input de arquivo temporário
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = '.json';
-        fileInput.style.display = 'none';
-        document.body.appendChild(fileInput);
-
-        // Promessa para lidar com a seleção de arquivo
-        const filePromise = new Promise((resolve, reject) => {
-          fileInput.onchange = (e) => {
-            if (e.target.files && e.target.files[0]) {
-              resolve(e.target.files[0]);
-            } else {
-              reject(new Error('Nenhum arquivo selecionado'));
-            }
-          };
-
-          // Se o usuário fechar o diálogo sem selecionar um arquivo
-          setTimeout(() => {
-            if (fileInput.files.length === 0) {
-              reject(new Error('Seleção de arquivo cancelada'));
-            }
-          }, 1000);
-        });
-
-        try {
-          fileInput.click(); // Abrir o seletor de arquivos
-          file = await filePromise;
-          console.log('Arquivo selecionado:', file.name);
-        } catch (error) {
-          console.log('Seleção de arquivo cancelada ou falhou:', error);
-          document.body.removeChild(fileInput);
-          return false;
-        }
-
-        // Limpar o input temporário
-        document.body.removeChild(fileInput);
-      }
-
-      if (!file) {
-        console.error('Nenhum arquivo para importar');
-        alert('Nenhum arquivo selecionado para importar.');
-        return false;
-      }
-
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-
-        reader.onload = async (e) => {
-          try {
-            console.log('Arquivo lido, processando conteúdo...');
-            const backupData = JSON.parse(e.target.result);
-
-            // Validar o backup - verificar se tem produtos ou vendas
-            if ((!backupData.products || backupData.products.length === 0) &&
-                (!backupData.sales || backupData.sales.length === 0)) {
-              console.error('Arquivo de backup inválido ou vazio');
-              alert('Arquivo de backup inválido ou vazio. Verifique se o arquivo contém dados de produtos ou vendas.');
-              reject(new Error('Arquivo de backup inválido ou vazio'));
-              return;
-            }
-
-            const timestamp = backupData.timestamp ? new Date(backupData.timestamp).toLocaleString() : 'data desconhecida';
-            console.log('Backup válido, criado em:', timestamp);
-
-            // Confirmar a importação
-            if (!confirm(`Deseja importar o backup criado em ${timestamp}?\n\nDetalhes do backup:\n- Produtos: ${(backupData.products || []).length}\n- Clientes: ${(backupData.clients || []).length}\n- Vendas: ${(backupData.sales || []).length}\n\nISSO SUBSTITUIRÁ TODOS OS DADOS ATUAIS!`)) {
-              console.log('Importação cancelada pelo usuário');
-              reject(new Error('Importação cancelada pelo usuário'));
-              return;
-            }
-
-            console.log('Importando dados do backup...');
-
-            // Importar dados - manter dados existentes se não houver no backup
-            if (backupData.products && backupData.products.length > 0) {
-              setItems(backupData.products);
-              console.log(`Importados ${backupData.products.length} produtos`);
-            }
-
-            if (backupData.clients && backupData.clients.length > 0) {
-              setClients(backupData.clients);
-              setFilteredClients(backupData.clients);
-              console.log(`Importados ${backupData.clients.length} clientes`);
-            }
-
-            if (backupData.vendors && backupData.vendors.length > 0) {
-              setVendors(backupData.vendors);
-              console.log(`Importados ${backupData.vendors.length} fornecedores`);
-            }
-
-            if (backupData.sales && backupData.sales.length > 0) {
-              // Garantir que todas as vendas tenham o formato de data correto
-              const processedSales = backupData.sales.map(sale => {
-                // Se a venda não tiver data, usar a data atual
-                if (!sale.date) {
-                  return {
-                    ...sale,
-                    date: formatDateToBrazilian(new Date().toISOString().split('T')[0])
-                  };
-                }
-
-                // Se a data estiver no formato ISO, converter para brasileiro
-                if (sale.date.includes('-') && !sale.date.includes('/')) {
-                  const dateParts = sale.date.split('-');
-                  if (dateParts.length === 3) {
-                    return {
-                      ...sale,
-                      date: `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`
-                    };
-                  }
-                }
-
-                return sale;
-              });
-
-              setSalesData(processedSales);
-              console.log(`Importadas ${processedSales.length} vendas`);
-
-              // Atualizar o localStorage com as vendas importadas
-              localStorage.setItem('salesData', JSON.stringify(processedSales));
-            }
-
-            if (backupData.minStockAlert) {
-              setMinStockAlert(backupData.minStockAlert);
-              localStorage.setItem('minStockAlert', JSON.stringify(backupData.minStockAlert));
-            }
-
-            if (backupData.ignoreStock) {
-              setIgnoreStock(backupData.ignoreStock);
-              localStorage.setItem('ignoreStock', JSON.stringify(backupData.ignoreStock));
-            }
-
-            // WordPress config já está configurado via .env
-
-            // Salvar no localStorage como backup temporário
-            localStorage.setItem('pdvBackupTemp', JSON.stringify(backupData));
-
-            console.log('Backup importado com sucesso!');
-            alert('Backup importado com sucesso!');
-
-            // Forçar a atualização da interface
-            checkDataIntegrity();
-
-            resolve(true);
-          } catch (error) {
-            console.error('Erro ao processar arquivo de backup:', error);
-            alert('Erro ao processar arquivo de backup: ' + (error.message || 'Formato inválido'));
-            reject(error);
-          }
-        };
-
-        reader.onerror = () => {
-          console.error('Erro ao ler o arquivo');
-          alert('Erro ao ler o arquivo. Verifique se o arquivo não está corrompido.');
-          reject(new Error('Erro ao ler o arquivo'));
-        };
-
-        console.log('Iniciando leitura do arquivo...');
-        reader.readAsText(file);
-      });
-    } catch (error) {
-      console.error('Erro ao importar backup:', error);
-      alert('Erro ao importar backup: ' + (error.message || 'Erro desconhecido'));
-      return false;
-    }
-  };
-
-  // Função para salvar configurações de backup
-  const saveBackupConfig = () => {
-    try {
-      console.log('Salvando configurações de backup...');
-      console.log('Local de backup:', backupLocation);
-      console.log('Backup automático:', autoBackup);
-
-      localStorage.setItem('backupLocation', backupLocation);
-      localStorage.setItem('autoBackup', autoBackup.toString());
-
-      console.log('Configurações salvas no localStorage');
-      alert('Configurações de backup salvas com sucesso!');
-      setShowConfigPopup(false);
-    } catch (error) {
-      console.error('Erro ao salvar configurações de backup:', error);
-      alert('Erro ao salvar configurações de backup. Por favor, tente novamente.');
-    }
-  };
+  // Função de salvar configurações de backup substituída pelo componente ConfigPopup
 
   // Adicionar backup automático após cada venda
   useEffect(() => {
@@ -5062,7 +4866,18 @@ ${clientCPF}
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
                 <button
-                  onClick={createBackup}
+                  onClick={async () => {
+                    try {
+                      // Criar backup usando o serviço aprimorado
+                      const backupContent = await createEnhancedBackup('js');
+                      // Salvar o backup
+                      const fileName = saveBackupFile(backupContent, 'js');
+                      alert(`Backup criado com sucesso e salvo como ${fileName}`);
+                    } catch (error) {
+                      console.error('Erro ao criar backup:', error);
+                      alert('Erro ao criar backup: ' + (error.message || 'Erro desconhecido'));
+                    }
+                  }}
                   className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center justify-center"
                 >
                   <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -5072,7 +4887,27 @@ ${clientCPF}
                 </button>
 
                 <button
-                  onClick={exportBackup}
+                  onClick={async () => {
+                    try {
+                      console.log('Botão Exportar clicado');
+                      // Criar backup usando o serviço aprimorado com formato Markdown
+                      const backupContent = await createEnhancedBackup('md');
+
+                      // Gerar nome do arquivo com data atual
+                      const date = new Date();
+                      const dateStr = `${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}`;
+                      const timeStr = `${date.getHours().toString().padStart(2, '0')}${date.getMinutes().toString().padStart(2, '0')}`;
+                      const fileName = `Backup_${dateStr}_${timeStr}.zip`;
+
+                      // Usar a biblioteca file-saver diretamente
+                      saveAs(backupContent, fileName);
+
+                      alert(`Backup criado com sucesso e salvo como ${fileName}. Verifique a pasta de downloads do seu navegador.`);
+                    } catch (error) {
+                      console.error('Erro ao exportar backup:', error);
+                      alert('Erro ao exportar backup: ' + (error.message || 'Erro desconhecido'));
+                    }
+                  }}
                   className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center justify-center"
                 >
                   <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -5082,7 +4917,37 @@ ${clientCPF}
                 </button>
 
                 <button
-                  onClick={() => importBackup()}
+                  onClick={() => {
+                    // Criar um input de arquivo temporário
+                    const fileInput = document.createElement('input');
+                    fileInput.type = 'file';
+                    fileInput.accept = '.zip';
+                    fileInput.style.display = 'none';
+                    document.body.appendChild(fileInput);
+
+                    // Adicionar evento para quando um arquivo for selecionado
+                    fileInput.addEventListener('change', async (event) => {
+                      const file = event.target.files[0];
+                      if (!file) return;
+
+                      try {
+                        // Restaurar o backup usando o serviço aprimorado
+                        await restoreBackup(file);
+                        alert('Backup restaurado com sucesso!');
+                        // Recarregar a página para aplicar as alterações
+                        window.location.reload();
+                      } catch (error) {
+                        console.error('Erro ao restaurar backup:', error);
+                        alert('Erro ao restaurar backup: ' + (error.message || 'Erro desconhecido'));
+                      } finally {
+                        // Remover o input de arquivo
+                        document.body.removeChild(fileInput);
+                      }
+                    });
+
+                    // Abrir o seletor de arquivos
+                    fileInput.click();
+                  }}
                   className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 flex items-center justify-center"
                 >
                   <svg className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -5210,7 +5075,9 @@ ${clientCPF}
               <div className="flex justify-end mt-6 pt-4 border-t border-gray-200">
                 <button
                   onClick={() => {
-                    saveBackupConfig();
+                    // Salvar configurações de backup
+                    localStorage.setItem('backupLocation', backupLocation);
+                    localStorage.setItem('autoBackup', autoBackup.toString());
                     setShowConfigPopup(false);
                   }}
                   className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700"

@@ -135,55 +135,102 @@ const migrateFromOldDB = async () => {
 
     // Migrar dados de cada object store
     for (const storeName of storeNames) {
-      if (!newDB.objectStoreNames.contains(storeName)) {
-        console.log(`Object store ${storeName} não existe no novo banco. Pulando...`);
-        continue;
-      }
+      try {
+        if (!newDB.objectStoreNames.contains(storeName)) {
+          console.log(`Object store ${storeName} não existe no novo banco. Pulando...`);
+          continue;
+        }
 
-      console.log(`Migrando dados da object store ${storeName}...`);
+        console.log(`Migrando dados da object store ${storeName}...`);
 
-      // Obter todos os dados da object store antiga
-      const oldData = await new Promise((resolve, reject) => {
-        const transaction = oldDB.transaction([storeName], 'readonly');
+        // Obter todos os dados da object store antiga
+        const oldData = await new Promise((resolve, reject) => {
+          try {
+            const transaction = oldDB.transaction([storeName], 'readonly');
+            const store = transaction.objectStore(storeName);
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+              resolve(request.result || []);
+            };
+
+            request.onerror = (event) => {
+              console.warn(`Erro ao ler dados de ${storeName}:`, event.target.error);
+              resolve([]);
+            };
+          } catch (err) {
+            console.warn(`Erro ao acessar store ${storeName}:`, err);
+            resolve([]);
+          }
+        });
+
+        console.log(`${oldData.length} registros encontrados em ${storeName}`);
+
+        // Se não há dados, pular
+        if (oldData.length === 0) {
+          continue;
+        }
+
+        // Adicionar dados ao novo banco um por um, ignorando erros
+        const transaction = newDB.transaction([storeName], 'readwrite');
         const store = transaction.objectStore(storeName);
-        const request = store.getAll();
+        let successCount = 0;
+        let errorCount = 0;
 
-        request.onsuccess = () => {
-          resolve(request.result);
-        };
+        for (const item of oldData) {
+          try {
+            // Verificar se o item já existe (para evitar erros de duplicação)
+            if (item.id) {
+              const checkRequest = store.get(item.id);
+              await new Promise(resolve => {
+                checkRequest.onsuccess = () => {
+                  if (!checkRequest.result) {
+                    // Item não existe, podemos adicionar
+                    const addRequest = store.add(item);
+                    addRequest.onsuccess = () => {
+                      successCount++;
+                      resolve();
+                    };
+                    addRequest.onerror = () => {
+                      errorCount++;
+                      resolve();
+                    };
+                  } else {
+                    // Item já existe, pular
+                    successCount++;
+                    resolve();
+                  }
+                };
+                checkRequest.onerror = () => {
+                  errorCount++;
+                  resolve();
+                };
+              });
+            } else {
+              // Item sem ID, tentar adicionar diretamente
+              const addRequest = store.add(item);
+              await new Promise(resolve => {
+                addRequest.onsuccess = () => {
+                  successCount++;
+                  resolve();
+                };
+                addRequest.onerror = () => {
+                  errorCount++;
+                  resolve();
+                };
+              });
+            }
+          } catch (itemError) {
+            console.warn(`Erro ao migrar item em ${storeName}:`, itemError);
+            errorCount++;
+          }
+        }
 
-        request.onerror = () => {
-          reject(request.error);
-        };
-      });
-
-      console.log(`${oldData.length} registros encontrados em ${storeName}`);
-
-      // Se não há dados, pular
-      if (oldData.length === 0) {
-        continue;
+        console.log(`Migração de ${storeName} concluída: ${successCount} itens migrados, ${errorCount} erros`);
+      } catch (storeError) {
+        console.warn(`Erro ao processar store ${storeName}:`, storeError);
+        // Continuar com a próxima store mesmo se houver erro
       }
-
-      // Adicionar dados ao novo banco
-      const transaction = newDB.transaction([storeName], 'readwrite');
-      const store = transaction.objectStore(storeName);
-
-      for (const item of oldData) {
-        store.add(item);
-      }
-
-      // Aguardar a conclusão da transação
-      await new Promise((resolve, reject) => {
-        transaction.oncomplete = () => {
-          console.log(`Migração de ${storeName} concluída com sucesso`);
-          resolve();
-        };
-
-        transaction.onerror = () => {
-          console.error(`Erro na migração de ${storeName}:`, transaction.error);
-          reject(transaction.error);
-        };
-      });
     }
 
     console.log('Migração concluída com sucesso!');
@@ -205,7 +252,13 @@ const ensureDB = async () => {
       await initDB();
 
       // Tentar migrar dados do banco antigo, se existir
-      await migrateFromOldDB();
+      // Envolver em try/catch para evitar que erros na migração afetem o funcionamento do app
+      try {
+        await migrateFromOldDB();
+      } catch (migrationError) {
+        console.error('Erro na migração, mas continuando com o banco atual:', migrationError);
+        // Não propagar o erro para permitir que o app continue funcionando
+      }
     } catch (error) {
       console.error('Erro em ensureDB:', error);
       throw error;
