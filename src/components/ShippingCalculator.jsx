@@ -9,6 +9,8 @@ import ShippingLabelGenerator from "./ShippingLabelGenerator";
 import CarrierConfigPanel from "./CarrierConfigPanel";
 import MagicWandScanButton from "./MagicWandScanButton";
 import GoogleMapsAgencyFinder from "./GoogleMapsAgencyFinder";
+import HereMapsAgencyFinder from "./HereMapsAgencyFinder";
+import MapApiSelector from "./MapApiSelector";
 import { searchClients, getLastClientSale, getSaleItems, getProducts } from "../services/database";
 import "../styles/ShippingCalculator.css";
 
@@ -76,7 +78,9 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
   const [showResultsPopup, setShowResultsPopup] = useState(false);
 
   // Estados para o mapa e localização de transportadoras
-  const [showAgencyFinder, setShowAgencyFinder] = useState(false);
+  const [showMapApiSelector, setShowMapApiSelector] = useState(false);
+  const [showGoogleMapsAgencyFinder, setShowGoogleMapsAgencyFinder] = useState(false);
+  const [showHereMapsAgencyFinder, setShowHereMapsAgencyFinder] = useState(false);
   const [selectedAgency, setSelectedAgency] = useState(null);
   const [isExportingToPDV, setIsExportingToPDV] = useState(false);
 
@@ -321,8 +325,28 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
       return;
     }
 
-    setShowAgencyFinder(true);
+    // Abrir o seletor de API de mapas
+    setShowMapApiSelector(true);
   };
+
+  // Efeito para adicionar event listeners para os eventos personalizados
+  useEffect(() => {
+    const handleOpenGoogleMapsAgencyFinder = (event) => {
+      setShowGoogleMapsAgencyFinder(true);
+    };
+
+    const handleOpenHereMapsAgencyFinder = (event) => {
+      setShowHereMapsAgencyFinder(true);
+    };
+
+    window.addEventListener('openGoogleMapsAgencyFinder', handleOpenGoogleMapsAgencyFinder);
+    window.addEventListener('openHereMapsAgencyFinder', handleOpenHereMapsAgencyFinder);
+
+    return () => {
+      window.removeEventListener('openGoogleMapsAgencyFinder', handleOpenGoogleMapsAgencyFinder);
+      window.removeEventListener('openHereMapsAgencyFinder', handleOpenHereMapsAgencyFinder);
+    };
+  }, []);
 
   // Função para lidar com a seleção de uma agência
   const handleSelectAgency = (agency) => {
@@ -693,12 +717,30 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
         </div>
       )}
 
-      {/* Componente de busca de agências de transportadoras usando Google Maps */}
-      {showAgencyFinder && (
+      {/* Seletor de API de mapas */}
+      {showMapApiSelector && (
+        <MapApiSelector
+          originCEP={zipCodeOrigin}
+          onSelectAgency={handleSelectAgency}
+          onClose={() => setShowMapApiSelector(false)}
+        />
+      )}
+
+      {/* Componente de busca de agências usando Google Maps */}
+      {showGoogleMapsAgencyFinder && (
         <GoogleMapsAgencyFinder
           originCEP={zipCodeOrigin}
           onSelectAgency={handleSelectAgency}
-          onClose={() => setShowAgencyFinder(false)}
+          onClose={() => setShowGoogleMapsAgencyFinder(false)}
+        />
+      )}
+
+      {/* Componente de busca de agências usando HERE Maps */}
+      {showHereMapsAgencyFinder && (
+        <HereMapsAgencyFinder
+          originCEP={zipCodeOrigin}
+          onSelectAgency={handleSelectAgency}
+          onClose={() => setShowHereMapsAgencyFinder(false)}
         />
       )}
 
