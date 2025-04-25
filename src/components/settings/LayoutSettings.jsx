@@ -104,11 +104,11 @@ const LayoutSettings = () => {
 
   return (
     <div className="p-4 bg-white rounded-lg shadow max-h-96 overflow-y-auto">
-      <h2 className="text-xl font-bold mb-4">Configurações de Layout</h2>
+      <h1 className="text-2xl font-bold mb-4">Configurações de Layout</h1>
 
       {/* Seção de Logo */}
       <div className="mb-4 pb-4 border-b border-gray-200">
-        <h3 className="text-md font-semibold mb-2">Logo</h3>
+        <h2 className="text-xl font-semibold mb-2">Logo</h2>
 
         {/* Upload e Visualização */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
@@ -174,8 +174,8 @@ const LayoutSettings = () => {
           <input
             type="range"
             min="20"
-            max="80"
-            step="1"
+            max="300"
+            step="5"
             value={layoutConfig.logoHeight}
             onChange={(e) => updateConfig('logoHeight', parseInt(e.target.value))}
             className="w-full"
@@ -185,7 +185,7 @@ const LayoutSettings = () => {
 
       {/* Seção de Cabeçalho */}
       <div className="mb-4 pb-4 border-b border-gray-200">
-        <h3 className="text-md font-semibold mb-2">Cabeçalho</h3>
+        <h2 className="text-xl font-semibold mb-2">Cabeçalho</h2>
 
         {/* Altura do Cabeçalho */}
         <div className="mb-3">
@@ -196,7 +196,7 @@ const LayoutSettings = () => {
           <input
             type="range"
             min="60"
-            max="120"
+            max="300"
             step="5"
             value={layoutConfig.headerHeight}
             onChange={(e) => updateConfig('headerHeight', parseInt(e.target.value))}
@@ -226,7 +226,7 @@ const LayoutSettings = () => {
 
       {/* Seção de Cores */}
       <div className="mb-4">
-        <h3 className="text-md font-semibold mb-2">Cores</h3>
+        <h2 className="text-xl font-semibold mb-2">Cores</h2>
 
         {/* Cor dos Botões */}
         <div className="mb-3">
