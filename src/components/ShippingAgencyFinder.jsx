@@ -188,6 +188,22 @@ const ShippingAgencyFinder = ({ originCEP, onSelectAgency, onClose }) => {
     }
   };
 
+  // Função para abrir o Google Maps para navegação
+  const openGoogleMapsNavigation = () => {
+    if (!selectedAgency || !originCoords) return;
+
+    try {
+      // Criar URL para o Google Maps com origem e destino
+      const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${originCoords[0]},${originCoords[1]}&destination=${selectedAgency.lat},${selectedAgency.lon}&travelmode=driving`;
+
+      // Abrir o Google Maps em uma nova aba
+      window.open(googleMapsUrl, '_blank');
+    } catch (err) {
+      console.error('Erro ao abrir Google Maps:', err);
+      setError('Não foi possível abrir o Google Maps para navegação.');
+    }
+  };
+
   // Função para baixar o mapa para navegação offline
   const handleDownloadMap = async () => {
     if (!selectedAgency || !originCoords) return;
@@ -360,6 +376,15 @@ const ShippingAgencyFinder = ({ originCEP, onSelectAgency, onClose }) => {
                       <div className="text-sm text-gray-600">
                         Distância: {agency.distance ? `${agency.distance.toFixed(2)} km` : 'N/A'}
                       </div>
+                      {agency.rating && (
+                        <div className="text-sm text-gray-600 flex items-center">
+                          <span className="text-yellow-500 mr-1">★</span>
+                          <span>{agency.rating}</span>
+                          {agency.total_ratings && (
+                            <span className="text-xs text-gray-500 ml-1">({agency.total_ratings})</span>
+                          )}
+                        </div>
+                      )}
                       <div className="text-xs text-gray-500 truncate">{agency.address}</div>
                     </li>
                   ))
@@ -439,6 +464,18 @@ const ShippingAgencyFinder = ({ originCEP, onSelectAgency, onClose }) => {
                   selectedAgency.type === 'jadlog' ? 'Jadlog' :
                   selectedAgency.type === 'transportadora' ? 'Transportadora' : 'Centro de Logística'
                 }</p>
+                {selectedAgency.rating && (
+                  <p>
+                    <span className="font-medium">Avaliação:</span>{' '}
+                    <span className="flex items-center">
+                      <span className="text-yellow-500 mr-1">★</span>
+                      <span>{selectedAgency.rating}</span>
+                      {selectedAgency.total_ratings && (
+                        <span className="text-sm text-gray-500 ml-1">({selectedAgency.total_ratings} avaliações)</span>
+                      )}
+                    </span>
+                  </p>
+                )}
                 <p><span className="font-medium">Endereço:</span> {selectedAgency.address}</p>
                 <p><span className="font-medium">CEP:</span> {selectedAgency.postcode}</p>
                 <p><span className="font-medium">Telefone:</span> {selectedAgency.phone}</p>
@@ -456,6 +493,19 @@ const ShippingAgencyFinder = ({ originCEP, onSelectAgency, onClose }) => {
                     </a>
                   </p>
                 )}
+                {selectedAgency.place_id && (
+                  <p>
+                    <span className="font-medium">Ver no Google Maps:</span>{' '}
+                    <a
+                      href={`https://www.google.com/maps/place/?q=place_id:${selectedAgency.place_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline"
+                    >
+                      Abrir no Google Maps
+                    </a>
+                  </p>
+                )}
               </div>
               <div>
                 <p><span className="font-medium">Horário de Funcionamento:</span> {selectedAgency.opening_hours}</p>
@@ -465,12 +515,25 @@ const ShippingAgencyFinder = ({ originCEP, onSelectAgency, onClose }) => {
                     <p><span className="font-medium">Tempo Estimado:</span> {route.duration ? `${Math.round(route.duration)} minutos` : 'N/A'}</p>
                   </>
                 )}
-                <div className="mt-3">
+                <div className="mt-3 flex flex-col gap-2">
+                  <button
+                    onClick={openGoogleMapsNavigation}
+                    disabled={!selectedAgency}
+                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 flex items-center justify-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    Abrir no Google Maps
+                  </button>
                   <button
                     onClick={handleDownloadMap}
                     disabled={downloadingMap || !route}
-                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
+                    className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50 flex items-center justify-center"
                   >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
                     {downloadingMap ? 'Baixando...' : 'Baixar Mapa para Navegação Offline'}
                   </button>
                 </div>

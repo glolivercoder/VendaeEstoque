@@ -239,11 +239,13 @@ export const getRoute = async (originLat, originLon, destLat, destLon) => {
   }
 };
 
-// Função para retornar dados iniciais (sem depender do IndexedDB)
+// Função para retornar dados iniciais (simulando dados do Google Maps com mais POIs)
 export const populateInitialData = async () => {
   try {
-    // Dados iniciais de algumas agências principais
+    // Dados iniciais de agências de correios, transportadoras e centros logísticos
+    // Simulando dados mais completos como os que seriam obtidos do Google Maps
     const initialData = [
+      // Agências dos Correios
       {
         id: 'correios_1',
         type: 'correios',
@@ -255,7 +257,10 @@ export const populateInitialData = async () => {
         email: 'atendimento@correios.com.br',
         postcode: '40255-310',
         website: 'https://www.correios.com.br',
-        opening_hours: 'Segunda a Sexta: 09:00-18:00'
+        opening_hours: 'Segunda a Sexta: 09:00-18:00',
+        rating: 4.2,
+        total_ratings: 156,
+        place_id: 'ChIJN1t_tDeuEmsRUsoyG83frY4' // Simulando ID do Google Maps
       },
       {
         id: 'correios_2',
@@ -268,59 +273,10 @@ export const populateInitialData = async () => {
         email: 'atendimento@correios.com.br',
         postcode: '41810-001',
         website: 'https://www.correios.com.br',
-        opening_hours: 'Segunda a Sexta: 09:00-18:00'
-      },
-      {
-        id: 'jadlog_1',
-        type: 'jadlog',
-        name: 'Jadlog Salvador',
-        lat: -12.9604,
-        lon: -38.5024,
-        address: 'Av. Tancredo Neves, 450, Caminho das Árvores, Salvador, BA',
-        phone: '(71) 3333-5050',
-        email: 'atendimento@jadlog.com.br',
-        postcode: '41820-020',
-        website: 'https://www.jadlog.com.br',
-        opening_hours: 'Segunda a Sexta: 08:00-18:00'
-      },
-      {
-        id: 'transportadora_1',
-        type: 'transportadora',
-        name: 'Braspress Salvador',
-        lat: -12.9504,
-        lon: -38.4924,
-        address: 'Av. Luís Viana Filho, 13223, São Cristóvão, Salvador, BA',
-        phone: '(71) 3288-9000',
-        email: 'sac@braspress.com',
-        postcode: '41500-300',
-        website: 'https://www.braspress.com',
-        opening_hours: 'Segunda a Sexta: 08:00-18:00'
-      },
-      {
-        id: 'logistica_1',
-        type: 'logistica',
-        name: 'Centro Logístico DHL Salvador',
-        lat: -12.9404,
-        lon: -38.3924,
-        address: 'Estrada CIA/Aeroporto, km 6,5, São Cristóvão, Salvador, BA',
-        phone: '(71) 3204-3200',
-        email: 'atendimento.brasil@dhl.com',
-        postcode: '41500-970',
-        website: 'https://www.dhl.com/br-pt/home.html',
-        opening_hours: '24 horas'
-      },
-      {
-        id: 'transportadora_2',
-        type: 'transportadora',
-        name: 'Jamef Transportes',
-        lat: -12.9304,
-        lon: -38.4824,
-        address: 'Rua Jardim Piaui, 220, Pirajá, Salvador, BA',
-        phone: '(71) 3215-8500',
-        email: 'sac@jamef.com.br',
-        postcode: '41290-000',
-        website: 'https://www.jamef.com.br',
-        opening_hours: 'Segunda a Sexta: 08:00-18:00'
+        opening_hours: 'Segunda a Sexta: 09:00-18:00',
+        rating: 3.8,
+        total_ratings: 98,
+        place_id: 'ChIJW__8D16uEmsRUKU2TmU3Wpg'
       },
       {
         id: 'correios_3',
@@ -333,7 +289,60 @@ export const populateInitialData = async () => {
         email: 'atendimento@correios.com.br',
         postcode: '40140-130',
         website: 'https://www.correios.com.br',
-        opening_hours: 'Segunda a Sexta: 09:00-18:00'
+        opening_hours: 'Segunda a Sexta: 09:00-18:00',
+        rating: 4.0,
+        total_ratings: 120,
+        place_id: 'ChIJK1SpE_6uEmsRhA61jo8iIgU'
+      },
+      {
+        id: 'correios_4',
+        type: 'correios',
+        name: 'Agência dos Correios - Itapuã',
+        lat: -12.9504,
+        lon: -38.3624,
+        address: 'Av. Dorival Caymmi, 14, Itapuã, Salvador, BA',
+        phone: '(71) 3003-0100',
+        email: 'atendimento@correios.com.br',
+        postcode: '41635-150',
+        website: 'https://www.correios.com.br',
+        opening_hours: 'Segunda a Sexta: 09:00-18:00',
+        rating: 3.9,
+        total_ratings: 87,
+        place_id: 'ChIJLR3xE_6uEmsRhA61jo8iIgU'
+      },
+      {
+        id: 'correios_5',
+        type: 'correios',
+        name: 'Agência dos Correios - Liberdade',
+        lat: -12.9404,
+        lon: -38.4824,
+        address: 'Rua Lima e Silva, 217, Liberdade, Salvador, BA',
+        phone: '(71) 3003-0100',
+        email: 'atendimento@correios.com.br',
+        postcode: '40375-016',
+        website: 'https://www.correios.com.br',
+        opening_hours: 'Segunda a Sexta: 09:00-18:00',
+        rating: 3.7,
+        total_ratings: 65,
+        place_id: 'ChIJLR3xE_6uEmsRhA61jo8iIgU'
+      },
+
+      // Unidades Jadlog
+      {
+        id: 'jadlog_1',
+        type: 'jadlog',
+        name: 'Jadlog Salvador',
+        lat: -12.9604,
+        lon: -38.5024,
+        address: 'Av. Tancredo Neves, 450, Caminho das Árvores, Salvador, BA',
+        phone: '(71) 3333-5050',
+        email: 'atendimento@jadlog.com.br',
+        postcode: '41820-020',
+        website: 'https://www.jadlog.com.br',
+        opening_hours: 'Segunda a Sexta: 08:00-18:00',
+        rating: 4.1,
+        total_ratings: 112,
+        place_id: 'ChIJK1SpE_6uEmsRhA61jo8iIgU'
       },
       {
         id: 'jadlog_2',
@@ -346,7 +355,174 @@ export const populateInitialData = async () => {
         email: 'atendimento@jadlog.com.br',
         postcode: '40155-150',
         website: 'https://www.jadlog.com.br',
-        opening_hours: 'Segunda a Sexta: 08:00-18:00'
+        opening_hours: 'Segunda a Sexta: 08:00-18:00',
+        rating: 3.9,
+        total_ratings: 78,
+        place_id: 'ChIJLR3xE_6uEmsRhA61jo8iIgU'
+      },
+      {
+        id: 'jadlog_3',
+        type: 'jadlog',
+        name: 'Jadlog Unidade Brotas',
+        lat: -12.9804,
+        lon: -38.4824,
+        address: 'Rua Frederico Costa, 142, Brotas, Salvador, BA',
+        phone: '(71) 3333-7070',
+        email: 'atendimento@jadlog.com.br',
+        postcode: '40255-383',
+        website: 'https://www.jadlog.com.br',
+        opening_hours: 'Segunda a Sexta: 08:00-18:00',
+        rating: 4.0,
+        total_ratings: 92,
+        place_id: 'ChIJLR3xE_6uEmsRhA61jo8iIgU'
+      },
+
+      // Transportadoras
+      {
+        id: 'transportadora_1',
+        type: 'transportadora',
+        name: 'Braspress Salvador',
+        lat: -12.9504,
+        lon: -38.4924,
+        address: 'Av. Luís Viana Filho, 13223, São Cristóvão, Salvador, BA',
+        phone: '(71) 3288-9000',
+        email: 'sac@braspress.com',
+        postcode: '41500-300',
+        website: 'https://www.braspress.com',
+        opening_hours: 'Segunda a Sexta: 08:00-18:00',
+        rating: 4.3,
+        total_ratings: 145,
+        place_id: 'ChIJK1SpE_6uEmsRhA61jo8iIgU'
+      },
+      {
+        id: 'transportadora_2',
+        type: 'transportadora',
+        name: 'Jamef Transportes',
+        lat: -12.9304,
+        lon: -38.4824,
+        address: 'Rua Jardim Piaui, 220, Pirajá, Salvador, BA',
+        phone: '(71) 3215-8500',
+        email: 'sac@jamef.com.br',
+        postcode: '41290-000',
+        website: 'https://www.jamef.com.br',
+        opening_hours: 'Segunda a Sexta: 08:00-18:00',
+        rating: 4.2,
+        total_ratings: 118,
+        place_id: 'ChIJLR3xE_6uEmsRhA61jo8iIgU'
+      },
+      {
+        id: 'transportadora_3',
+        type: 'transportadora',
+        name: 'Expresso São Miguel',
+        lat: -12.9204,
+        lon: -38.4724,
+        address: 'Rua Nilo Peçanha, 400, Pirajá, Salvador, BA',
+        phone: '(71) 3392-3100',
+        email: 'sac@expressosaomiguel.com.br',
+        postcode: '41290-040',
+        website: 'https://www.expressosaomiguel.com.br',
+        opening_hours: 'Segunda a Sexta: 08:00-18:00',
+        rating: 4.0,
+        total_ratings: 95,
+        place_id: 'ChIJLR3xE_6uEmsRhA61jo8iIgU'
+      },
+      {
+        id: 'transportadora_4',
+        type: 'transportadora',
+        name: 'Rapidão Cometa',
+        lat: -12.9104,
+        lon: -38.4624,
+        address: 'Av. San Martin, 1000, São Caetano, Salvador, BA',
+        phone: '(71) 3362-4000',
+        email: 'sac@rapidaocometa.com.br',
+        postcode: '40230-460',
+        website: 'https://www.rapidaocometa.com.br',
+        opening_hours: 'Segunda a Sexta: 08:00-18:00',
+        rating: 3.8,
+        total_ratings: 82,
+        place_id: 'ChIJLR3xE_6uEmsRhA61jo8iIgU'
+      },
+      {
+        id: 'transportadora_5',
+        type: 'transportadora',
+        name: 'Total Express',
+        lat: -12.9004,
+        lon: -38.4524,
+        address: 'Rua Barão de Cotegipe, 300, Calçada, Salvador, BA',
+        phone: '(71) 3254-5000',
+        email: 'sac@totalexpress.com.br',
+        postcode: '40410-900',
+        website: 'https://www.totalexpress.com.br',
+        opening_hours: 'Segunda a Sexta: 08:00-18:00',
+        rating: 3.9,
+        total_ratings: 76,
+        place_id: 'ChIJLR3xE_6uEmsRhA61jo8iIgU'
+      },
+
+      // Centros Logísticos
+      {
+        id: 'logistica_1',
+        type: 'logistica',
+        name: 'Centro Logístico DHL Salvador',
+        lat: -12.9404,
+        lon: -38.3924,
+        address: 'Estrada CIA/Aeroporto, km 6,5, São Cristóvão, Salvador, BA',
+        phone: '(71) 3204-3200',
+        email: 'atendimento.brasil@dhl.com',
+        postcode: '41500-970',
+        website: 'https://www.dhl.com/br-pt/home.html',
+        opening_hours: '24 horas',
+        rating: 4.5,
+        total_ratings: 187,
+        place_id: 'ChIJK1SpE_6uEmsRhA61jo8iIgU'
+      },
+      {
+        id: 'logistica_2',
+        type: 'logistica',
+        name: 'Centro de Distribuição Mercado Livre',
+        lat: -12.9304,
+        lon: -38.3824,
+        address: 'Estrada CIA/Aeroporto, km 8, São Cristóvão, Salvador, BA',
+        phone: '(71) 3204-4000',
+        email: 'atendimento@mercadolivre.com',
+        postcode: '41500-970',
+        website: 'https://www.mercadolivre.com.br',
+        opening_hours: '24 horas',
+        rating: 4.4,
+        total_ratings: 165,
+        place_id: 'ChIJLR3xE_6uEmsRhA61jo8iIgU'
+      },
+      {
+        id: 'logistica_3',
+        type: 'logistica',
+        name: 'Centro Logístico Correios CTCE',
+        lat: -12.9204,
+        lon: -38.3724,
+        address: 'Estrada CIA/Aeroporto, km 4, São Cristóvão, Salvador, BA',
+        phone: '(71) 3003-0100',
+        email: 'atendimento@correios.com.br',
+        postcode: '41500-970',
+        website: 'https://www.correios.com.br',
+        opening_hours: '24 horas',
+        rating: 4.2,
+        total_ratings: 142,
+        place_id: 'ChIJLR3xE_6uEmsRhA61jo8iIgU'
+      },
+      {
+        id: 'logistica_4',
+        type: 'logistica',
+        name: 'Centro de Distribuição Magalu',
+        lat: -12.9104,
+        lon: -38.3624,
+        address: 'Estrada CIA/Aeroporto, km 10, São Cristóvão, Salvador, BA',
+        phone: '(71) 3204-5000',
+        email: 'atendimento@magazineluiza.com.br',
+        postcode: '41500-970',
+        website: 'https://www.magazineluiza.com.br',
+        opening_hours: '24 horas',
+        rating: 4.3,
+        total_ratings: 128,
+        place_id: 'ChIJLR3xE_6uEmsRhA61jo8iIgU'
       }
     ];
 
