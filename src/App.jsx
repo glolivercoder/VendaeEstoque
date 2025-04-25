@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppContextProvider } from './context/AppContext';
 import EmployeeManager from './components/settings/EmployeeManager';
+import LayoutSettings from './components/settings/LayoutSettings';
 import LoginModal from './components/modals/LoginModal';
 import ThemeToggle from './components/ThemeToggle';
 import {
@@ -234,6 +235,7 @@ function AppContent() {
   const [showProductSelector, setShowProductSelector] = useState(false);
   const [showEmployeeSection, setShowEmployeeSection] = useState(false);
   const [showMaintenanceSection, setShowMaintenanceSection] = useState(false);
+  const [showLayoutSection, setShowLayoutSection] = useState(false);
 
   // Adicionar estado para categorias e nova categoria
   const [categories, setCategories] = useState(['Ferramentas', 'Instrumentos Musicais', 'Informática', 'Gadgets', 'Todos', 'Diversos']);
@@ -2607,7 +2609,7 @@ ${clientCPF}
       ) : (
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex justify-between items-center mb-8 bg-linkvendas-dark p-4 rounded-lg shadow-md">
+          <div className="flex justify-between items-center mb-8 bg-[#2c3e50] p-4 rounded-lg shadow-md">
             {/* Logo */}
             <div className="flex items-center">
               <img src="/images/logo-linkvendas.svg" alt="LinkVendas Express" className="h-12" />
@@ -5129,6 +5131,18 @@ ${clientCPF}
                     })}
                   </div>
                 </div>
+
+                <div className="flex justify-between items-center cursor-pointer" onClick={() => setShowLayoutSection(!showLayoutSection)}>
+                  <h3 className="text-md font-medium mb-2 mt-4">Layout</h3>
+                  <svg className={`h-5 w-5 transform ${showLayoutSection ? 'rotate-180' : ''} transition-transform duration-200`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+                {showLayoutSection && (
+                  <div className="mb-4">
+                    <LayoutSettings />
+                  </div>
+                )}
 
                 <div className="flex justify-between items-center cursor-pointer" onClick={() => setShowMaintenanceSection(!showMaintenanceSection)}>
                   <h3 className="text-md font-medium mb-2 mt-4">Manutenção do Sistema</h3>
