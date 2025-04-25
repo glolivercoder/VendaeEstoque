@@ -2609,7 +2609,11 @@ ${clientCPF}
       ) : (
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex justify-between items-center mb-8 bg-[#2c3e50] p-4 rounded-lg shadow-md" style={{ height: '80px' }}>
+          <div className="flex justify-between items-center mb-8 bg-[#2c3e50] p-4 rounded-lg shadow-md"
+            style={{
+              height: localStorage.getItem('layoutConfig') ?
+                `${JSON.parse(localStorage.getItem('layoutConfig')).headerHeight || 80}px` : '80px'
+            }}>
             {/* Logo */}
             <div className="flex items-center logo-container" style={{
               justifyContent: localStorage.getItem('layoutConfig') ?
@@ -2624,8 +2628,7 @@ ${clientCPF}
                   className="z-10"
                   style={{
                     height: localStorage.getItem('layoutConfig') ?
-                      JSON.parse(localStorage.getItem('layoutConfig')).logoSize === 'small' ? '30px' :
-                      JSON.parse(localStorage.getItem('layoutConfig')).logoSize === 'large' ? '60px' : '45px'
+                      `${JSON.parse(localStorage.getItem('layoutConfig')).logoHeight || 45}px`
                       : '45px'
                   }}
                 />
