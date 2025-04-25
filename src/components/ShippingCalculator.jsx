@@ -8,40 +8,9 @@ import TrackingPanel from "./TrackingPanel";
 import ShippingLabelGenerator from "./ShippingLabelGenerator";
 import CarrierConfigPanel from "./CarrierConfigPanel";
 import MagicWandScanButton from "./MagicWandScanButton";
+import ShippingAgencyFinder from "./ShippingAgencyFinder";
 import { searchClients, getLastClientSale, getSaleItems, getProducts } from "../services/database";
 import "../styles/ShippingCalculator.css";
-
-// Importar bibliotecas para o mapa
-let L = null;
-let Map = null;
-let TileLayer = null;
-let Marker = null;
-let Popup = null;
-
-// Carregar as bibliotecas de mapa dinamicamente
-// Nota: As bibliotecas serão carregadas sob demanda quando o mapa for exibido
-// Isso evita o erro de 'require is not defined' no navegador
-const loadMapLibraries = async () => {
-  try {
-    if (typeof window !== 'undefined' && !L) {
-      // Importação dinâmica usando import() em vez de require()
-      const leaflet = await import('leaflet');
-      const reactLeaflet = await import('react-leaflet');
-
-      L = leaflet.default;
-      Map = reactLeaflet.MapContainer;
-      TileLayer = reactLeaflet.TileLayer;
-      Marker = reactLeaflet.Marker;
-      Popup = reactLeaflet.Popup;
-
-      return true;
-    }
-    return !!L; // Retorna true se as bibliotecas já estiverem carregadas
-  } catch (error) {
-    console.error('Erro ao carregar bibliotecas de mapa:', error);
-    return false;
-  }
-}
 
 // Ícone de carregamento
 const Loader2 = () => (
@@ -107,12 +76,9 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
   const [showResultsPopup, setShowResultsPopup] = useState(false);
 
   // Estados para o mapa e localização de transportadoras
-  const [showMap, setShowMap] = useState(false);
-  const [mapCenter, setMapCenter] = useState([-12.9704, -38.5124]); // Salvador-BA
-  const [nearbyCarriers, setNearbyCarriers] = useState([]);
-  const [isLoadingCarriers, setIsLoadingCarriers] = useState(false);
+  const [showAgencyFinder, setShowAgencyFinder] = useState(false);
+  const [selectedAgency, setSelectedAgency] = useState(null);
   const [isExportingToPDV, setIsExportingToPDV] = useState(false);
-  const mapRef = useRef(null);
 
   // Estado para armazenar os dados recebidos de outros componentes
   const [receivedShippingData, setReceivedShippingData] = useState(null);
@@ -344,8 +310,8 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
     }
   }, []);
 
-  // Função para buscar transportadoras próximas usando a API do OpenStreetMap
-  const findNearbyCarriers = async () => {
+  // Função para abrir o buscador de agências de transportadoras
+  const openAgencyFinder = () => {
     if (!zipCodeOrigin) {
       toast({
         title: "CEP de origem necessário",
@@ -355,58 +321,19 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
       return;
     }
 
-    setIsLoadingCarriers(true);
-    setShowMap(true);
+    setShowAgencyFinder(true);
+  };
 
-    // Carregar as bibliotecas do mapa antes de continuar
-    const librariesLoaded = await loadMapLibraries();
-    if (!librariesLoaded) {
-      toast({
-        title: "Erro ao carregar mapa",
-        description: "Não foi possível carregar as bibliotecas do mapa. Tente novamente.",
-        variant: "destructive",
-      });
-      setIsLoadingCarriers(false);
-      return;
-    }
+  // Função para lidar com a seleção de uma agência
+  const handleSelectAgency = (agency) => {
+    setSelectedAgency(agency);
+    console.log("Agência selecionada:", agency);
 
-    try {
-      // Simulação de busca de transportadoras
-      setTimeout(() => {
-        const demoCarriers = [
-          {
-            id: 1,
-            lat: -12.9704 + 0.01,
-            lon: -38.5124 + 0.01,
-            tags: { name: "Correios", phone: "(71) 3333-1234", website: "https://www.correios.com.br" }
-          },
-          {
-            id: 2,
-            lat: -12.9704 - 0.01,
-            lon: -38.5124 - 0.01,
-            tags: { name: "Jadlog", phone: "(71) 3333-5678", website: "https://www.jadlog.com.br" }
-          },
-          {
-            id: 3,
-            lat: -12.9704 + 0.02,
-            lon: -38.5124 - 0.02,
-            tags: { name: "Loggi", phone: "(71) 3333-9012", website: "https://www.loggi.com" }
-          },
-          {
-            id: 4,
-            lat: -12.9704 - 0.02,
-            lon: -38.5124 + 0.02,
-            tags: { name: "Azul Cargo", phone: "(71) 3333-3456", website: "https://www.azulcargo.com.br" }
-          }
-        ];
-
-        setNearbyCarriers(demoCarriers);
-        setIsLoadingCarriers(false);
-      }, 1500);
-    } catch (error) {
-      console.error('Erro ao buscar transportadoras próximas:', error);
-      setIsLoadingCarriers(false);
-    }
+    // Exibir mensagem de sucesso
+    toast({
+      title: "Agência selecionada",
+      description: `${agency.name} foi selecionada com sucesso.`,
+    });
   };
 
   // Função auxiliar para preencher os dados do produto
@@ -716,17 +643,9 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
               </button>
               <button
                 className="btn btn-secondary"
-                onClick={findNearbyCarriers}
-                disabled={isLoadingCarriers}
+                onClick={openAgencyFinder}
               >
-                {isLoadingCarriers ? (
-                  <>
-                    <Loader2 />
-                    <span>Buscando...</span>
-                  </>
-                ) : (
-                  "Encontrar Transportadoras Próximas"
-                )}
+                Encontrar Transportadoras Próximas
               </button>
             </div>
           </div>
@@ -774,110 +693,13 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
         </div>
       )}
 
-      {showMap && (
-        <div className="popup-overlay">
-          <div className="popup-content">
-            <div className="popup-header">
-              <h3>Transportadoras Próximas</h3>
-              <button
-                className="close-button"
-                onClick={() => setShowMap(false)}
-              >
-                &times;
-              </button>
-            </div>
-            <div className="map-popup-content">
-              {typeof window !== 'undefined' && Map && L && (
-                <div style={{ height: '400px', width: '100%' }}>
-                  <Map
-                    center={mapCenter}
-                    zoom={13}
-                    style={{ height: '100%', width: '100%' }}
-                    ref={mapRef}
-                  >
-                    <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    />
-
-                    {/* Marcador para o CEP de origem */}
-                    <Marker position={mapCenter}>
-                      <Popup>
-                        <strong>Sua localização</strong><br />
-                        CEP: {zipCodeOrigin}
-                      </Popup>
-                    </Marker>
-
-                    {/* Marcadores para as transportadoras próximas */}
-                    {nearbyCarriers.map((carrier, index) => (
-                      <Marker
-                        key={carrier.id || index}
-                        position={[carrier.lat, carrier.lon]}
-                      >
-                        <Popup>
-                          <strong>{carrier.tags?.name || `Transportadora ${index + 1}`}</strong><br />
-                          {carrier.tags?.phone && <div>Telefone: {carrier.tags.phone}</div>}
-                          {carrier.tags?.website && (
-                            <div>
-                              <a href={carrier.tags.website} target="_blank" rel="noopener noreferrer">
-                                Visitar site
-                              </a>
-                            </div>
-                          )}
-                        </Popup>
-                      </Marker>
-                    ))}
-                  </Map>
-                </div>
-              )}
-
-              {typeof window !== 'undefined' && (!Map || !L) && (
-                <div className="map-loading-message">
-                  <p>Carregando bibliotecas do mapa...</p>
-                  <button
-                    className="btn btn-primary"
-                    onClick={async () => {
-                      await loadMapLibraries();
-                      // Forçar atualização do componente
-                      setShowMap(false);
-                      setTimeout(() => setShowMap(true), 100);
-                    }}
-                  >
-                    Tentar novamente
-                  </button>
-                </div>
-              )}
-
-              {isLoadingCarriers && (
-                <div className="loading-overlay">
-                  <div className="loading-spinner"></div>
-                  <p>Buscando transportadoras próximas...</p>
-                </div>
-              )}
-
-              {!isLoadingCarriers && nearbyCarriers.length > 0 && (
-                <div className="carriers-list">
-                  <h4>Transportadoras Encontradas</h4>
-                  <ul>
-                    {nearbyCarriers.map((carrier, index) => (
-                      <li key={carrier.id || index}>
-                        <strong>{carrier.tags?.name || `Transportadora ${index + 1}`}</strong>
-                        {carrier.tags?.phone && <div>Telefone: {carrier.tags.phone}</div>}
-                        {carrier.tags?.website && (
-                          <div>
-                            <a href={carrier.tags.website} target="_blank" rel="noopener noreferrer">
-                              Visitar site
-                            </a>
-                          </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+      {/* Componente de busca de agências de transportadoras */}
+      {showAgencyFinder && (
+        <ShippingAgencyFinder
+          originCEP={zipCodeOrigin}
+          onSelectAgency={handleSelectAgency}
+          onClose={() => setShowAgencyFinder(false)}
+        />
       )}
 
       {/* Botões de exportação */}
