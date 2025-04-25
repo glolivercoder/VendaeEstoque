@@ -24,6 +24,7 @@
     "@google/generative-ai": "^0.24.0",
     "@headlessui/react": "^2.2.0",
     "@heroicons/react": "^2.2.0",
+    "@react-google-maps/api": "^2.20.6",
     "@turf/turf": "^7.2.0",
     "axios": "^1.9.0",
     "better-sqlite3": "^11.8.1",

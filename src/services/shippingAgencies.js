@@ -1,22 +1,5 @@
-// Importar a biblioteca idb para trabalhar com IndexedDB
-import { openDB } from 'idb';
+// Importar axios para requisições HTTP
 import axios from 'axios';
-
-// Inicializar o banco de dados
-const initDB = async () => {
-  return openDB('shippingAgenciesDB', 1, {
-    upgrade(db) {
-      // Criar store para agências de correios e transportadoras
-      if (!db.objectStoreNames.contains('agencies')) {
-        const store = db.createObjectStore('agencies', { keyPath: 'id' });
-        store.createIndex('type', 'type');
-        store.createIndex('name', 'name');
-        store.createIndex('lat', 'lat');
-        store.createIndex('lon', 'lon');
-      }
-    }
-  });
-};
 
 // Função para buscar agências do OpenStreetMap usando a API Overpass
 export const fetchAgenciesFromOSM = async () => {

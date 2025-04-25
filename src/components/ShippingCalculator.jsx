@@ -8,7 +8,7 @@ import TrackingPanel from "./TrackingPanel";
 import ShippingLabelGenerator from "./ShippingLabelGenerator";
 import CarrierConfigPanel from "./CarrierConfigPanel";
 import MagicWandScanButton from "./MagicWandScanButton";
-import ShippingAgencyFinder from "./ShippingAgencyFinder";
+import GoogleMapsAgencyFinder from "./GoogleMapsAgencyFinder";
 import { searchClients, getLastClientSale, getSaleItems, getProducts } from "../services/database";
 import "../styles/ShippingCalculator.css";
 
@@ -693,9 +693,9 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
         </div>
       )}
 
-      {/* Componente de busca de agências de transportadoras */}
+      {/* Componente de busca de agências de transportadoras usando Google Maps */}
       {showAgencyFinder && (
-        <ShippingAgencyFinder
+        <GoogleMapsAgencyFinder
           originCEP={zipCodeOrigin}
           onSelectAgency={handleSelectAgency}
           onClose={() => setShowAgencyFinder(false)}
