@@ -63,7 +63,15 @@ const LayoutSettings = () => {
   const handleSaveLogo = () => {
     if (logoPreview) {
       localStorage.setItem('customLogo', logoPreview);
-      localStorage.setItem('logoSize', layoutConfig.logoSize);
+
+      // Atualizar o objeto de configuração com o tamanho da logo
+      const updatedConfig = {
+        ...layoutConfig
+      };
+
+      // Salvar a configuração atualizada
+      setLayoutConfig(updatedConfig);
+
       alert('Logo salva com sucesso! Atualize a página para ver as alterações.');
       // Forçar atualização da página para mostrar a nova logo
       window.location.reload();
@@ -92,10 +100,19 @@ const LayoutSettings = () => {
     const logoContainer = document.querySelector('.logo-container');
     if (logoContainer) {
       logoContainer.style.justifyContent = layoutConfig.logoAlignment === 'center' ? 'center' : 'flex-start';
+      logoContainer.style.width = '50%'; // Garantir que o contêiner tenha largura suficiente
     }
 
-    // Salvar o tamanho do logo
-    localStorage.setItem('logoSize', layoutConfig.logoSize);
+    // Aplicar tamanho da logo
+    const logoImg = document.querySelector('.logo-container img');
+    if (logoImg) {
+      logoImg.style.height =
+        layoutConfig.logoSize === 'small' ? '30px' :
+        layoutConfig.logoSize === 'large' ? '60px' : '45px';
+    }
+
+    // Salvar as configurações no localStorage
+    localStorage.setItem('layoutConfig', JSON.stringify(layoutConfig));
 
     // Atualizar a página para aplicar todas as alterações
     alert('Configurações aplicadas com sucesso! A página será recarregada para aplicar todas as alterações.');

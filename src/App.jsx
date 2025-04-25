@@ -2609,17 +2609,24 @@ ${clientCPF}
       ) : (
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex justify-between items-center mb-8 bg-[#2c3e50] p-4 rounded-lg shadow-md">
+          <div className="flex justify-between items-center mb-8 bg-[#2c3e50] p-4 rounded-lg shadow-md" style={{ height: '80px' }}>
             {/* Logo */}
-            <div className="flex items-center logo-container">
+            <div className="flex items-center logo-container" style={{
+              justifyContent: localStorage.getItem('layoutConfig') ?
+                JSON.parse(localStorage.getItem('layoutConfig')).logoAlignment === 'center' ? 'center' : 'flex-start'
+                : 'flex-start',
+              width: '50%'
+            }}>
               {localStorage.getItem('customLogo') ? (
                 <img
                   src={localStorage.getItem('customLogo')}
                   alt="Logo Personalizada"
-                  className="h-12 z-10"
+                  className="z-10"
                   style={{
-                    height: localStorage.getItem('logoSize') === 'small' ? '30px' :
-                           localStorage.getItem('logoSize') === 'large' ? '50px' : '40px'
+                    height: localStorage.getItem('layoutConfig') ?
+                      JSON.parse(localStorage.getItem('layoutConfig')).logoSize === 'small' ? '30px' :
+                      JSON.parse(localStorage.getItem('layoutConfig')).logoSize === 'large' ? '60px' : '45px'
+                      : '45px'
                   }}
                 />
               ) : (
@@ -2632,13 +2639,13 @@ ${clientCPF}
               {/* Botão de login */}
               <button
                 onClick={() => setShowLoginModal(true)}
-                className="flex items-center text-sm font-medium text-white hover:text-linkvendas-orange px-3 py-1.5 rounded-md transition-colors"
-                style={{ color: '#ffffff' }}
+                className="flex items-center text-sm font-medium hover:text-linkvendas-orange px-3 py-1.5 rounded-md transition-colors"
+                style={{ color: 'white' }}
               >
-                <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="white">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
-                ENTRAR
+                <span style={{ color: 'white' }}>ENTRAR</span>
               </button>
 
               {/* Botão de alternância de tema */}
