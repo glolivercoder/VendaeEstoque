@@ -3,13 +3,14 @@ import { useTheme } from '../context/ThemeContext';
 
 const ThemeToggle = () => {
   const { theme, toggleTheme } = useTheme();
-  
+
   return (
     <button
       onClick={toggleTheme}
-      className="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary 
-                 hover:bg-gray-100 dark:hover:bg-gray-700
-                 text-gray-700 dark:text-gray-300
+      className="p-2 rounded-full focus:outline-none
+                 bg-white dark:bg-linkvendas-dark
+                 text-linkvendas-blue dark:text-white
+                 hover:text-linkvendas-orange dark:hover:text-linkvendas-orange
                  transition-colors"
       aria-label={`Alternar para tema ${theme === 'light' ? 'escuro' : 'claro'}`}
       title={`Alternar para tema ${theme === 'light' ? 'escuro' : 'claro'}`}
