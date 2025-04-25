@@ -6,7 +6,7 @@
   --linkvendas-orange: #f39c12;
   --linkvendas-white: #ffffff;
   --linkvendas-dark: #2c3e50;
-  
+
   /* Tema claro (padrão) */
   --primary-color: var(--linkvendas-blue);
   --secondary-color: var(--linkvendas-orange);
@@ -15,12 +15,12 @@
   --card-background: #ffffff;
   --border-color: #e0e0e0;
   --button-text: #ffffff;
-  --header-background: #ffffff;
-  --header-text: var(--linkvendas-blue);
-  --sidebar-background: #f0f0f0;
-  --sidebar-text: #333333;
-  --sidebar-hover: var(--linkvendas-blue);
-  --sidebar-active: var(--linkvendas-blue);
+  --header-background: var(--linkvendas-dark);
+  --header-text: var(--linkvendas-white);
+  --sidebar-background: var(--linkvendas-dark);
+  --sidebar-text: var(--linkvendas-white);
+  --sidebar-hover: var(--linkvendas-orange);
+  --sidebar-active: var(--linkvendas-orange);
   --input-background: #ffffff;
   --input-border: #cccccc;
   --input-text: #333333;
@@ -31,18 +31,18 @@
   --primary-color: var(--linkvendas-blue);
   --secondary-color: var(--linkvendas-orange);
   --text-color: var(--linkvendas-white);
-  --background-color: var(--linkvendas-dark);
-  --card-background: #34495e;
-  --border-color: #2c3e50;
+  --background-color: #1a1a1a;
+  --card-background: #2a2a2a;
+  --border-color: #3a3a3a;
   --button-text: var(--linkvendas-white);
-  --header-background: #2c3e50;
+  --header-background: var(--linkvendas-dark);
   --header-text: var(--linkvendas-white);
-  --sidebar-background: #2c3e50;
+  --sidebar-background: var(--linkvendas-dark);
   --sidebar-text: var(--linkvendas-white);
   --sidebar-hover: var(--linkvendas-orange);
   --sidebar-active: var(--linkvendas-orange);
-  --input-background: #34495e;
-  --input-border: #2c3e50;
+  --input-background: #2a2a2a;
+  --input-border: #3a3a3a;
   --input-text: var(--linkvendas-white);
 }
 
@@ -51,12 +51,32 @@
   background-color: var(--primary-color);
   color: var(--button-text);
   border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .btn-secondary {
   background-color: var(--secondary-color);
   color: var(--button-text);
   border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background-color: #e67e22;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Estilos para o cabeçalho */
@@ -64,24 +84,35 @@
   background-color: var(--header-background);
   color: var(--header-text);
   border-bottom: 1px solid var(--border-color);
+  padding: 12px 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* Estilos para a barra lateral */
 .sidebar {
   background-color: var(--sidebar-background);
   color: var(--sidebar-text);
+  padding: 20px 0;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-item {
   color: var(--sidebar-text);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  transition: all 0.3s ease;
 }
 
 .sidebar-item:hover {
   color: var(--sidebar-hover);
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-item.active {
   color: var(--sidebar-active);
+  background-color: rgba(255, 255, 255, 0.15);
+  border-left: 4px solid var(--linkvendas-orange);
 }
 
 /* Estilos para inputs */
@@ -89,6 +120,15 @@ input, select, textarea {
   background-color: var(--input-background);
   border: 1px solid var(--input-border);
   color: var(--input-text);
+  padding: 10px 12px;
+  border-radius: 4px;
+  transition: border-color 0.3s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--linkvendas-blue);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
 }
 
 /* Estilos para o logo */
@@ -105,6 +145,11 @@ input, select, textarea {
   cursor: pointer;
   padding: 5px;
   margin-left: 10px;
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover {
+  transform: rotate(30deg);
 }
 
 .theme-toggle svg {

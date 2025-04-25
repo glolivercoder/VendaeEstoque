@@ -2607,10 +2607,10 @@ ${clientCPF}
       ) : (
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex justify-between items-center mb-8 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm">
+          <div className="flex justify-between items-center mb-8 bg-linkvendas-dark p-4 rounded-lg shadow-md">
             {/* Logo */}
             <div className="flex items-center">
-              <img src="/src/assets/linkvendas-express-logo.png" alt="LinkVendas Express" className="h-12" />
+              <img src="/images/logo-linkvendas.svg" alt="LinkVendas Express" className="h-12" />
             </div>
 
             {/* Botões à direita */}
@@ -2618,12 +2618,12 @@ ${clientCPF}
               {/* Botão de login */}
               <button
                 onClick={() => setShowLoginModal(true)}
-                className="flex items-center text-sm font-medium text-linkvendas-blue dark:text-white hover:text-linkvendas-orange dark:hover:text-linkvendas-orange bg-white dark:bg-linkvendas-dark px-3 py-1.5 rounded-md transition-colors"
+                className="flex items-center text-sm font-medium text-white hover:text-linkvendas-orange px-3 py-1.5 rounded-md transition-colors"
               >
                 <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
-                Entrar
+                ENTRAR
               </button>
 
               {/* Botão de alternância de tema */}
@@ -2632,9 +2632,9 @@ ${clientCPF}
               {/* Botão de configurações */}
               <button
                 onClick={() => setShowConfigPopup(true)}
-                className="px-3 py-1.5 bg-white dark:bg-linkvendas-dark text-linkvendas-blue dark:text-white rounded-md hover:text-linkvendas-orange dark:hover:text-linkvendas-orange transition-colors"
+                className="px-3 py-1.5 text-white hover:text-linkvendas-orange rounded-md transition-colors"
               >
-                Configurações
+                CONFIGURAÇÕES
               </button>
             </div>
           </div>

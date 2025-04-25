@@ -8,9 +8,7 @@ const ThemeToggle = () => {
     <button
       onClick={toggleTheme}
       className="p-2 rounded-full focus:outline-none
-                 bg-white dark:bg-linkvendas-dark
-                 text-linkvendas-blue dark:text-white
-                 hover:text-linkvendas-orange dark:hover:text-linkvendas-orange
+                 text-white hover:text-linkvendas-orange
                  transition-colors"
       aria-label={`Alternar para tema ${theme === 'light' ? 'escuro' : 'claro'}`}
       title={`Alternar para tema ${theme === 'light' ? 'escuro' : 'claro'}`}
