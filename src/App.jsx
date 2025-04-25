@@ -2611,8 +2611,20 @@ ${clientCPF}
           {/* Header */}
           <div className="flex justify-between items-center mb-8 bg-[#2c3e50] p-4 rounded-lg shadow-md">
             {/* Logo */}
-            <div className="flex items-center">
-              <img src="/images/logo-linkvendas.svg" alt="LinkVendas Express" className="h-12" />
+            <div className="flex items-center logo-container">
+              {localStorage.getItem('customLogo') ? (
+                <img
+                  src={localStorage.getItem('customLogo')}
+                  alt="Logo Personalizada"
+                  className="h-12 z-10"
+                  style={{
+                    height: localStorage.getItem('logoSize') === 'small' ? '30px' :
+                           localStorage.getItem('logoSize') === 'large' ? '50px' : '40px'
+                  }}
+                />
+              ) : (
+                <div className="text-white font-bold text-xl">LinkVendas Express</div>
+              )}
             </div>
 
             {/* Botões à direita */}
@@ -2621,6 +2633,7 @@ ${clientCPF}
               <button
                 onClick={() => setShowLoginModal(true)}
                 className="flex items-center text-sm font-medium text-white hover:text-linkvendas-orange px-3 py-1.5 rounded-md transition-colors"
+                style={{ color: '#ffffff' }}
               >
                 <svg className="w-5 h-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />

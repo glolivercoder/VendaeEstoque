@@ -36,17 +36,7 @@ const LayoutSettings = () => {
     { name: 'Cinza Escuro', color: '#34495e' },
   ];
 
-  // Paleta de cores HTML
-  const htmlPalette = [
-    // Linha 1
-    '#1abc9c', '#2ecc71', '#3498db', '#9b59b6', '#34495e',
-    // Linha 2
-    '#16a085', '#27ae60', '#2980b9', '#8e44ad', '#2c3e50',
-    // Linha 3
-    '#f1c40f', '#e67e22', '#e74c3c', '#ecf0f1', '#95a5a6',
-    // Linha 4
-    '#f39c12', '#d35400', '#c0392b', '#bdc3c7', '#7f8c8d',
-  ];
+  // Removida a paleta de cores HTML conforme solicitado
 
   // Carregar a logo atual
   useEffect(() => {
@@ -73,7 +63,10 @@ const LayoutSettings = () => {
   const handleSaveLogo = () => {
     if (logoPreview) {
       localStorage.setItem('customLogo', logoPreview);
-      alert('Logo salva com sucesso!');
+      localStorage.setItem('logoSize', layoutConfig.logoSize);
+      alert('Logo salva com sucesso! Atualize a página para ver as alterações.');
+      // Forçar atualização da página para mostrar a nova logo
+      window.location.reload();
     }
   };
 
@@ -94,14 +87,19 @@ const LayoutSettings = () => {
     document.documentElement.style.setProperty('--text-color', layoutConfig.descriptionTextColor);
     document.documentElement.style.setProperty('--sidebar-text', layoutConfig.menuTextColor);
     document.documentElement.style.setProperty('--background-color', layoutConfig.backgroundColor);
-    
+
     // Aplicar alinhamento do logo
     const logoContainer = document.querySelector('.logo-container');
     if (logoContainer) {
       logoContainer.style.justifyContent = layoutConfig.logoAlignment === 'center' ? 'center' : 'flex-start';
     }
-    
-    alert('Configurações aplicadas com sucesso!');
+
+    // Salvar o tamanho do logo
+    localStorage.setItem('logoSize', layoutConfig.logoSize);
+
+    // Atualizar a página para aplicar todas as alterações
+    alert('Configurações aplicadas com sucesso! A página será recarregada para aplicar todas as alterações.');
+    window.location.reload();
   };
 
   // Função para resetar as configurações para o padrão
@@ -116,9 +114,9 @@ const LayoutSettings = () => {
       menuTextColor: '#ffffff',
       backgroundColor: '#f5f5f5',
     };
-    
+
     setLayoutConfig(defaultSettings);
-    
+
     // Aplicar configurações padrão
     document.documentElement.style.setProperty('--header-background', defaultSettings.headerColor);
     document.documentElement.style.setProperty('--primary-color', defaultSettings.buttonColor);
@@ -126,14 +124,14 @@ const LayoutSettings = () => {
     document.documentElement.style.setProperty('--text-color', defaultSettings.descriptionTextColor);
     document.documentElement.style.setProperty('--sidebar-text', defaultSettings.menuTextColor);
     document.documentElement.style.setProperty('--background-color', defaultSettings.backgroundColor);
-    
+
     alert('Configurações resetadas para o padrão!');
   };
 
   return (
     <div className="p-4 bg-white rounded-lg shadow">
       <h2 className="text-xl font-bold mb-4">Configurações de Layout</h2>
-      
+
       {/* Upload de Logo */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-2">Logo</h3>
@@ -165,7 +163,7 @@ const LayoutSettings = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Alinhamento da Logo */}
         <div className="mt-4">
           <label className="block text-sm font-medium mb-1">Alinhamento da Logo</label>
@@ -194,7 +192,7 @@ const LayoutSettings = () => {
             </label>
           </div>
         </div>
-        
+
         {/* Tamanho da Logo */}
         <div className="mt-4">
           <label className="block text-sm font-medium mb-1">Tamanho da Logo</label>
@@ -209,11 +207,11 @@ const LayoutSettings = () => {
           </select>
         </div>
       </div>
-      
+
       {/* Cores */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-2">Cores</h3>
-        
+
         {/* Cor do Cabeçalho */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Cor do Cabeçalho</label>
@@ -232,7 +230,7 @@ const LayoutSettings = () => {
             />
           </div>
         </div>
-        
+
         {/* Cor dos Botões */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Cor dos Botões</label>
@@ -251,7 +249,7 @@ const LayoutSettings = () => {
             />
           </div>
         </div>
-        
+
         {/* Cor do Texto dos Botões */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Cor do Texto dos Botões</label>
@@ -270,7 +268,7 @@ const LayoutSettings = () => {
             />
           </div>
         </div>
-        
+
         {/* Cor do Texto das Descrições */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Cor do Texto das Descrições</label>
@@ -289,7 +287,7 @@ const LayoutSettings = () => {
             />
           </div>
         </div>
-        
+
         {/* Cor do Texto dos Menus */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Cor do Texto dos Menus</label>
@@ -308,7 +306,7 @@ const LayoutSettings = () => {
             />
           </div>
         </div>
-        
+
         {/* Cor de Fundo */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Cor de Fundo</label>
@@ -328,11 +326,11 @@ const LayoutSettings = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Paletas de Cores */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-2">Paletas de Cores</h3>
-        
+
         {/* Cores do Logo */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Cores do Logo</label>
@@ -356,7 +354,7 @@ const LayoutSettings = () => {
             ))}
           </div>
         </div>
-        
+
         {/* Cores do Sistema */}
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Cores do Sistema</label>
@@ -380,30 +378,10 @@ const LayoutSettings = () => {
             ))}
           </div>
         </div>
-        
-        {/* Paleta HTML */}
-        <div>
-          <label className="block text-sm font-medium mb-1">Paleta HTML</label>
-          <div className="grid grid-cols-5 gap-2">
-            {htmlPalette.map((color, index) => (
-              <button
-                key={index}
-                className="w-full h-10 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                style={{ backgroundColor: color }}
-                title={color}
-                onClick={() => {
-                  const colorPicker = document.querySelector('input[type="color"]:focus');
-                  if (colorPicker) {
-                    colorPicker.value = color;
-                    colorPicker.dispatchEvent(new Event('change', { bubbles: true }));
-                  }
-                }}
-              />
-            ))}
-          </div>
-        </div>
+
+        {/* Paleta HTML removida conforme solicitado */}
       </div>
-      
+
       {/* Botões de Ação */}
       <div className="flex justify-end gap-4 mt-6">
         <button
