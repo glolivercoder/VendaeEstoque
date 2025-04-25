@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react';
+import ReactDOM from 'react-dom/client';
 import PropTypes from 'prop-types';
 import GeminiService from '../services/GeminiService';
+import ImageSourceSelector from './ImageSourceSelector';
 
 const MagicCaptureButton = ({ onProductDataExtracted }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -8,7 +10,49 @@ const MagicCaptureButton = ({ onProductDataExtracted }) => {
   const fileInputRef = useRef(null);
 
   const handleButtonClick = () => {
-    fileInputRef.current.click();
+    // Função para processar a imagem com base na fonte selecionada
+    const handleSelectSource = (sourceType) => {
+      if (sourceType === 'camera') {
+        // Abrir câmera
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        // Forçar o uso da câmera em dispositivos móveis
+        input.setAttribute('capture', 'environment');
+        // Adicionar atributos para garantir que a câmera seja aberta
+        input.setAttribute('data-capture', 'camera');
+        input.onchange = handleFileChange;
+        input.click();
+      } else {
+        // Abrir seletor de arquivo
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = handleFileChange;
+        input.click();
+      }
+    };
+
+    // Renderizar o componente ImageSourceSelector no DOM
+    const selectorRoot = document.createElement('div');
+    document.body.appendChild(selectorRoot);
+
+    // Função para fechar o seletor
+    const handleClose = () => {
+      document.body.removeChild(selectorRoot);
+    };
+
+    // Renderizar o componente
+    const root = ReactDOM.createRoot(selectorRoot);
+    root.render(
+      <ImageSourceSelector
+        onSelect={sourceType => {
+          handleClose();
+          handleSelectSource(sourceType);
+        }}
+        onClose={handleClose}
+      />
+    );
   };
 
   const handleFileChange = async (e) => {

@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import ReactDOM from 'react-dom/client';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import './styles/ImageStyles.css';
 import './styles/global.css';
 import './styles/shipping.css';
-import './styles/ImageSourceSelector.css';
+import ThemeSelector from './components/ThemeSelector';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { AppContextProvider } from './context/AppContext';
@@ -48,7 +47,6 @@ import ShippingCalculator from './components/ShippingCalculator.jsx';
 import SaleConfirmationPopup from './components/SaleConfirmationPopup';
 import SalesHistory from './components/SalesHistory';
 import ProductSelector from './components/ProductSelector';
-import ImageSourceSelector from './components/ImageSourceSelector';
 import { ToastProvider } from './components/ui/toast';
 
 // Registrar componentes do Chart.js
@@ -2692,160 +2690,55 @@ ${clientCPF}
                         )}
 
                         <div className="image-actions mt-2 flex space-x-2">
-                          <button
-                            className="image-upload-button"
-                            onClick={() => {
-                              // Função para processar a imagem com base na fonte selecionada
-                              const handleSelectSource = (sourceType) => {
-                                if (sourceType === 'camera') {
-                                  // Abrir câmera
-                                  const input = document.createElement('input');
-                                  input.type = 'file';
-                                  input.accept = 'image/*';
-                                  // Forçar o uso da câmera em dispositivos móveis
-                                  input.setAttribute('capture', 'environment');
-                                  // Adicionar atributos para garantir que a câmera seja aberta
-                                  input.setAttribute('data-capture', 'camera');
-                                  input.onchange = (e) => {
-                                    const file = e.target.files[0];
-                                    if (file) {
-                                      const reader = new FileReader();
-                                      reader.onload = (event) => {
-                                        setNewItem({...newItem, image: event.target.result});
-                                      };
-                                      reader.readAsDataURL(file);
-                                    }
-                                  };
-                                  input.click();
-                                } else {
-                                  // Abrir seletor de arquivo
-                                  const input = document.createElement('input');
-                                  input.type = 'file';
-                                  input.accept = 'image/*';
-                                  input.onchange = (e) => {
-                                    const file = e.target.files[0];
-                                    if (file) {
-                                      const reader = new FileReader();
-                                      reader.onload = (event) => {
-                                        setNewItem({...newItem, image: event.target.result});
-                                      };
-                                      reader.readAsDataURL(file);
-                                    }
-                                  };
-                                  input.click();
-                                }
-                              };
-
-                              // Renderizar o componente ImageSourceSelector no DOM
-                              const selectorRoot = document.createElement('div');
-                              document.body.appendChild(selectorRoot);
-
-                              // Função para fechar o seletor
-                              const handleClose = () => {
-                                document.body.removeChild(selectorRoot);
-                              };
-
-                              // Renderizar o componente
-                              const root = ReactDOM.createRoot(selectorRoot);
-                              root.render(
-                                <ImageSourceSelector
-                                  onSelect={sourceType => {
-                                    handleClose();
-                                    handleSelectSource(sourceType);
-                                  }}
-                                  onClose={handleClose}
-                                />
-                              );
-                            }}
-                          >
+                          <label className="image-upload-button">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                               <path d="M6.002 5.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z"/>
                               <path d="M2.002 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-12zm12 1a1 1 0 0 1 1 1v6.5l-3.777-1.947a.5.5 0 0 0-.577.093l-3.71 3.71-2.66-1.772a.5.5 0 0 0-.63.062L1.002 12V3a1 1 0 0 1 1-1h12z"/>
                             </svg>
                             Imagem Principal
-                          </button>
-
-                          <button
-                            className="image-upload-button"
-                            onClick={() => {
-                              // Função para processar a imagem com base na fonte selecionada
-                              const handleSelectSource = (sourceType) => {
-                                if (sourceType === 'camera') {
-                                  // Abrir câmera
-                                  const input = document.createElement('input');
-                                  input.type = 'file';
-                                  input.accept = 'image/*';
-                                  // Forçar o uso da câmera em dispositivos móveis
-                                  input.setAttribute('capture', 'environment');
-                                  // Adicionar atributos para garantir que a câmera seja aberta
-                                  input.setAttribute('data-capture', 'camera');
-                                  input.onchange = (e) => {
-                                    const file = e.target.files[0];
-                                    if (file) {
-                                      const reader = new FileReader();
-                                      reader.onload = (event) => {
-                                        const newImage = event.target.result;
-                                        const additionalImages = newItem.additionalImages || [];
-                                        setNewItem({
-                                          ...newItem,
-                                          additionalImages: [...additionalImages, newImage]
-                                        });
-                                      };
-                                      reader.readAsDataURL(file);
-                                    }
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onload = (event) => {
+                                    setNewItem({...newItem, image: event.target.result});
                                   };
-                                  input.click();
-                                } else {
-                                  // Abrir seletor de arquivo
-                                  const input = document.createElement('input');
-                                  input.type = 'file';
-                                  input.accept = 'image/*';
-                                  input.onchange = (e) => {
-                                    const file = e.target.files[0];
-                                    if (file) {
-                                      const reader = new FileReader();
-                                      reader.onload = (event) => {
-                                        const newImage = event.target.result;
-                                        const additionalImages = newItem.additionalImages || [];
-                                        setNewItem({
-                                          ...newItem,
-                                          additionalImages: [...additionalImages, newImage]
-                                        });
-                                      };
-                                      reader.readAsDataURL(file);
-                                    }
-                                  };
-                                  input.click();
+                                  reader.readAsDataURL(file);
                                 }
-                              };
+                              }}
+                              className="hidden-file-input"
+                            />
+                          </label>
 
-                              // Renderizar o componente ImageSourceSelector no DOM
-                              const selectorRoot = document.createElement('div');
-                              document.body.appendChild(selectorRoot);
-
-                              // Função para fechar o seletor
-                              const handleClose = () => {
-                                document.body.removeChild(selectorRoot);
-                              };
-
-                              // Renderizar o componente
-                              const root = ReactDOM.createRoot(selectorRoot);
-                              root.render(
-                                <ImageSourceSelector
-                                  onSelect={sourceType => {
-                                    handleClose();
-                                    handleSelectSource(sourceType);
-                                  }}
-                                  onClose={handleClose}
-                                />
-                              );
-                            }}
-                          >
+                          <label className="image-upload-button">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                               <path d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
                             </svg>
                             Adicionar Imagem
-                          </button>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  const reader = new FileReader();
+                                  reader.onload = (event) => {
+                                    const newImage = event.target.result;
+                                    const additionalImages = newItem.additionalImages || [];
+                                    setNewItem({
+                                      ...newItem,
+                                      additionalImages: [...additionalImages, newImage]
+                                    });
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                              className="hidden-file-input"
+                            />
+                          </label>
                         </div>
 
                         {/* Miniaturas das imagens adicionais */}
@@ -3337,139 +3230,6 @@ ${clientCPF}
                 Finalizar Venda
               </button>
 
-              {/* Clientes button - Movido para logo após o botão Finalizar Venda */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowClients(!showClients)}
-                  className={`btn btn-primary w-full px-6 py-3 rounded-lg text-lg font-bold flex items-center justify-center gap-2 ${
-                    showClients ? 'active' : ''
-                  }`}
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
-                  </svg>
-                  Clientes
-                  <svg
-                    className={`w-6 h-6 transform ${showClients ? 'rotate-180' : ''} transition-transform`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-
-                {/* Dropdown de clientes que aparece abaixo do botão */}
-                {showClients && (
-                  <div className="absolute z-50 left-0 right-0 mt-1 bg-white rounded-lg shadow-md p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold">Clientes</h3>
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="text"
-                          placeholder="Buscar cliente..."
-                          className="px-3 py-2 border rounded-lg"
-                          onChange={(e) => handleClientSearch(e.target.value)}
-                        />
-                        <button
-                          onClick={() => setShowAddClient(true)}
-                          className="p-2 bg-purple-100 rounded-full hover:bg-purple-200 text-purple-600"
-                          title="Adicionar Novo Cliente"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
-                      {filteredClients.map((client) => (
-                        <div key={client.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div
-                            className="flex-1 cursor-pointer hover:text-purple-600"
-                            onClick={() => {
-                              setSelectedClient(client);
-                              setShowClients(false);
-                            }}
-                          >
-                            <div className="font-medium">{client.name}</div>
-                            <div className="text-sm text-gray-600">
-                              {client.document}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditClient(client);
-                              }}
-                              className="p-2 text-blue-500 hover:text-blue-600"
-                              title="Editar Cliente"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
-                            </button>
-                            {client.whatsapp && (
-                              <a
-                                href={`tel:${client.whatsapp}`}
-                                className="p-2 text-green-500 hover:text-green-600 flex items-center"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleWhatsAppClick(client.whatsapp);
-                                  return false; // Impede o comportamento padrão do link
-                                }}
-                                title="Abrir WhatsApp"
-                              >
-                                <img
-                                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/767px-WhatsApp.svg.png"
-                                  alt="WhatsApp"
-                                  className="w-5 h-5"
-                                />
-                              </a>
-                            )}
-
-                            {client.email && (
-                              <a
-                                href={`mailto:${client.email}`}
-                                className="p-2 text-blue-500 hover:text-blue-600 flex items-center"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEmailClick(client.email);
-                                  return false; // Impede o comportamento padrão do link
-                                }}
-                                title="Enviar Email"
-                              >
-                                <img
-                                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Gmail_icon_%282020%29.svg/2560px-Gmail_icon_%282020%29.svg.png"
-                                  alt="Email"
-                                  className="w-5 h-5"
-                                />
-                              </a>
-                            )}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (window.confirm(`Deseja realmente excluir o cliente ${client.name}?`)) {
-                                  handleDeleteClient(client.id);
-                                }
-                              }}
-                              className="p-2 text-red-500 hover:text-red-600"
-                              title="Excluir Cliente"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
               {/* Relatório de Vendas button */}
               <button
                 onClick={() => {
@@ -3514,6 +3274,27 @@ ${clientCPF}
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Histórico de Vendas
+              </button>
+
+              {/* Clientes button */}
+              <button
+                onClick={() => setShowClients(!showClients)}
+                className={`btn btn-primary w-full px-6 py-3 rounded-lg text-lg font-bold flex items-center justify-center gap-2 ${
+                  showClients ? 'active' : ''
+                }`}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+                </svg>
+                Clientes
+                <svg
+                  className={`w-6 h-6 transform ${showClients ? 'rotate-180' : ''} transition-transform`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
 
               {/* Fornecedores button */}
@@ -3562,7 +3343,115 @@ ${clientCPF}
 
             </div>
 
-            {/* Clients Section - Removido e movido para dentro do botão Clientes */}
+            {/* Clients Section */}
+            {showClients && (
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Clientes</h3>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Buscar cliente..."
+                      className="px-3 py-2 border rounded-lg"
+                      onChange={(e) => handleClientSearch(e.target.value)}
+                    />
+                    <button
+                      onClick={() => setShowAddClient(true)}
+                      className="p-2 bg-purple-100 rounded-full hover:bg-purple-200 text-purple-600"
+                      title="Adicionar Novo Cliente"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {filteredClients.map((client) => (
+                    <div key={client.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div
+                        className="flex-1 cursor-pointer hover:text-purple-600"
+                        onClick={() => {
+                          setSelectedClient(client);
+                          setShowClients(false);
+                        }}
+                      >
+                        <div className="font-medium">{client.name}</div>
+                        <div className="text-sm text-gray-600">
+                          {client.document}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditClient(client);
+                          }}
+                          className="p-2 text-blue-500 hover:text-blue-600"
+                          title="Editar Cliente"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        {client.whatsapp && (
+                          <a
+                            href={`tel:${client.whatsapp}`}
+                            className="p-2 text-green-500 hover:text-green-600 flex items-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleWhatsAppClick(client.whatsapp);
+                              return false; // Impede o comportamento padrão do link
+                            }}
+                            title="Abrir WhatsApp"
+                          >
+                            <img
+                              src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/767px-WhatsApp.svg.png"
+                              alt="WhatsApp"
+                              className="w-5 h-5"
+                            />
+                          </a>
+                        )}
+
+                        {client.email && (
+                          <a
+                            href={`mailto:${client.email}`}
+                            className="p-2 text-blue-500 hover:text-blue-600 flex items-center"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEmailClick(client.email);
+                              return false; // Impede o comportamento padrão do link
+                            }}
+                            title="Enviar Email"
+                          >
+                            <img
+                              src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Gmail_icon_%282020%29.svg/2560px-Gmail_icon_%282020%29.svg.png"
+                              alt="Email"
+                              className="w-5 h-5"
+                            />
+                          </a>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (window.confirm(`Deseja realmente excluir o cliente ${client.name}?`)) {
+                              handleDeleteClient(client.id);
+                            }
+                          }}
+                          className="p-2 text-red-500 hover:text-red-600"
+                          title="Excluir Cliente"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Add Client Modal */}
             <div className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${showAddClient ? 'flex' : 'hidden'} items-center justify-center p-4`}>

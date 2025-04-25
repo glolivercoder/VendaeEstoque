@@ -1,0 +1,316 @@
+/* Estilos globais para o aplicativo */
+
+/* Importar os temas */
+@import '../themes/theme-green.css';
+@import '../themes/theme-blue.css';
+@import '../themes/theme-purple.css';
+
+/* Estilos base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Aplicar tema padrão (verde) */
+body {
+  font-family: 'Arial', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  transition: all 0.3s ease;
+}
+
+/* Aumentar tamanho das fontes e colocar em negrito */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2.2rem; }
+h3 { font-size: 1.9rem; }
+h4 { font-size: 1.6rem; }
+h5 { font-size: 1.4rem; }
+h6 { font-size: 1.2rem; }
+
+p, span, div, li, a, button, input, select, textarea {
+  font-size: 1.1rem;
+}
+
+/* Botões */
+.btn, button {
+  font-weight: 700;
+  font-size: 1.1rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+.btn-primary, .btn-success {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover, .btn-success:hover {
+  background-color: var(--secondary-color);
+}
+
+.btn-secondary {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.btn-secondary:hover {
+  opacity: 0.9;
+}
+
+.btn-danger {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+.btn-danger:hover {
+  opacity: 0.9;
+}
+
+/* Categorias com estilo igual aos botões principais */
+.category-item {
+  background-color: #FFFFFF;
+  color: var(--primary-color);
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  border: 2px solid var(--primary-color);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.category-item.selected, .category-item:hover {
+  background-color: var(--primary-color);
+  color: white;
+  transform: translateX(0);
+}
+
+/* Cards e Containers */
+.card, .container {
+  background-color: var(--card-background);
+  border-radius: 10px;
+  box-shadow: 0 4px 6px var(--shadow-color);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Inputs */
+input, select, textarea {
+  font-size: 1.1rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  background-color: #FFFFFF;
+  color: #333333;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+  outline: none;
+}
+
+/* Tabelas */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+  font-size: 1.1rem;
+}
+
+th {
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: 700;
+  text-align: left;
+  padding: 1rem;
+}
+
+td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color);
+  color: #000000;
+}
+
+tr:hover {
+  background-color: var(--category-background);
+}
+
+/* Garantir que os labels das abas sejam sempre pretos */
+.tab-label, .tab-content, details summary, details p, label, .description-text {
+  color: #000000 !important;
+  font-weight: 500;
+}
+
+/* Garantir alto contraste para descrições de itens */
+.item-description, p.text-sm, p.text-base, .product-description {
+  color: #000000 !important;
+  font-weight: 500 !important;
+}
+
+/* Garantir que os textos em detalhes e abas sejam sempre visíveis */
+details, summary, .tab-content, .tab-pane {
+  color: #000000 !important;
+  background-color: #FFFFFF;
+}
+
+/* Garantir que todos os labels sejam pretos */
+label, .block.text-sm.font-medium, .block.text-sm.font-medium.mb-1 {
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+/* Garantir que os labels no formulário de adição de item sejam pretos */
+.block.text-sm.font-medium.mb-1, .font-medium {
+  color: #000000 !important;
+}
+
+/* Garantir que os textos de categoria tenham a cor correta */
+.font-medium, .text-gray-600, .text-gray-700 {
+  color: #000000 !important;
+}
+
+/* Garantir que todos os cabeçalhos das abas sejam pretos */
+h1:not(button):not(.btn):not([class*="bg-"]),
+h2:not(button):not(.btn):not([class*="bg-"]),
+h3:not(button):not(.btn):not([class*="bg-"]),
+h4:not(button):not(.btn):not([class*="bg-"]),
+h5:not(button):not(.btn):not([class*="bg-"]),
+h6:not(button):not(.btn):not([class*="bg-"]),
+.text-xl:not(button):not(.btn):not([class*="bg-"]),
+.text-2xl:not(button):not(.btn):not([class*="bg-"]),
+.text-lg:not(button):not(.btn):not([class*="bg-"]),
+.font-semibold:not(button):not(.btn):not([class*="bg-"]),
+.font-bold:not(button):not(.btn):not([class*="bg-"]) {
+  color: #000000 !important;
+}
+
+/* Garantir que os cabeçalhos no console sejam pretos */
+.test-header h2, .test-page-header h1, .console-header h2, .console-title {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+/* Garantir que os cabeçalhos das abas sejam pretos */
+.tab-header, .tab-title, .tab-label, .tab-name, .tab-heading {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+/* Garantir que os cabeçalhos em modais e popups sejam pretos */
+.modal-header h2, .modal-header h3, .popup-header h2, .popup-header h3,
+.modal-title, .popup-title,
+.fixed h3:not(button):not(.btn):not([class*="bg-"]),
+.fixed h2:not(button):not(.btn):not([class*="bg-"]),
+.fixed .text-xl:not(button):not(.btn):not([class*="bg-"]),
+.fixed .font-semibold:not(button):not(.btn):not([class*="bg-"]) {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+/* Garantir que os botões de compartilhamento tenham a cor correta */
+.share-btn,
+.action-btn.share-btn,
+.share-btn span,
+.share-btn font,
+.share-btn * {
+  background-color: #2196F3 !important;
+  color: white !important;
+  font-weight: 500 !important;
+}
+
+/* Garantir que apenas os textos em branco que não estão em botões sejam convertidos para preto */
+.text-white:not(button):not(.btn):not(.btn-primary):not(.btn-secondary):not(.btn-success):not(.btn-danger):not(.run-all-btn):not(.clear-btn):not([class*="bg-"]),
+[class*="text-white"]:not(button):not(.btn):not(.btn-primary):not(.btn-secondary):not(.btn-success):not(.btn-danger):not(.run-all-btn):not(.clear-btn):not([class*="bg-"]) {
+  color: #000000 !important;
+}
+
+/* Garantir que os cabeçalhos das abas no console sejam pretos */
+.console-tab, .console-tab-header, .console-tab-title, .console-tab-label {
+  color: #000000 !important;
+  font-weight: 600;
+}
+
+/* Navegação */
+nav {
+  background-color: var(--primary-color);
+  padding: 1rem;
+  margin-bottom: 2rem;
+}
+
+nav a {
+  color: white;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+nav a:hover {
+  background-color: var(--secondary-color);
+}
+
+/* Tema escuro */
+.dark-mode {
+  color: var(--text-color);
+  background-color: var(--background-color);
+}
+
+/* Aplicar temas específicos */
+body.theme-green {
+  --primary-color: #2ECC71;
+  --secondary-color: #27AE60;
+  --accent-color: #1E9E56;
+  --text-color: #333333;
+  --background-color: #F8F9FA;
+  --card-background: #FFFFFF;
+  --border-color: #E0E0E0;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --category-background: #E8F5E9;
+  --category-text: #1E9E56;
+}
+
+body.theme-blue {
+  --primary-color: #4A7AFF;
+  --secondary-color: #3D6AE8;
+  --accent-color: #2C5BD9;
+  --text-color: #333333;
+  --background-color: #F8F9FA;
+  --card-background: #FFFFFF;
+  --border-color: #E0E0E0;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --category-background: #E3F2FD;
+  --category-text: #2C5BD9;
+}
+
+body.theme-purple {
+  --primary-color: #B15CFF;
+  --secondary-color: #9D4EE8;
+  --accent-color: #8A3FD1;
+  --text-color: #333333;
+  --background-color: #F8F9FA;
+  --card-background: #FFFFFF;
+  --border-color: #E0E0E0;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --category-background: #F3E5FF;
+  --category-text: #8A3FD1;
+}
+
+

@@ -304,46 +304,6 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
     };
   }, []);
 
-  // Efeito para inicializar o CEP de origem com o CEP do vendedor selecionado
-  useEffect(() => {
-    // Obter o CEP do vendedor para o CEP de origem
-    const vendorInfo = localStorage.getItem('selectedVendor');
-    if (vendorInfo) {
-      try {
-        const vendor = JSON.parse(vendorInfo);
-        if (vendor.cep) {
-          setZipCodeOrigin(vendor.cep.replace(/\D/g, ''));
-          console.log(`CEP do vendedor definido como origem: ${vendor.cep}`);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar vendedor selecionado:', error);
-      }
-    } else {
-      // Tentar obter o CEP do usuário atual (vendedor/administrador)
-      const currentUserInfo = localStorage.getItem('currentUser');
-      if (currentUserInfo) {
-        try {
-          const currentUser = JSON.parse(currentUserInfo);
-          if (currentUser.cep) {
-            setZipCodeOrigin(currentUser.cep.replace(/\D/g, ''));
-            console.log(`CEP do usuário atual definido como origem: ${currentUser.cep}`);
-          } else {
-            // CEP padrão para Salvador-BA
-            setZipCodeOrigin('40255310');
-            console.log('CEP padrão definido como origem: 40255-310');
-          }
-        } catch (error) {
-          console.error('Erro ao carregar usuário atual:', error);
-          setZipCodeOrigin('40255310');
-        }
-      } else {
-        // CEP padrão para Salvador-BA
-        setZipCodeOrigin('40255310');
-        console.log('CEP padrão definido como origem: 40255-310');
-      }
-    }
-  }, []);
-
   // Função para buscar transportadoras próximas usando a API do OpenStreetMap
   const findNearbyCarriers = async () => {
     if (!zipCodeOrigin) {

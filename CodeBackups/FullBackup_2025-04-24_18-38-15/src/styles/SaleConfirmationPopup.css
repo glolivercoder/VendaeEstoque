@@ -1,0 +1,457 @@
+/* Estilos para o Pop-up de Confirmação de Venda */
+
+.sale-confirmation-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.sale-confirmation-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 500px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: popup-appear 0.3s ease-out;
+}
+
+@keyframes popup-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.sale-confirmation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #2196F3;
+  color: white;
+}
+
+.sale-confirmation-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.sale-confirmation-content {
+  padding: 20px;
+}
+
+.sale-confirmation-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.success-icon {
+  width: 40px;
+  height: 40px;
+  background-color: #e3f2fd;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.success-icon svg {
+  width: 24px;
+  height: 24px;
+  color: #2196F3;
+}
+
+.sale-confirmation-title h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.sale-details {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.sale-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.sale-info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.sale-info-label {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 4px;
+}
+
+.sale-info-value {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.sale-info-section {
+  margin-bottom: 15px;
+}
+
+.sale-info-section:last-child {
+  margin-bottom: 0;
+}
+
+.sale-info-section h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #555;
+  margin: 0 0 8px 0;
+}
+
+.sale-info-section p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.sale-info-doc {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 4px;
+}
+
+.product-list {
+  margin-bottom: 10px;
+}
+
+.product-item {
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.product-item:last-child {
+  border-bottom: none;
+}
+
+.sale-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.sale-total span:first-child {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.sale-total span:last-child {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.sale-confirmation-actions {
+  padding: 15px 20px 20px;
+}
+
+.primary-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-weight: 500;
+}
+
+.action-icon {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 8px;
+}
+
+.receipt-btn {
+  background-color: #2196F3;
+  color: white;
+}
+
+.receipt-btn:hover {
+  background-color: #1976D2;
+}
+
+.freight-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.freight-btn:hover {
+  background-color: #388E3C;
+}
+
+.share-btn {
+  background-color: #2196F3;
+  color: white !important;
+  font-weight: 500;
+}
+
+.share-btn span,
+.share-btn font,
+.share-btn * {
+  color: white !important;
+  font-weight: 500 !important;
+}
+
+.share-btn:hover {
+  background-color: #1976D2;
+}
+
+.share-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 15px;
+  animation: fade-in 0.2s ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.share-option-btn {
+  flex: 1;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #f5f5f5;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.share-option-btn:hover {
+  background-color: #e8e8e8;
+  transform: translateY(-2px);
+}
+
+.share-icon {
+  width: 20px;
+  height: 20px;
+  margin-bottom: 5px;
+}
+
+.share-option-btn span {
+  font-size: 0.8rem;
+  color: #2196F3;
+  font-weight: 500;
+}
+
+.whatsapp-btn {
+  color: #25D366;
+}
+
+.whatsapp-btn:hover {
+  background-color: #e6f9ed;
+}
+
+.email-btn {
+  color: #D44638;
+}
+
+.email-btn:hover {
+  background-color: #fdf1f0;
+}
+
+.close-sale-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 6px;
+  color: #555;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.close-sale-btn:hover {
+  background-color: #e0e0e0;
+}
+
+/* Estilos para o formulário de contato */
+.contact-form-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+}
+
+.contact-form {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  animation: popup-appear 0.3s ease-out;
+}
+
+.contact-form h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.contact-form p {
+  margin: 0 0 15px 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #2196F3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cancel-btn {
+  padding: 8px 16px;
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 4px;
+  color: #555;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.cancel-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.save-btn {
+  padding: 8px 16px;
+  background-color: #2196F3;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.save-btn:hover {
+  background-color: #1976D2;
+}
+
+/* Responsividade */
+@media (max-width: 480px) {
+  .sale-confirmation-container {
+    max-width: 95%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .primary-actions {
+    flex-direction: column;
+  }
+
+  .share-options {
+    justify-content: center;
+  }
+
+  .share-option-btn {
+    min-width: 80px;
+  }
+}
