@@ -1,0 +1,337 @@
+.cart-button-container {
+  position: fixed;
+  top: 100px; /* Posicionado mais abaixo para evitar sobreposição com outros elementos */
+  right: 30px;
+  z-index: 9999; /* Aumentado para garantir que fique acima de outros elementos */
+  /* Ensure the cart button is always visible and on top of other elements */
+  pointer-events: auto !important; /* Garantir que os eventos de clique funcionem */
+}
+
+.cart-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #1976d2 !important; /* Blue circle */
+  color: white;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s, background-color 0.2s;
+  /* Adicionar borda branca para maior contraste */
+  border: 2px solid white;
+}
+
+.cart-button:hover {
+  background-color: #1565c0;
+  transform: scale(1.05);
+}
+
+.cart-icon {
+  width: 28px;
+  height: 28px;
+  color: white; /* White cart icon */
+  stroke-width: 2.5; /* Tornar o ícone mais grosso para melhor visibilidade */
+}
+
+.cart-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #f44336;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos para o popup do carrinho */
+.cart-popup {
+  position: absolute;
+  top: 55px;
+  right: 0;
+  width: 350px;
+  max-height: 500px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 9999; /* Aumentado para garantir que fique acima de outros elementos */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Responsividade para dispositivos móveis */
+@media (max-width: 480px) {
+  .cart-popup {
+    width: 300px;
+    right: -20px; /* Ajuste para dispositivos móveis */
+  }
+}
+
+.cart-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background-color: #1976d2;
+  color: white;
+}
+
+.cart-popup-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+}
+
+.cart-items-container {
+  padding: 15px;
+  overflow-y: auto;
+  max-height: 350px;
+}
+
+.empty-cart-message {
+  text-align: center;
+  color: #757575;
+  padding: 20px 0;
+}
+
+.cart-items-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.cart-item:last-child {
+  border-bottom: none;
+}
+
+.item-image {
+  width: 50px;
+  height: 50px;
+  margin-right: 10px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.item-details {
+  flex: 1;
+}
+
+.item-name {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 5px;
+}
+
+.item-price {
+  color: #1976d2;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+}
+
+.item-subtotal {
+  font-weight: 700;
+  color: #4caf50;
+}
+
+.item-actions {
+  display: flex;
+  align-items: center;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  margin-right: 15px;
+}
+
+.quantity-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #e0e0e0;
+  background-color: #f5f5f5;
+  color: #333;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.quantity-input {
+  width: 40px;
+  height: 28px;
+  border: 1px solid #e0e0e0;
+  text-align: center;
+  margin: 0 5px;
+  border-radius: 4px;
+}
+
+.remove-item-btn {
+  background: none;
+  border: none;
+  color: #f44336;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cart-summary {
+  padding: 15px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.total-price {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  font-size: 18px;
+  margin-bottom: 5px;
+}
+
+.items-count {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 14px;
+  color: #757575;
+}
+
+.cart-actions {
+  display: flex;
+  padding: 15px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.clear-cart-btn {
+  flex: 1;
+  padding: 10px;
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  margin-right: 10px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.finalize-btn {
+  flex: 1;
+  padding: 10px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* Estilos para o popup de pagamento */
+.payment-popup {
+  position: absolute;
+  top: 55px;
+  right: 0;
+  width: 350px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 9999; /* Aumentado para garantir que fique acima de outros elementos */
+  overflow: hidden;
+}
+
+.payment-popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background-color: #1976d2;
+  color: white;
+}
+
+.payment-popup-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.payment-methods {
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+}
+
+.payment-method-btn {
+  padding: 12px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.payment-method-btn.dinheiro {
+  background-color: #4caf50;
+  color: white;
+}
+
+.payment-method-btn.cartao {
+  background-color: #2196f3;
+  color: white;
+}
+
+.payment-method-btn.pix {
+  background-color: #9c27b0;
+  color: white;
+}
+
+.payment-method-btn.cancelar {
+  background-color: #f44336;
+  color: white;
+}
+
+.payment-method-btn:hover {
+  opacity: 0.9;
+}

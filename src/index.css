@@ -2,6 +2,119 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =========================
+   Vibrant Tech Dark Theme
+   ========================= */
+.dark {
+  --vtd-bg: #101c2c;
+  --vtd-bg-secondary: #16263d;
+  --vtd-card: #182a40;
+  --vtd-border: #00d9ff;
+  --vtd-primary: #00eaff;
+  --vtd-secondary: #00ffb8;
+  --vtd-accent: #ffb300;
+  --vtd-danger: #ff3c3c;
+  --vtd-success: #00ff8a;
+  --vtd-warning: #ffe600;
+  --vtd-text: #f2faff;
+  --vtd-text-muted: #79b8d1;
+  --vtd-orange: #ff9100;
+}
+
+.dark body {
+  background: var(--vtd-bg);
+  color: var(--vtd-text);
+}
+
+.dark .container, .dark .card {
+  background: var(--vtd-card) !important;
+  border: 2px solid var(--vtd-border) !important;
+  box-shadow: 0 0 16px var(--vtd-primary), 0 0 2px var(--vtd-secondary);
+}
+
+.dark .input-group input, .dark input, .dark textarea, .dark select {
+  background: var(--vtd-bg-secondary);
+  color: var(--vtd-text);
+  border: 1.5px solid var(--vtd-primary);
+  box-shadow: 0 0 8px var(--vtd-secondary) inset;
+}
+
+.dark .input-group input:focus, .dark input:focus, .dark textarea:focus, .dark select:focus {
+  border-color: var(--vtd-accent);
+  box-shadow: 0 0 0 2px var(--vtd-accent);
+}
+
+.dark .button-primary {
+  background: linear-gradient(90deg,var(--vtd-primary), var(--vtd-secondary));
+  color: #101c2c;
+  border: 2px solid var(--vtd-accent);
+  text-shadow: 0 0 6px var(--vtd-accent);
+  box-shadow: 0 0 8px var(--vtd-secondary);
+}
+
+.dark .button-primary:hover {
+  background: var(--vtd-orange);
+  color: #fff;
+  border-color: var(--vtd-primary);
+}
+
+.dark .button-secondary {
+  background: var(--vtd-bg-secondary);
+  color: var(--vtd-primary);
+  border: 1.5px solid var(--vtd-secondary);
+}
+
+.dark .button-secondary:hover {
+  background: var(--vtd-secondary);
+  color: #101c2c;
+}
+
+.dark label, .dark .input-group label {
+  color: var(--vtd-accent);
+}
+
+.dark .text-danger {
+  color: var(--vtd-danger);
+}
+
+.dark .text-success {
+  color: var(--vtd-success);
+}
+
+.dark .text-warning {
+  color: var(--vtd-warning);
+}
+
+.dark .border {
+  border-color: var(--vtd-border) !important;
+}
+
+.dark .shadow {
+  box-shadow: 0 0 8px var(--vtd-accent);
+}
+
+.dark .menu, .dark .dropdown, .dark .modal {
+  background: var(--vtd-bg-secondary) !important;
+  color: var(--vtd-text);
+  border: 1.5px solid var(--vtd-primary);
+}
+
+.dark .table, .dark table {
+  background: var(--vtd-bg-secondary);
+  color: var(--vtd-text);
+}
+
+.dark ::selection {
+  background: var(--vtd-accent);
+  color: #101c2c;
+}
+
+/* Neon border for focus */
+.dark :focus {
+  outline: 2px solid var(--vtd-accent) !important;
+  box-shadow: 0 0 6px var(--vtd-accent) !important;
+}
+
 /* Custom styles */
 .container {
   max-width: 1200px;
@@ -112,6 +225,39 @@
 /* Table styling */
 .table-container {
   overflow-x: auto;
+}
+
+/* Responsividade para mobile Samsung M52 (até 600px) */
+@media (max-width: 600px) {
+  .table, table {
+    width: 100% !important;
+    font-size: 1.06rem;
+    overflow-x: auto;
+    display: block;
+  }
+  .table th, .table td, table th, table td {
+    padding: 0.7rem 0.3rem !important;
+    font-size: 1.01rem;
+    word-break: break-word;
+  }
+  .table tr, table tr {
+    display: table-row;
+    width: 100%;
+  }
+  input, select, textarea {
+    width: 100% !important;
+    font-size: 1.05rem;
+    padding: 0.8rem 0.7rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  button, .btn {
+    width: 100%;
+    font-size: 1.1rem;
+    padding: 1rem 0.5rem;
+    border-radius: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
 }
 
 .table {

@@ -2665,7 +2665,7 @@ ${clientCPF}
           </div>
 
           {/* Main content */}
-          <div className="space-y-8">
+          <div className="space-y-8 bg-white dark:bg-[var(--vtd-bg)] text-gray-900 dark:text-[var(--vtd-text)]">
             {/* Add Item Section */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex justify-between items-center mb-4">

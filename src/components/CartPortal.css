@@ -1,0 +1,86 @@
+/* Estilos para o CartPortal */
+.cart-portal-container {
+  position: fixed !important;
+  z-index: 99999 !important;
+  pointer-events: auto !important;
+  display: block !important;
+}
+
+.cart-portal-button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 50% !important;
+  background-color: #1976d2 !important;
+  color: white !important;
+  border: 2px solid white !important;
+  cursor: pointer !important;
+  position: relative !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3) !important;
+}
+
+.cart-portal-button svg {
+  width: 28px !important;
+  height: 28px !important;
+  color: white !important;
+}
+
+.cart-portal-button span {
+  position: absolute !important;
+  top: -5px !important;
+  right: -5px !important;
+  background-color: #ff4081 !important;
+  color: white !important;
+  border-radius: 50% !important;
+  width: 22px !important;
+  height: 22px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid white !important;
+}
+
+.cart-portal-popup,
+.payment-portal-popup {
+  position: absolute !important;
+  top: 55px !important;
+  right: 0 !important;
+  width: 350px !important;
+  background-color: white !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  z-index: 99999 !important;
+  overflow: hidden !important;
+}
+
+/* Ajustes para dispositivos móveis */
+@media (max-width: 768px) {
+  .cart-portal-popup,
+  .payment-portal-popup {
+    width: 300px !important;
+    right: 0 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .cart-portal-popup,
+  .payment-portal-popup {
+    width: 280px !important;
+    right: 0 !important;
+  }
+  
+  .cart-portal-button {
+    width: 45px !important;
+    height: 45px !important;
+  }
+  
+  .cart-portal-button svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+}

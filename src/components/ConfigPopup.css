@@ -1,0 +1,173 @@
+/* Estilos específicos para o ConfigPopup */
+
+/* Ajustes para o popup de configuração */
+.popup-content {
+  max-width: 400px !important;
+}
+
+.popup-header h2 {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+}
+
+.popup-body h3 {
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  margin-bottom: 8px !important;
+  color: #333 !important;
+}
+
+/* Ajustes para os formulários */
+.form-group {
+  margin-bottom: 12px !important;
+}
+
+.form-group label {
+  font-size: 0.85rem !important;
+  display: block !important;
+  margin-bottom: 4px !important;
+  color: #333 !important;
+}
+
+.form-control {
+  width: 100% !important;
+  padding: 6px 8px !important;
+  font-size: 0.85rem !important;
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+}
+
+.form-helper {
+  margin-top: 2px !important;
+  margin-bottom: 0 !important;
+}
+
+.form-helper small {
+  font-size: 0.75rem !important;
+  color: #666 !important;
+}
+
+/* Ajustes para os botões de ação */
+.backup-actions {
+  display: flex !important;
+  gap: 8px !important;
+  margin-top: 12px !important;
+  margin-bottom: 12px !important;
+}
+
+.btn-backup, .btn-restore {
+  padding: 6px 10px !important;
+  font-size: 0.8rem !important;
+  border: none !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
+  flex: 1 !important;
+}
+
+.btn-backup {
+  background-color: #2196F3 !important;
+  color: white !important;
+}
+
+.btn-restore {
+  background-color: #4CAF50 !important;
+  color: white !important;
+}
+
+.btn-backup:hover {
+  background-color: #1976D2 !important;
+}
+
+.btn-restore:hover {
+  background-color: #388E3C !important;
+}
+
+/* Ajustes para os botões de rodapé */
+.form-actions {
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 8px !important;
+  padding: 12px 20px !important;
+  border-top: 1px solid #eee !important;
+}
+
+.btn-cancel, .btn-save {
+  padding: 6px 12px !important;
+  font-size: 0.85rem !important;
+  border: none !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
+}
+
+.btn-cancel {
+  background-color: #f0f0f0 !important;
+  color: #333 !important;
+}
+
+.btn-save {
+  background-color: #2196F3 !important;
+  color: white !important;
+}
+
+.btn-cancel:hover {
+  background-color: #e0e0e0 !important;
+}
+
+.btn-save:hover {
+  background-color: #1976D2 !important;
+}
+
+/* Ajustes para o checkbox */
+.form-group input[type="checkbox"] {
+  margin-right: 8px !important;
+}
+
+/* Ajustes para o botão de sistema de backup avançado */
+.text-blue-600 {
+  font-size: 0.75rem !important;
+  padding: 4px 8px !important;
+  background-color: #f0f7ff !important;
+  border-radius: 4px !important;
+  border: 1px solid #d0e3ff !important;
+}
+
+/* Ajustes para o título de outras configurações */
+hr {
+  margin: 12px 0 !important;
+  border: none !important;
+  border-top: 1px solid #eee !important;
+}
+
+/* Estilos para os botões de seleção de cores */
+.color-buttons {
+  display: flex !important;
+  gap: 8px !important;
+  margin-top: 8px !important;
+}
+
+.color-button {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 4px !important;
+  border: 1px solid #ddd !important;
+  cursor: pointer !important;
+}
+
+.color-button.green {
+  background-color: #4CAF50 !important;
+}
+
+.color-button.blue {
+  background-color: #2196F3 !important;
+}
+
+.color-button.purple {
+  background-color: #9C27B0 !important;
+}
+
+.color-button.selected {
+  border: 2px solid #333 !important;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1) !important;
+}

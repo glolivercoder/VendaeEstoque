@@ -421,6 +421,41 @@
   background-color: #7b1fa2;
 }
 
+/* Estilos para o botão de ícone (câmera) */
+.shipping-calculator .icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.shipping-calculator .icon-button:hover {
+  background-color: #e0e0e0;
+}
+
+.shipping-calculator .icon-button:active {
+  transform: scale(0.95);
+}
+
+.shipping-calculator .icon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shipping-calculator .input-with-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* Estilos para botões */
 .shipping-calculator .btn {
   display: inline-flex;

@@ -82,16 +82,45 @@ p, span, div, li, a, button, input, select, textarea {
 
 /* Categorias com estilo igual aos botões principais */
 .category-item {
-  background-color: #FFFFFF;
-  color: var(--primary-color);
+  background: var(--primary-color, #1976d2);
+  color: #fff;
   font-weight: 700;
   padding: 0.75rem 1rem;
-  border-radius: 6px;
+  border-radius: 10px;
   margin-bottom: 0.5rem;
-  border: 2px solid var(--primary-color);
+  border: 2.5px solid transparent;
   cursor: pointer;
-  transition: all 0.3s ease;
+  box-shadow: 0 4px 0 0 #181c23, 0 8px 24px 0 #0008;
+  transition: all 0.2s cubic-bezier(.4,2,.6,1);
+  position: relative;
+  text-shadow: 0 2px 6px #000b;
+  letter-spacing: 0.5px;
 }
+
+.category-item.selected, .category-item:hover {
+  background: var(--primary-color, #1976d2);
+  color: #fff;
+  border-color: var(--vtd-accent, #ffb300);
+  box-shadow: 0 6px 20px 0 var(--vtd-accent, #ffb300), 0 2px 8px 0 #000a;
+  text-shadow: 0 2px 12px #000b, 0 0 4px var(--vtd-accent, #ffb300);
+  transform: translateY(-2px) scale(1.04);
+}
+
+
+.category-item:active {
+  top: 2px;
+  box-shadow: 0 1.5px 0 0 #181c23, 0 2px 8px 0 #0006;
+}
+
+.category-item.selected, .category-item:hover {
+  background: var(--primary-color, #1976d2);
+  color: #fff;
+  border-color: var(--vtd-accent, #ffb300);
+  box-shadow: 0 6px 20px 0 var(--vtd-accent, #ffb300), 0 2px 8px 0 #000a;
+  text-shadow: 0 2px 12px #000b, 0 0 4px var(--vtd-accent, #ffb300);
+  transform: translateY(-2px) scale(1.04);
+}
+
 
 .category-item.selected, .category-item:hover {
   background-color: var(--primary-color);
@@ -153,6 +182,71 @@ tr:hover {
 }
 
 /* Garantir que os labels das abas sejam sempre pretos */
+
+/* Responsividade para mobile Samsung M52 (até 600px) */
+@media (max-width: 600px) {
+  body, html {
+    font-size: 16px;
+    padding: 0;
+    margin: 0;
+    overflow-x: hidden;
+  }
+  .container, .card {
+    width: 100% !important;
+    max-width: 100vw !important;
+    margin: 0 !important;
+    border-radius: 0.75rem !important;
+    padding: 1rem !important;
+    box-sizing: border-box;
+  }
+  .category-item {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    padding: 0.9rem 0.5rem;
+    border-radius: 0.75rem;
+  }
+  .main-content, .AppContent, .content {
+    padding: 0.5rem !important;
+  }
+  input, select, textarea {
+    width: 100% !important;
+    font-size: 1.05rem;
+    padding: 0.8rem 0.7rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  button, .btn {
+    width: 100%;
+    font-size: 1.1rem;
+    padding: 1rem 0.5rem;
+    border-radius: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  /* Modais */
+  .modal, .modal-content, .modal-dialog {
+    width: 96vw !important;
+    min-width: unset !important;
+    max-width: 98vw !important;
+    left: 2vw !important;
+    right: 2vw !important;
+    top: 6vh !important;
+    margin: 0 auto !important;
+    border-radius: 1rem !important;
+    padding: 1.2rem 0.5rem !important;
+    box-sizing: border-box;
+  }
+  .modal-header, .modal-footer {
+    padding: 0.5rem 0.2rem !important;
+  }
+  .modal-close, .close {
+    right: 0.7rem !important;
+    top: 0.7rem !important;
+  }
+}
+
 .tab-label, .tab-content, details summary, details p, label, .description-text {
   color: #000000 !important;
   font-weight: 500;

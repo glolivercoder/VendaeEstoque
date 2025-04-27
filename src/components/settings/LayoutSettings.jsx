@@ -1,16 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
+import FontAndButtonSettingsDropdown from './FontAndButtonSettingsDropdown';
 
 const LayoutSettings = () => {
   // Estado para armazenar as configurações de layout
   const [layoutConfig, setLayoutConfig] = useLocalStorage('layoutConfig', {
-    logoAlignment: 'left', // 'left' ou 'center'
-    logoHeight: 45, // altura em pixels
-    headerHeight: 80, // altura em pixels
-    headerColor: '#2c3e50', // Cor do cabeçalho
-    buttonColor: '#3498db', // Cor dos botões
-    buttonTextColor: '#ffffff', // Cor do texto dos botões
-    textColor: '#333333', // Cor do texto geral
+    logoAlignment: 'left',
+    logoHeight: 45,
+    headerHeight: 80,
+    headerColor: '#2c3e50',
+    buttonColor: '#3498db',
+    buttonTextColor: '#ffffff',
+    textColor: '#333333',
+  });
+
+  // Novo estado para fontes e botões
+  const [fontConfig, setFontConfig] = useLocalStorage('fontConfig', {
+    family: 'Roboto',
+    size: 16,
+    color: '#333333',
+  });
+  const [buttonConfig, setButtonConfig] = useLocalStorage('buttonConfig', {
+    primary: { color: '#3498db', fontSize: 14 },
+    secondary: { color: '#95a5a6', fontSize: 14 },
+    success: { color: '#27ae60', fontSize: 14 },
+    warning: { color: '#f1c40f', fontSize: 14 },
+    danger: { color: '#e74c3c', fontSize: 14 },
   });
 
   // Estado para o upload de logo
@@ -61,6 +76,15 @@ const LayoutSettings = () => {
       document.documentElement.style.setProperty('--primary-color', layoutConfig.buttonColor);
       document.documentElement.style.setProperty('--button-text', layoutConfig.buttonTextColor);
       document.documentElement.style.setProperty('--text-color', layoutConfig.textColor);
+      // Fontes globais
+      document.documentElement.style.setProperty('--app-font-family', fontConfig.family);
+      document.documentElement.style.setProperty('--app-font-size', fontConfig.size + 'px');
+      document.documentElement.style.setProperty('--app-font-color', fontConfig.color);
+      // Botões globais
+      Object.entries(buttonConfig).forEach(([key, val]) => {
+        document.documentElement.style.setProperty(`--btn-${key}-color`, val.color);
+        document.documentElement.style.setProperty(`--btn-${key}-font-size`, val.fontSize + 'px');
+      });
 
       // Aplicar altura do cabeçalho - corrigido seletor para garantir que funcione
       const header = document.querySelector('div[class*="bg-[#2c3e50]"]');
@@ -110,13 +134,29 @@ const LayoutSettings = () => {
       buttonTextColor: '#ffffff',
       textColor: '#333333',
     };
-
     setLayoutConfig(defaultSettings);
+    setFontConfig({ family: 'Roboto', size: 16, color: '#333333' });
+    setButtonConfig({
+      primary: { color: '#3498db', fontSize: 14 },
+      secondary: { color: '#95a5a6', fontSize: 14 },
+      success: { color: '#27ae60', fontSize: 14 },
+      warning: { color: '#f1c40f', fontSize: 14 },
+      danger: { color: '#e74c3c', fontSize: 14 },
+    });
     alert('Configurações resetadas para o padrão!');
   };
 
   return (
     <div className="p-3 bg-white rounded-lg shadow max-h-[500px] overflow-y-auto text-sm">
+      {/* Dropdowns para fontes e botões */}
+      <div className="mb-4">
+        <FontAndButtonSettingsDropdown
+          fontConfig={fontConfig}
+          setFontConfig={setFontConfig}
+          buttonConfig={buttonConfig}
+          setButtonConfig={setButtonConfig}
+        />
+      </div>
       <h1 className="text-lg font-bold mb-2">Configurações de Layout</h1>
 
       {/* Seção de Logo */}
@@ -130,7 +170,7 @@ const LayoutSettings = () => {
               type="file"
               accept="image/*"
               onChange={handleLogoUpload}
-              className="w-full p-1 border rounded mb-1 text-xs"
+              className="w-full p-1 border rounded mb-1 text-xs min-h-[30px] min-w-[30px]"
             />
             <button
               onClick={handleSaveLogo}
@@ -160,7 +200,7 @@ const LayoutSettings = () => {
                 value="left"
                 checked={layoutConfig.logoAlignment === 'left'}
                 onChange={() => updateConfig('logoAlignment', 'left')}
-                className="mr-1 h-3 w-3"
+                className="mr-1 h-[30px] w-[30px]"
               />
               <span className="text-xs">Esquerda</span>
             </label>
@@ -171,7 +211,7 @@ const LayoutSettings = () => {
                 value="center"
                 checked={layoutConfig.logoAlignment === 'center'}
                 onChange={() => updateConfig('logoAlignment', 'center')}
-                className="mr-1 h-3 w-3"
+                className="mr-1 h-[30px] w-[30px]"
               />
               <span className="text-xs">Centro</span>
             </label>
@@ -191,7 +231,7 @@ const LayoutSettings = () => {
             step="5"
             value={layoutConfig.logoHeight}
             onChange={(e) => updateConfig('logoHeight', parseInt(e.target.value))}
-            className="w-full h-4"
+            className="w-full h-[30px]"
           />
         </div>
       </div>
@@ -213,7 +253,7 @@ const LayoutSettings = () => {
             step="5"
             value={layoutConfig.headerHeight}
             onChange={(e) => updateConfig('headerHeight', parseInt(e.target.value))}
-            className="w-full h-4"
+            className="w-full h-[30px]"
           />
         </div>
 
@@ -225,13 +265,13 @@ const LayoutSettings = () => {
               type="color"
               value={layoutConfig.headerColor}
               onChange={(e) => updateConfig('headerColor', e.target.value)}
-              className="w-6 h-6 border-0"
+              className="w-[48px] h-[48px] border-0"
             />
             <input
               type="text"
               value={layoutConfig.headerColor}
               onChange={(e) => updateConfig('headerColor', e.target.value)}
-              className="w-20 p-1 text-xs border rounded"
+              className="w-20 p-1 text-xs border rounded min-h-[30px] min-w-[30px]"
             />
           </div>
         </div>
@@ -249,13 +289,13 @@ const LayoutSettings = () => {
               type="color"
               value={layoutConfig.buttonColor}
               onChange={(e) => updateConfig('buttonColor', e.target.value)}
-              className="w-6 h-6 border-0"
+              className="w-[48px] h-[48px] border-0"
             />
             <input
               type="text"
               value={layoutConfig.buttonColor}
               onChange={(e) => updateConfig('buttonColor', e.target.value)}
-              className="w-20 p-1 text-xs border rounded"
+              className="w-20 p-1 text-xs border rounded min-h-[30px] min-w-[30px]"
             />
           </div>
         </div>
@@ -268,13 +308,13 @@ const LayoutSettings = () => {
               type="color"
               value={layoutConfig.buttonTextColor}
               onChange={(e) => updateConfig('buttonTextColor', e.target.value)}
-              className="w-6 h-6 border-0"
+              className="w-[48px] h-[48px] border-0"
             />
             <input
               type="text"
               value={layoutConfig.buttonTextColor}
               onChange={(e) => updateConfig('buttonTextColor', e.target.value)}
-              className="w-20 p-1 text-xs border rounded"
+              className="w-20 p-1 text-xs border rounded min-h-[30px] min-w-[30px]"
             />
           </div>
         </div>
@@ -287,13 +327,13 @@ const LayoutSettings = () => {
               type="color"
               value={layoutConfig.textColor}
               onChange={(e) => updateConfig('textColor', e.target.value)}
-              className="w-6 h-6 border-0"
+              className="w-[48px] h-[48px] border-0"
             />
             <input
               type="text"
               value={layoutConfig.textColor}
               onChange={(e) => updateConfig('textColor', e.target.value)}
-              className="w-20 p-1 text-xs border rounded"
+              className="w-20 p-1 text-xs border rounded min-h-[30px] min-w-[30px]"
             />
           </div>
         </div>

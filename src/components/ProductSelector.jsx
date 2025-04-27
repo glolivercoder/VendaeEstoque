@@ -97,13 +97,13 @@ const ProductSelector = ({ onClose, onSelectForPDV }) => {
   const selectedCount = Object.values(selectedProducts).filter(Boolean).length;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-xl font-semibold">Selecionar Produtos</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-[var(--vtd-card)] rounded-lg shadow-xl border dark:border-[var(--vtd-border)] w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-[var(--vtd-border)]">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-[var(--vtd-text)]">Selecionar Produtos</h2>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 hover:text-gray-700 dark:text-[var(--vtd-accent)] dark:hover:text-[var(--vtd-primary)]"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -111,13 +111,13 @@ const ProductSelector = ({ onClose, onSelectForPDV }) => {
           </button>
         </div>
 
-        <div className="p-4 border-b">
+        <div className="p-4 border-b border-gray-200 dark:border-[var(--vtd-border)]">
           <div className="flex flex-wrap gap-3 mb-4">
             <div className="flex-1">
               <input
                 type="text"
                 placeholder="Buscar produtos..."
-                className="w-full px-3 py-2 border rounded-md"
+                className="w-full px-3 py-2 border rounded-md bg-white text-gray-900 focus:border-blue-500 dark:bg-[var(--vtd-bg-secondary)] dark:text-[var(--vtd-text)] dark:border-[var(--vtd-primary)] dark:focus:border-[var(--vtd-accent)]"
                 value={searchQuery}
                 onChange={handleSearch}
               />
@@ -125,13 +125,13 @@ const ProductSelector = ({ onClose, onSelectForPDV }) => {
             <div className="flex gap-2">
               <button
                 onClick={handleSelectAll}
-                className="px-3 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                className="px-3 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 dark:bg-[var(--vtd-primary)] dark:text-[#101c2c] dark:hover:bg-[var(--vtd-accent)] dark:hover:text-white font-bold shadow-md"
               >
                 Selecionar Todos
               </button>
               <button
                 onClick={handleDeselectAll}
-                className="px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                className="px-3 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 dark:bg-[var(--vtd-bg-secondary)] dark:text-[var(--vtd-primary)] dark:hover:bg-[var(--vtd-secondary)] dark:hover:text-[#101c2c] font-bold"
               >
                 Limpar Seleção
               </button>
@@ -143,10 +143,10 @@ const ProductSelector = ({ onClose, onSelectForPDV }) => {
               <button
                 key={category}
                 onClick={() => handleCategoryChange(category)}
-                className={`px-3 py-1 rounded-full text-sm ${
+                className={`px-3 py-1 rounded-full text-sm font-semibold transition-colors border dark:border-[var(--vtd-border)] ${
                   selectedCategory === category
-                    ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-blue-600 text-white dark:bg-[var(--vtd-accent)] dark:text-[#101c2c] border-blue-700 dark:border-[var(--vtd-accent)]'
+                    : 'bg-gray-100 text-gray-700 hover:bg-blue-100 dark:bg-[var(--vtd-bg-secondary)] dark:text-[var(--vtd-text-muted)] dark:hover:bg-[var(--vtd-primary)] dark:hover:text-[#101c2c]'
                 }`}
               >
                 {category}
@@ -155,13 +155,13 @@ const ProductSelector = ({ onClose, onSelectForPDV }) => {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4 bg-white dark:bg-[var(--vtd-bg)]">
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-gray-500 dark:text-[var(--vtd-text-muted)]">
               Nenhum produto encontrado.
             </div>
           ) : (
@@ -169,8 +169,10 @@ const ProductSelector = ({ onClose, onSelectForPDV }) => {
               {filteredProducts.map((product) => (
                 <div
                   key={product.id}
-                  className={`border rounded-lg p-3 cursor-pointer transition-colors ${
-                    selectedProducts[product.id] ? 'border-primary bg-primary bg-opacity-5' : 'hover:border-gray-300'
+                  className={`border rounded-lg p-3 cursor-pointer transition-colors shadow-md dark:bg-[var(--vtd-card)] dark:border-[var(--vtd-border)] dark:hover:border-[var(--vtd-accent)] ${
+                    selectedProducts[product.id]
+                      ? 'border-blue-600 bg-blue-50 dark:border-[var(--vtd-accent)] dark:bg-[var(--vtd-accent)]/10'
+                      : 'hover:border-blue-400 dark:hover:border-[var(--vtd-primary)]'
                   }`}
                   onClick={() => toggleProductSelection(product.id)}
                 >

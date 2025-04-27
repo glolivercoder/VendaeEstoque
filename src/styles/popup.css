@@ -1,0 +1,92 @@
+/* Estilos para os popups do sistema */
+
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.popup-content {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 500px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: popup-appear 0.3s ease-out;
+}
+
+@keyframes popup-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: var(--popup-header-bg, var(--primary-color, #2196F3));
+  color: var(--popup-header-text, white);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.popup-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--popup-header-text, white);
+}
+
+.popup-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--popup-header-text, white);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: var(--popup-header-text, white);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.popup-body {
+  padding: 20px;
+  overflow-y: auto;
+  max-height: 70vh;
+}
+
+/* Responsividade */
+@media (max-width: 480px) {
+  .popup-content {
+    max-width: 95%;
+    max-height: 90vh;
+  }
+}

@@ -8,11 +8,9 @@ import TrackingPanel from "./TrackingPanel";
 import ShippingLabelGenerator from "./ShippingLabelGenerator";
 import CarrierConfigPanel from "./CarrierConfigPanel";
 import MagicWandScanButton from "./MagicWandScanButton";
-import GoogleMapsAgencyFinder from "./GoogleMapsAgencyFinder";
-import HereMapsAgencyFinder from "./HereMapsAgencyFinder";
-import MapApiSelector from "./MapApiSelector";
 import { searchClients, getLastClientSale, getSaleItems, getProducts } from "../services/database";
 import "../styles/ShippingCalculator.css";
+import "../styles/icon-button.css";
 
 // Ícone de carregamento
 const Loader2 = () => (
@@ -77,11 +75,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
   // Estados para o pop-up de resultados
   const [showResultsPopup, setShowResultsPopup] = useState(false);
 
-  // Estados para o mapa e localização de transportadoras
-  const [showMapApiSelector, setShowMapApiSelector] = useState(false);
-  const [showGoogleMapsAgencyFinder, setShowGoogleMapsAgencyFinder] = useState(false);
-  const [showHereMapsAgencyFinder, setShowHereMapsAgencyFinder] = useState(false);
-  const [selectedAgency, setSelectedAgency] = useState(null);
+  // Estados para o mapa e localização de transportadoras (temporariamente desativados)
   const [isExportingToPDV, setIsExportingToPDV] = useState(false);
 
   // Estado para armazenar os dados recebidos de outros componentes
@@ -314,50 +308,22 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
     }
   }, []);
 
-  // Função para abrir o buscador de agências de transportadoras
+  // Função para abrir o buscador de agências de transportadoras (temporariamente desativada)
   const openAgencyFinder = () => {
-    if (!zipCodeOrigin) {
-      toast({
-        title: "CEP de origem necessário",
-        description: "Informe o CEP de origem para buscar transportadoras próximas.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Abrir o seletor de API de mapas
-    setShowMapApiSelector(true);
+    toast({
+      title: "Funcionalidade temporariamente desativada",
+      description: "A busca de transportadoras próximas está temporariamente desativada.",
+    });
   };
 
-  // Efeito para adicionar event listeners para os eventos personalizados
+  // Efeito para adicionar event listeners para os eventos personalizados (temporariamente desativado)
   useEffect(() => {
-    const handleOpenGoogleMapsAgencyFinder = (event) => {
-      setShowGoogleMapsAgencyFinder(true);
-    };
-
-    const handleOpenHereMapsAgencyFinder = (event) => {
-      setShowHereMapsAgencyFinder(true);
-    };
-
-    window.addEventListener('openGoogleMapsAgencyFinder', handleOpenGoogleMapsAgencyFinder);
-    window.addEventListener('openHereMapsAgencyFinder', handleOpenHereMapsAgencyFinder);
-
-    return () => {
-      window.removeEventListener('openGoogleMapsAgencyFinder', handleOpenGoogleMapsAgencyFinder);
-      window.removeEventListener('openHereMapsAgencyFinder', handleOpenHereMapsAgencyFinder);
-    };
+    // Event listeners removidos temporariamente
   }, []);
 
-  // Função para lidar com a seleção de uma agência
+  // Função para lidar com a seleção de uma agência (temporariamente desativada)
   const handleSelectAgency = (agency) => {
-    setSelectedAgency(agency);
-    console.log("Agência selecionada:", agency);
-
-    // Exibir mensagem de sucesso
-    toast({
-      title: "Agência selecionada",
-      description: `${agency.name} foi selecionada com sucesso.`,
-    });
+    // Função desativada temporariamente
   };
 
   // Função auxiliar para preencher os dados do produto
@@ -484,8 +450,54 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
     }, 2000);
   };
 
+  // Função para lidar com o escaneamento de código de barras
+  const handleScanComplete = (barcode) => {
+    setSku(barcode);
+    setIsScanning(false);
+
+    // Buscar informações do produto pelo código de barras
+    fetchProductBySku(barcode)
+      .then(product => {
+        if (product) {
+          fillProductData(product);
+        } else {
+          toast({
+            title: "Produto não encontrado",
+            description: `Nenhum produto encontrado com o código ${barcode}.`,
+            variant: "destructive",
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Erro ao buscar produto:', error);
+        toast({
+          title: "Erro",
+          description: "Ocorreu um erro ao buscar o produto. Tente novamente.",
+          variant: "destructive",
+        });
+      });
+  };
+
+  // Função para lidar com erros de escaneamento
+  const handleScanError = (error) => {
+    console.error('Erro ao escanear código de barras:', error);
+    setIsScanning(false);
+    toast({
+      title: "Erro",
+      description: "Ocorreu um erro ao escanear o código de barras. Tente novamente.",
+      variant: "destructive",
+    });
+  };
+
   return (
     <div className="shipping-calculator">
+      {isScanning && (
+        <ProductScanner
+          onScanComplete={handleScanComplete}
+          onScanError={handleScanError}
+          onClose={() => setIsScanning(false)}
+        />
+      )}
       <div className="tabs">
         <button
           className={`tab ${activeTab === 0 ? "active" : ""}`}
@@ -717,32 +729,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
         </div>
       )}
 
-      {/* Seletor de API de mapas */}
-      {showMapApiSelector && (
-        <MapApiSelector
-          originCEP={zipCodeOrigin}
-          onSelectAgency={handleSelectAgency}
-          onClose={() => setShowMapApiSelector(false)}
-        />
-      )}
-
-      {/* Componente de busca de agências usando Google Maps */}
-      {showGoogleMapsAgencyFinder && (
-        <GoogleMapsAgencyFinder
-          originCEP={zipCodeOrigin}
-          onSelectAgency={handleSelectAgency}
-          onClose={() => setShowGoogleMapsAgencyFinder(false)}
-        />
-      )}
-
-      {/* Componente de busca de agências usando HERE Maps */}
-      {showHereMapsAgencyFinder && (
-        <HereMapsAgencyFinder
-          originCEP={zipCodeOrigin}
-          onSelectAgency={handleSelectAgency}
-          onClose={() => setShowHereMapsAgencyFinder(false)}
-        />
-      )}
+      {/* Componentes de busca de agências temporariamente removidos para testes */}
 
       {/* Botões de exportação */}
       <div className="export-buttons-container">
