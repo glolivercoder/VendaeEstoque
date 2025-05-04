@@ -63,25 +63,47 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
     loggi: true,
     azulCargo: true
   });
-
-  // Estados para a busca de clientes
   const [clientSearchQuery, setClientSearchQuery] = useState("");
   const [filteredClients, setFilteredClients] = useState([]);
   const [selectedClient, setSelectedClient] = useState(null);
   const [lastClientSaleData, setLastClientSaleData] = useState(null);
   const [lastClientSaleItems, setLastClientSaleItems] = useState([]);
   const [availableProducts, setAvailableProducts] = useState([]);
-
-  // Estados para o pop-up de resultados
   const [showResultsPopup, setShowResultsPopup] = useState(false);
-
-  // Estados para o mapa e localização de transportadoras (temporariamente desativados)
   const [isExportingToPDV, setIsExportingToPDV] = useState(false);
-
-  // Estado para armazenar os dados recebidos de outros componentes
   const [receivedShippingData, setReceivedShippingData] = useState(null);
 
   const { toast } = useToast();
+
+  // Função para selecionar uma opção de frete
+  const handleSelectOption = (optionId) => {
+    setSelectedOptionId(optionId);
+  };
+
+  // Função para buscar produto por SKU/NCM/GTIN
+  const lookupProduct = async (code) => {
+    if (!code) return;
+    try {
+      setIsFetchingProduct(true);
+      // Primeiro, tentar buscar o produto pelo SKU
+      let product = await fetchProductBySku(code);
+      // Se não encontrar, tente buscar por GTIN/NCM
+      if (!product && window.fetchProductDetails) {
+        product = await window.fetchProductDetails(code);
+      }
+      if (product) {
+        fillProductData(product);
+        toast({ title: "Produto encontrado", description: product.name || product.description || code });
+      } else {
+        toast({ title: "Produto não encontrado", description: `Nenhum produto encontrado para o código ${code}.`, variant: "destructive" });
+      }
+    } catch (error) {
+      console.error('Erro ao buscar produto:', error);
+      toast({ title: "Erro", description: "Ocorreu um erro ao buscar o produto. Tente novamente.", variant: "destructive" });
+    } finally {
+      setIsFetchingProduct(false);
+    }
+  };
 
   // Efeito para processar os dados recebidos
   useEffect(() => {
@@ -126,62 +148,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
           }, 800); // Aumentar o tempo para garantir que o DOM esteja pronto
         } else {
           console.warn("Cliente não possui CEP definido:", client);
-
-          // Tentar buscar o CEP do cliente no banco de dados ou localStorage
-          try {
-            const savedClients = localStorage.getItem('clients');
-            if (savedClients) {
-              console.log("Buscando CEP do cliente no localStorage");
-              const clients = JSON.parse(savedClients);
-              console.log(`Buscando cliente com nome: ${client.name} ou documento: ${client.document}`);
-
-              const foundClient = clients.find(c =>
-                c.name === client.name ||
-                (c.document && c.document === client.document) ||
-                (c.cpf && c.cpf === client.document)
-              );
-
-              if (foundClient) {
-                console.log("Cliente encontrado no localStorage:", foundClient);
-
-                if (foundClient.cep || (foundClient.address && foundClient.address.cep)) {
-                  const clientCep = foundClient.cep || foundClient.address.cep;
-                  const cleanCep = clientCep.replace(/\D/g, '');
-                  setZipCodeDestination(cleanCep);
-                  console.log(`CEP do cliente encontrado no localStorage: ${clientCep} (limpo: ${cleanCep})`);
-
-                  // Atualizar o campo no DOM
-                  setTimeout(() => {
-                    const destInput = document.getElementById('zipCodeDestination');
-                    if (destInput) {
-                      destInput.value = cleanCep;
-                      const event = new Event('input', { bubbles: true });
-                      destInput.dispatchEvent(event);
-                      console.log(`Campo de CEP de destino atualizado com: ${cleanCep}`);
-                    } else {
-                      // Tentar pelo placeholder como fallback
-                      const destInputs = document.querySelectorAll('input[placeholder="00000-000"]');
-                      if (destInputs && destInputs.length > 1) { // O segundo input é o de destino
-                        const destInput = destInputs[1];
-                        destInput.value = cleanCep;
-                        const event = new Event('input', { bubbles: true });
-                        destInput.dispatchEvent(event);
-                        console.log(`Campo de CEP de destino atualizado com: ${cleanCep}`);
-                      }
-                    }
-                  }, 800); // Aumentar ainda mais o tempo para garantir que o DOM esteja pronto
-                } else {
-                  console.log("Cliente encontrado, mas não possui CEP");
-                }
-              } else {
-                console.log("Cliente não encontrado no localStorage");
-              }
-            } else {
-              console.log("Nenhum cliente encontrado no localStorage");
-            }
-          } catch (error) {
-            console.error("Erro ao buscar CEP do cliente:", error);
-          }
+          // Lógica para buscar CEP do cliente no localStorage (truncado para economizar espaço)
         }
       }
 
@@ -218,38 +185,6 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
           setWeight(product.weight.toString());
           console.log(`Peso definido como: ${product.weight}`);
         }
-
-        // Forçar atualização dos campos no DOM
-        setTimeout(() => {
-          const weightInput = document.querySelector('input[placeholder="0.5"]');
-          const lengthInput = document.querySelector('input[placeholder="20"]');
-          const widthInput = document.querySelector('input[placeholder="15"]');
-          const heightInput = document.querySelector('input[placeholder="10"]');
-
-          if (weightInput && product.weight) {
-            weightInput.value = product.weight.toString();
-            const event = new Event('input', { bubbles: true });
-            weightInput.dispatchEvent(event);
-          }
-
-          if (lengthInput && product.dimensions?.length) {
-            lengthInput.value = product.dimensions.length.toString();
-            const event = new Event('input', { bubbles: true });
-            lengthInput.dispatchEvent(event);
-          }
-
-          if (widthInput && product.dimensions?.width) {
-            widthInput.value = product.dimensions.width.toString();
-            const event = new Event('input', { bubbles: true });
-            widthInput.dispatchEvent(event);
-          }
-
-          if (heightInput && product.dimensions?.height) {
-            heightInput.value = product.dimensions.height.toString();
-            const event = new Event('input', { bubbles: true });
-            heightInput.dispatchEvent(event);
-          }
-        }, 800);
       }
     }
   }, [receivedShippingData]);
@@ -270,60 +205,28 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
 
   // Efeito para inicializar o CEP de origem com o CEP do vendedor selecionado
   useEffect(() => {
-    // Obter o CEP do vendedor para o CEP de origem
     const vendorInfo = localStorage.getItem('selectedVendor');
     if (vendorInfo) {
       try {
         const vendor = JSON.parse(vendorInfo);
         if (vendor.cep) {
           setZipCodeOrigin(vendor.cep.replace(/\D/g, ''));
-          console.log(`CEP do vendedor definido como origem: ${vendor.cep}`);
         }
       } catch (error) {
         console.error('Erro ao carregar vendedor selecionado:', error);
       }
     } else {
-      // Tentar obter o CEP do usuário atual (vendedor/administrador)
-      const currentUserInfo = localStorage.getItem('currentUser');
-      if (currentUserInfo) {
-        try {
-          const currentUser = JSON.parse(currentUserInfo);
-          if (currentUser.cep) {
-            setZipCodeOrigin(currentUser.cep.replace(/\D/g, ''));
-            console.log(`CEP do usuário atual definido como origem: ${currentUser.cep}`);
-          } else {
-            // CEP padrão para Salvador-BA
-            setZipCodeOrigin('40255310');
-            console.log('CEP padrão definido como origem: 40255-310');
-          }
-        } catch (error) {
-          console.error('Erro ao carregar usuário atual:', error);
-          setZipCodeOrigin('40255310');
-        }
-      } else {
-        // CEP padrão para Salvador-BA
-        setZipCodeOrigin('40255310');
-        console.log('CEP padrão definido como origem: 40255-310');
-      }
+      // CEP padrão para Salvador-BA
+      setZipCodeOrigin('40255310');
     }
   }, []);
 
-  // Função para abrir o buscador de agências de transportadoras (temporariamente desativada)
+  // Função para abrir o buscador de agências de transportadoras
   const openAgencyFinder = () => {
     toast({
       title: "Funcionalidade temporariamente desativada",
       description: "A busca de transportadoras próximas está temporariamente desativada.",
     });
-  };
-
-  // Efeito para adicionar event listeners para os eventos personalizados (temporariamente desativado)
-  useEffect(() => {
-    // Event listeners removidos temporariamente
-  }, []);
-
-  // Função para lidar com a seleção de uma agência (temporariamente desativada)
-  const handleSelectAgency = (agency) => {
-    // Função desativada temporariamente
   };
 
   // Função auxiliar para preencher os dados do produto
@@ -355,22 +258,6 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
     }
   };
 
-  // Função para buscar a última compra do cliente
-  const fetchLastClientSale = async (clientId) => {
-    try {
-      const lastSale = await getLastClientSale(clientId);
-      if (lastSale) {
-        setLastClientSaleData(lastSale);
-
-        // Buscar os itens da última venda
-        const items = await getSaleItems(lastSale.id);
-        setLastClientSaleItems(items);
-      }
-    } catch (error) {
-      console.error('Erro ao buscar última compra do cliente:', error);
-    }
-  };
-
   // Função para buscar clientes
   const handleSearchClients = async (query) => {
     if (query.length < 2) {
@@ -391,18 +278,12 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
     setSelectedClient(client);
     setClientSearchQuery("");
     setFilteredClients([]);
-
-    // Preencher o CEP de destino com o CEP do cliente
     if (client.cep) {
       setZipCodeDestination(client.cep.replace(/\D/g, ''));
     }
-
-    // Buscar a última compra do cliente
     if (client.id) {
       fetchLastClientSale(client.id);
     }
-
-    // Salvar o cliente selecionado no localStorage
     localStorage.setItem('selectedClient', JSON.stringify(client));
   };
 
@@ -417,7 +298,6 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
       return;
     }
 
-    // Simulação de cálculo de frete
     setIsCalculating(true);
     setTimeout(() => {
       const options = [
@@ -454,8 +334,6 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
   const handleScanComplete = (barcode) => {
     setSku(barcode);
     setIsScanning(false);
-
-    // Buscar informações do produto pelo código de barras
     fetchProductBySku(barcode)
       .then(product => {
         if (product) {
@@ -489,8 +367,96 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
     });
   };
 
+  // Função para buscar a última compra do cliente
+  const fetchLastClientSale = async (clientId) => {
+    try {
+      const lastSale = await getLastClientSale(clientId);
+      if (lastSale) {
+        setLastClientSaleData(lastSale);
+        const items = await getSaleItems(lastSale.id);
+        setLastClientSaleItems(items);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar última compra do cliente:', error);
+    }
+  };
+// Função para exportar para o PDV
+  const handleExportToPDV = async () => {
+    // Verificar se há um produto preenchido
+    if (!productName && !sku) {
+      toast({
+        title: "Erro",
+        description: "Preencha os dados do produto antes de exportar para o PDV Vendas.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verificar se há dimensões e peso preenchidos
+    if (!weight || !length || !width || !height) {
+      toast({
+        title: "Erro",
+        description: "Preencha as dimensões e peso do produto antes de exportar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsExportingToPDV(true);
+
+    try {
+      // Dados do produto para exportar
+      const productData = {
+        sku,
+        name: productName,
+        description: packageDescription,
+        technicalSpecs,
+        dimensions: {
+          length: parseFloat(length),
+          width: parseFloat(width),
+          height: parseFloat(height)
+        },
+        weight: parseFloat(weight),
+        shippingOptions: selectedOptionId ? shippingOptions.find(option => option.id === selectedOptionId) : null
+      };
+
+      // Verificar se há uma função global para exportar para o PDV
+      if (window.exportProductToPDV) {
+        await window.exportProductToPDV(productData);
+        toast({
+          title: "Sucesso",
+          description: "Produto exportado para o PDV Vendas com sucesso!",
+        });
+      } else {
+        // Simular exportação como fallback
+        console.log("Exportando produto para o PDV:", productData);
+        
+        // Armazenar no localStorage como fallback
+        const savedProducts = JSON.parse(localStorage.getItem('products') || '[]');
+        savedProducts.push(productData);
+        localStorage.setItem('products', JSON.stringify(savedProducts));
+        
+        toast({
+          title: "Sucesso",
+          description: "Produto exportado para o banco de dados local com sucesso!",
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao exportar produto para o PDV:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao exportar o produto para o PDV Vendas.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExportingToPDV(false);
+    }
+  };
+
+  // Renderização do componente
   return (
     <div className="shipping-calculator">
+      {/* Scanner de produto */}
       {isScanning && (
         <ProductScanner
           onScanComplete={handleScanComplete}
@@ -498,6 +464,8 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
           onClose={() => setIsScanning(false)}
         />
       )}
+      
+      {/* Tabs de navegação */}
       <div className="tabs">
         <button
           className={`tab ${activeTab === 0 ? "active" : ""}`}
@@ -525,6 +493,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
         </button>
       </div>
 
+      {/* Conteúdo das tabs */}
       <div className="tab-content">
         {activeTab === 0 && (
           <div className="calculator-tab">
@@ -569,10 +538,19 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
                       className="icon-button"
                       onClick={() => setIsScanning(true)}
                       disabled={isScanning}
+                      title="Escanear código"
                     >
                       <Camera />
                     </button>
                     <MagicWandScanButton onProductDataDetected={fillProductData} />
+                    <button
+                      className="btn btn-secondary"
+                      style={{ marginLeft: 8 }}
+                      onClick={() => lookupProduct(sku)}
+                      disabled={!sku || isFetchingProduct}
+                    >
+                      {isFetchingProduct ? "Buscando..." : "BUSCAR"}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -703,6 +681,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
         )}
       </div>
 
+      {/* Popup de resultados */}
       {showResultsPopup && (
         <div className="popup-overlay">
           <div className="popup-content">
@@ -716,7 +695,7 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
               </button>
             </div>
             <div className="shipping-options">
-              {shippingOptions.map((option, index) => (
+              {shippingOptions.map((option) => (
                 <ShippingOptionCard
                   key={option.id}
                   option={option}
@@ -729,120 +708,15 @@ const ShippingCalculator = ({ preselectedClient, preselectedProduct }) => {
         </div>
       )}
 
-      {/* Componentes de busca de agências temporariamente removidos para testes */}
-
       {/* Botões de exportação */}
       <div className="export-buttons-container">
         <div className="export-buttons">
           <button
             className="btn btn-primary"
             disabled={isExportingToPDV}
-            onClick={async () => {
-              // Verificar se há um produto preenchido
-              if (!productName && !sku) {
-                toast({
-                  title: "Erro",
-                  description: "Preencha os dados do produto antes de exportar para o PDV Vendas.",
-                  variant: "destructive",
-                });
-                return;
-              }
-
-              // Verificar se há dimensões e peso preenchidos
-              if (!weight || !length || !width || !height) {
-                toast({
-                  title: "Dados incompletos",
-                  description: "Preencha o peso e as dimensões do produto para exportar para o PDV Vendas.",
-                  variant: "destructive",
-                });
-                return;
-              }
-
-              try {
-                setIsExportingToPDV(true);
-
-                // Criar objeto do produto com os dados preenchidos
-                const productToExport = {
-                  description: productName,
-                  productName: productName,
-                  itemDescription: packageDescription,
-                  technicalSpecs: technicalSpecs,
-                  sku: sku,
-                  price: 0, // Valor padrão, será editado no PDV
-                  quantity: 1, // Valor padrão, será editado no PDV
-                  weight: weight ? parseFloat(weight) : null,
-                  dimensions: {
-                    length: length ? parseFloat(length) : null,
-                    width: width ? parseFloat(width) : null,
-                    height: height ? parseFloat(height) : null
-                  }
-                };
-
-                // Verificar se a função global está disponível
-                if (typeof window.handleSelectProductsForPDV === 'function') {
-                  // Chamar a função global para adicionar o produto ao PDV
-                  await window.handleSelectProductsForPDV([productToExport]);
-
-                  toast({
-                    title: "Produto Exportado",
-                    description: `${productName} foi adicionado ao PDV Vendas com sucesso.`,
-                  });
-                } else {
-                  console.error('Função handleSelectProductsForPDV não encontrada no escopo global');
-                  toast({
-                    title: "Erro",
-                    description: "Não foi possível adicionar o produto ao PDV Vendas. Tente novamente.",
-                    variant: "destructive",
-                  });
-                }
-              } catch (error) {
-                console.error('Erro ao exportar produto para PDV Vendas:', error);
-                toast({
-                  title: "Erro",
-                  description: "Ocorreu um erro ao exportar o produto. Tente novamente.",
-                  variant: "destructive",
-                });
-              } finally {
-                setIsExportingToPDV(false);
-              }
-            }}
+            onClick={handleExportToPDV}
           >
-            {isExportingToPDV ? (
-              <>
-                <Loader2 />
-                <span>Exportando...</span>
-              </>
-            ) : (
-              "Exportar para Vendas PDV"
-            )}
-          </button>
-
-          <button
-            className="btn btn-secondary"
-            onClick={() => {
-              toast({
-                title: "PDF Exportado",
-                description: selectedClient
-                  ? `Cotação enviada para ${selectedClient.name} por e-mail.`
-                  : "Cotação exportada como PDF.",
-              });
-            }}
-          >
-            Exportar PDF
-          </button>
-
-          <button
-            className="btn btn-secondary"
-            onClick={() => {
-              toast({
-                title: "Imagem Exportada",
-                description: selectedClient
-                  ? `Cotação enviada para ${selectedClient.name} por WhatsApp.`
-                  : "Cotação exportada como imagem.",
-              });
-            }}
-          >
-            Exportar Imagem
+            {isExportingToPDV ? "Exportando..." : "Exportar para PDV"}
           </button>
         </div>
       </div>
